@@ -1,0 +1,29 @@
+# Render Configuration for NestJS API
+services:
+  - type: web
+    name: pairmeup-api
+    env: node
+    repo: https://github.com/Rich-Data-F/PairmeUpNext.git
+    rootDir: apps/api
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        fromService:
+          type: web
+          name: pairmeup-api
+          property: port
+      - key: DATABASE_URL
+        sync: false # Set manually in Render dashboard
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ID_ENCRYPTION_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://your-vercel-app.vercel.app
+      - key: GEODB_BASE_URL
+        value: https://geodb-cities-api.wirefreethought.com
+    healthCheckPath: /health

@@ -1,23 +1,23 @@
-# Railway deployment configuration
-services:
-  api:
-    build:
-      buildCommand: npm run build
-      startCommand: npm run start:prod
-    env:
-      NODE_ENV: production
-      PORT: ${{ PORT }}
-      DATABASE_URL: ${{ DATABASE_URL }}
-      JWT_SECRET: ${{ JWT_SECRET }}
-      ID_ENCRYPTION_KEY: ${{ ID_ENCRYPTION_KEY }}
-      CORS_ORIGINS: ${{ CORS_ORIGINS }}
-      GEODB_BASE_URL: https://geodb-cities-api.wirefreethought.com
-      PAYPAL_CLIENT_ID: ${{ PAYPAL_CLIENT_ID }}
-      PAYPAL_CLIENT_SECRET: ${{ PAYPAL_CLIENT_SECRET }}
-      PAYPAL_ENV: sandbox
-      MINIO_ENDPOINT: ${{ MINIO_ENDPOINT }}
-      MINIO_PORT: ${{ MINIO_PORT }}
-      MINIO_ACCESS_KEY: ${{ MINIO_ACCESS_KEY }}
-      MINIO_SECRET_KEY: ${{ MINIO_SECRET_KEY }}
-      MINIO_BUCKET_NAME: ${{ MINIO_BUCKET_NAME }}
-      REDIS_URL: ${{ REDIS_URL }}
+# Railway deployment configuration for PairMeUp API
+# Database hosted on Neon, API only on Railway
+
+[build]
+cmd = "cd apps/api && npm ci && npm run build"
+
+[deploy]
+cmd = "cd apps/api && npm run start:prod"
+healthcheck_path = "/health"
+
+[env]
+NODE_ENV = "production"
+PORT = "$PORT"
+DATABASE_URL = "$DATABASE_URL"
+JWT_SECRET = "$JWT_SECRET"
+ID_ENCRYPTION_KEY = "$ID_ENCRYPTION_KEY"
+CORS_ORIGINS = "$CORS_ORIGINS"
+GEODB_BASE_URL = "https://geodb-cities-api.wirefreethought.com"
+
+# Optional PayPal configuration
+PAYPAL_CLIENT_ID = "$PAYPAL_CLIENT_ID"
+PAYPAL_CLIENT_SECRET = "$PAYPAL_CLIENT_SECRET"
+PAYPAL_ENV = "sandbox"
