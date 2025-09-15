@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { getApiBase } from '@/lib/config';
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,8 +9,7 @@ export async function GET(request: NextRequest) {
     console.log(`🔍 Fetching featured listings (limit: ${limit})`);
     
   // Call backend API
-  const base = process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL || 'https://pairmeup.onrender.com';
-  const backendUrl = `${base}/search/featured?limit=${limit}`;
+  const backendUrl = `${getApiBase()}/search/featured?limit=${limit}`;
     console.log(`📡 Calling backend: ${backendUrl}`);
     
     const response = await fetch(backendUrl, {

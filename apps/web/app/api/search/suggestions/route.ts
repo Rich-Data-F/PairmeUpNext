@@ -1,12 +1,12 @@
 import { NextRequest } from 'next/server';
+import { getApiBase } from '@/lib/config';
 
 export async function GET(request: NextRequest) {
   try {
     console.log('🔍 Fetching search suggestions');
     
   // Call backend API
-  const base = process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL || 'https://pairmeup.onrender.com';
-  const backendUrl = `${base}/search/suggestions`;
+  const backendUrl = `${getApiBase()}/search/suggestions`;
     console.log(`📡 Calling backend: ${backendUrl}`);
     
     const response = await fetch(backendUrl, {

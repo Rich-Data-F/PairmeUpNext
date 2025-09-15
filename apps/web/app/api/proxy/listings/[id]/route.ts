@@ -8,7 +8,8 @@ export async function GET(
     console.log(`🔍 Fetching listing details for ID: ${params.id}`);
     
     // Call backend API
-    const backendUrl = `http://localhost:4000/listings/${params.id}`;
+  const { getApiBase } = await import('@/lib/config');
+  const backendUrl = `${getApiBase()}/listings/${params.id}`;
     console.log(`📡 Calling backend: ${backendUrl}`);
     
     const response = await fetch(backendUrl, {

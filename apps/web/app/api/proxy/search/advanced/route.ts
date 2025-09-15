@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getApiBase } from '@/lib/config';
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,8 +35,8 @@ export async function GET(request: NextRequest) {
     if (isVerified) backendParams.set('verifiedOnly', isVerified);
     if (hasImages) backendParams.set('hasImages', hasImages);
 
-    // Call the real backend API
-    const backendUrl = `http://localhost:4000/search/advanced?${backendParams.toString()}`;
+  // Call the real backend API
+  const backendUrl = `${getApiBase()}/search/advanced?${backendParams.toString()}`;
     console.log(`📡 Calling backend: ${backendUrl}`);
 
     const response = await fetch(backendUrl, {

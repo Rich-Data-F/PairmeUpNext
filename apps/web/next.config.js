@@ -54,6 +54,8 @@ const nextConfig = {
   },
   async rewrites() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL;
+  // Tip: In development, set NEXT_PUBLIC_API_URL=http://localhost:4000
+  // In production (Vercel), set NEXT_PUBLIC_API_URL=https://pairmeup.onrender.com
     if (!apiUrl) {
       return [];
     }

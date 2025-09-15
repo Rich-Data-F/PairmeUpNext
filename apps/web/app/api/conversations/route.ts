@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:4000';
+import { getApiBase } from '@/lib/config';
+const API_BASE_URL = getApiBase();
 
 // GET /api/conversations - Get user's conversations
 export async function GET(request: NextRequest) {
