@@ -1,0 +1,1069 @@
+// EarbudHub Marketplace - Professional Earbud Parts Marketplace with Lost/Stolen Registry
+//
+// PROJECT OVERVIEW:
+// - Full-stack marketplace for buying/selling individual earbuds, charging cases, and accessories
+// - Integrated lost/stolen registry with smart matching algorithm
+// - Advanced ratings system with 12+ criteria and weighted scoring
+// - Blog system with brand/model taxonomy
+// - City-level geolocation using GeoDB Cities API
+// - Trust features: identifier masking, verification badges, escrow payments
+// - Found items registry with legal compliance workflow
+//
+// TECHNICAL STACK:
+// - Frontend: Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS
+// - Backend: NestJS, TypeScript, Swagger documentation
+// - Database: PostgreSQL with Prisma ORM
+// - Authentication: NextAuth.js (planned)
+// - Payment: PayPal Orders v2 API with escrow simulation
+// - Geolocation: GeoDB Cities API for global city picker
+// - File Upload: MinIO (S3-compatible)
+// - Development: Docker Compose (PostgreSQL, Redis, MinIO)
+// - Deployment: Railway (Backend + Database) + Vercel (Frontend)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// USER MANAGEMENT & AUTHENTICATION
+// ============================================================================
+
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  emailVerified     DateTime?
+  name              String?
+  image             String?
+  
+  // Authentication fields
+  password              String?   // For email/password auth
+  passwordResetToken    String?   // For password reset
+  passwordResetExpiry   DateTime? // Token expiry
+  lastPasswordChange    DateTime? // Track password changes
+  lastLoginAt           DateTime? // Track login activity
+  
+  isAdmin           Boolean   @default(false)
+  isVerified        Boolean   @default(false)
+  verificationBadge String? // "email", "phone", "id", "premium"
+  reputation        Int       @default(0)
+  trustLevel        String    @default("new") // "new", "bronze", "silver", "gold", "platinum"
+  
+  // Rating fields
+  averageRating     Float     @default(0)
+  totalRatings      Int       @default(0)
+
+  // Profile fields
+  bio           String?
+  phoneNumber   String?
+  phoneVerified Boolean  @default(false)
+  website       String?
+  location      String?
+  joinedAt      DateTime @default(now())
+  lastActiveAt  DateTime @default(now())
+
+  // Privacy settings
+  showEmail    Boolean @default(false)
+  showPhone    Boolean @default(false)
+  showLocation Boolean @default(true)
+
+  // Relationships
+  listings     Listing[]
+  lostReports  LostReport[]
+  foundItems   FoundItem[]
+  ratings      Rating[]
+  blogPosts    BlogPost[]
+  comments     Comment[]
+  orders       Order[]
+  sellerOrders Order[]      @relation("SellerOrders")
+  matches      Match[]
+  files        File[]
+  savedSearches SavedSearch[] @relation("UserSavedSearches")
+  searchAnalytics SearchAnalytics[] @relation("UserSearchAnalytics")
+  Account      Account[]
+  Session      Session[]
+  
+  // Brand and Model submissions and approvals
+  submittedBrands Brand[] @relation("BrandSubmissions")
+  approvedBrands  Brand[] @relation("BrandApprovals")
+  submittedModels Model[] @relation("ModelSubmissions")
+  approvedModels  Model[] @relation("ModelApprovals")
+  proposedModels  ProposedModel[] @relation("UserProposedModels")
+  reviewedModels  ProposedModel[] @relation("AdminModelReviews")
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ============================================================================
+// BRANDS & MODELS
+// ============================================================================
+
+model Brand {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  logo        String?
+  website     String?
+  isActive    Boolean  @default(true)
+  
+  // Validation and approval fields
+  status          BrandStatus @default(PENDING)
+  isVerified      Boolean     @default(false)
+  submittedBy     String?     // User ID who submitted this brand
+  approvedBy      String?     // Admin ID who approved
+  approvedAt      DateTime?
+  rejectionReason String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // SEO fields
+  metaTitle       String?
+  metaDescription String?
+
+  // Relationships
+  models         Model[]
+  blogPosts      BlogPost[]
+  Listing        Listing[]
+  LostReport     LostReport[]
+  FoundItem      FoundItem[]
+  Rating         Rating[]
+  SponsoredLink  SponsoredLink[]
+  submitter      User?        @relation("BrandSubmissions", fields: [submittedBy], references: [id])
+  approver       User?        @relation("BrandApprovals", fields: [approvedBy], references: [id])
+  
+  // Proposed models by users (pending approval)
+  proposedModels ProposedModel[]
+
+  @@map("brands")
+}
+
+model Model {
+  id             String    @id @default(cuid())
+  name           String
+  slug           String    @unique
+  brandId        String
+  description    String?
+  image          String?
+  releaseDate    DateTime?
+  discontinuedAt DateTime?
+  isActive       Boolean   @default(true)
+  
+  // Validation and approval fields
+  status          ModelStatus @default(PENDING)
+  isVerified      Boolean     @default(false)
+  submittedBy     String?     // User ID who submitted this model
+  approvedBy      String?     // Admin ID who approved
+  approvedAt      DateTime?
+  rejectionReason String?
+
+  // Technical specifications
+  hasANC           Boolean  @default(false)
+  batteryLife      Int? // hours
+  caseChargeTime   Int? // minutes
+  earbudChargeTime Int? // minutes
+  waterResistance  String? // "IPX4", "IPX7", etc.
+  bluetoothVersion String? // "5.0", "5.1", "5.2", etc.
+  codecs           String[] // ["SBC", "AAC", "LDAC", "aptX"]
+  driverSize       Int? // mm
+  frequency        String? // "20Hz-20kHz"
+  impedance        Int? // ohms
+  sensitivity      Int? // dB
+
+  // Physical dimensions
+  earbudWeight     Float? // grams
+  caseWeight       Float? // grams
+  earbudDimensions String? // "LxWxH mm"
+  caseDimensions   String? // "LxWxH mm"
+
+  // Market data
+  originalPrice Decimal? @db.Decimal(10, 2)
+  currentPrice  Decimal? @db.Decimal(10, 2)
+  currency      String   @default("USD")
+
+  // SEO fields
+  metaTitle       String?
+  metaDescription String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  brand         Brand           @relation(fields: [brandId], references: [id])
+  listings      Listing[]
+  lostReports   LostReport[]
+  foundItems    FoundItem[]
+  ratings       Rating[]
+  blogPosts     BlogPost[]
+  SponsoredLink SponsoredLink[]
+  submitter     User?           @relation("ModelSubmissions", fields: [submittedBy], references: [id])
+  approver      User?           @relation("ModelApprovals", fields: [approvedBy], references: [id])
+
+  @@unique([brandId, name])
+  @@map("models")
+}
+
+// ============================================================================
+// PROPOSED MODELS (USER SUBMISSIONS)
+// ============================================================================
+
+model ProposedModel {
+  id          String   @id @default(cuid())
+  name        String
+  brandId     String
+  description String?
+  
+  // Submission details
+  submittedBy     String
+  submissionNote  String? // User's note about why this model should be added
+  adminNote       String? // Admin's note about approval/rejection
+  
+  // Technical specifications (optional for user submissions)
+  hasANC           Boolean?
+  batteryLife      Int?
+  waterResistance  String?
+  bluetoothVersion String?
+  originalPrice    Decimal? @db.Decimal(10, 2)
+  
+  // Status and approval
+  status         ModelStatus @default(PENDING)
+  reviewedBy     String?     // Admin who reviewed
+  reviewedAt     DateTime?
+  rejectionReason String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relationships
+  brand     Brand @relation(fields: [brandId], references: [id])
+  submitter User  @relation("UserProposedModels", fields: [submittedBy], references: [id])
+  reviewer  User? @relation("AdminModelReviews", fields: [reviewedBy], references: [id])
+  
+  @@unique([brandId, name])
+  @@map("proposed_models")
+}
+
+// ============================================================================
+// CITIES & GEOLOCATION
+// ============================================================================
+
+model City {
+  id          String  @id @default(cuid())
+  geoDbId     Int     @unique // GeoDB Cities API ID
+  name        String
+  country     String
+  countryCode String // ISO 3166-1 alpha-2
+  region      String?
+  regionCode  String?
+  latitude    Decimal @db.Decimal(10, 8)
+  longitude   Decimal @db.Decimal(11, 8)
+  population  Int?
+  timezone    String?
+
+  // Denormalized for search performance
+  displayName String // "Paris, France" or "New York, NY, USA"
+  searchText  String // Lowercase for search
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  listings    Listing[]
+  lostReports LostReport[]
+  foundItems  FoundItem[]
+
+  @@index([searchText])
+  @@index([countryCode])
+  @@map("cities")
+}
+
+// ============================================================================
+// MARKETPLACE LISTINGS
+// ============================================================================
+
+enum ListingType {
+  EARBUD_LEFT
+  EARBUD_RIGHT
+  EARBUD_PAIR
+  CHARGING_CASE
+  ACCESSORIES
+}
+
+enum Condition {
+  NEW
+  LIKE_NEW
+  GOOD
+  FAIR
+  PARTS_ONLY
+}
+
+enum ListingStatus {
+  DRAFT
+  ACTIVE
+  SOLD
+  EXPIRED
+  SUSPENDED
+  DELETED
+}
+
+enum BrandStatus {
+  PENDING    // Submitted by user, awaiting admin review
+  APPROVED   // Approved by admin, visible to all users
+  REJECTED   // Rejected by admin
+  SYSTEM     // Created by system/admin (pre-approved)
+}
+
+enum ModelStatus {
+  PENDING    // Submitted by user, awaiting admin review
+  APPROVED   // Approved by admin, visible to all users
+  REJECTED   // Rejected by admin
+  SYSTEM     // Created by system/admin (pre-approved)
+}
+
+model Listing {
+  id          String        @id @default(cuid())
+  title       String
+  description String
+  type        ListingType
+  condition   Condition
+  price       Decimal       @db.Decimal(10, 2)
+  currency    String        @default("USD")
+  status      ListingStatus @default(DRAFT)
+
+  // Product details
+  brandId          String
+  modelId          String
+  serialNumber     String? // Encrypted
+  identifierMasked String? // "****E5F6" format
+  identifierFull   String? // Encrypted full identifier
+  isVerified       Boolean @default(false)
+
+  // Location
+  cityId            String
+  hideExactLocation Boolean  @default(true)
+  latitude          Decimal? @db.Decimal(10, 8)
+  longitude         Decimal? @db.Decimal(11, 8)
+
+  // Media
+  images            String[] // Array of image URLs
+  verificationPhoto String? // Photo of identifier for verification
+
+  // Seller information
+  sellerId    String
+  sellerNotes String?
+
+  // Marketplace metadata
+  views          Int       @default(0)
+  favorites      Int       @default(0)
+  reportCount    Int       @default(0)
+  boost          Boolean   @default(false)
+  boostExpiresAt DateTime?
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  publishedAt DateTime?
+  expiresAt   DateTime?
+  soldAt      DateTime?
+
+  // Relationships
+  brand     Brand      @relation(fields: [brandId], references: [id])
+  model     Model      @relation(fields: [modelId], references: [id])
+  city      City       @relation(fields: [cityId], references: [id])
+  seller    User       @relation(fields: [sellerId], references: [id])
+  orders    Order[]
+  matches   Match[]
+  FoundItem FoundItem?
+
+  @@index([status, publishedAt])
+  @@index([brandId, modelId])
+  @@index([cityId])
+  @@index([type, condition])
+  @@map("listings")
+}
+
+// ============================================================================
+// LOST/STOLEN REGISTRY
+// ============================================================================
+
+enum LostReportStatus {
+  ACTIVE
+  RESOLVED
+  CANCELLED
+  EXPIRED
+}
+
+model LostReport {
+  id          String           @id @default(cuid())
+  title       String
+  description String
+  type        ListingType
+  status      LostReportStatus @default(ACTIVE)
+
+  // Product details
+  brandId          String
+  modelId          String
+  serialNumber     String? // Encrypted
+  identifierMasked String? // "****E5F6" format
+  identifierFull   String? // Encrypted full identifier
+
+  // Loss details
+  lostDate      DateTime
+  lostLocation  String // Free text description
+  circumstances String? // How it was lost
+
+  // Location
+  cityId             String
+  shareExactLocation Boolean  @default(false)
+  latitude           Decimal? @db.Decimal(10, 8)
+  longitude          Decimal? @db.Decimal(11, 8)
+  searchRadius       Int      @default(50) // km
+
+  // Reward
+  rewardAmount      Decimal? @db.Decimal(10, 2)
+  rewardCurrency    String   @default("USD")
+  rewardDescription String?
+
+  // Evidence
+  images             String[] // Photos of receipt, box, etc.
+  proofOfPurchase    String?
+  additionalEvidence String?
+
+  // Reporter information
+  reporterId       String
+  contactEmail     String?
+  contactPhone     String?
+  preferredContact String  @default("email") // "email", "phone", "app"
+
+  // Privacy settings
+  shareContact    Boolean @default(false)
+  allowPublicView Boolean @default(true)
+
+  // Timestamps
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  resolvedAt DateTime?
+  expiresAt  DateTime? // Auto-expire after 1 year
+
+  // Relationships
+  brand    Brand   @relation(fields: [brandId], references: [id])
+  model    Model   @relation(fields: [modelId], references: [id])
+  city     City    @relation(fields: [cityId], references: [id])
+  reporter User    @relation(fields: [reporterId], references: [id])
+  matches  Match[]
+
+  @@index([status, lostDate])
+  @@index([brandId, modelId])
+  @@index([cityId])
+  @@map("lost_reports")
+}
+
+// ============================================================================
+// FOUND ITEMS REGISTRY (Legal Compliance)
+// ============================================================================
+
+enum FoundItemStatus {
+  REPORTED
+  AUTHORITY_NOTIFIED
+  WAITING_PERIOD
+  AVAILABLE_FOR_SALE
+  CLAIMED_BY_OWNER
+  SOLD
+}
+
+enum Jurisdiction {
+  FRANCE
+  US_CALIFORNIA
+  US_NEW_YORK
+  US_TEXAS
+  US_FLORIDA
+  US_OTHER
+  UK
+  GERMANY
+  OTHER
+}
+
+model FoundItem {
+  id          String          @id @default(cuid())
+  title       String
+  description String
+  type        ListingType
+  status      FoundItemStatus @default(REPORTED)
+
+  // Product details
+  brandId          String
+  modelId          String
+  serialNumber     String? // Encrypted
+  identifierMasked String? // "****E5F6" format
+  identifierFull   String? // Encrypted full identifier
+  condition        Condition
+
+  // Found details
+  foundDate     DateTime
+  foundLocation String // Description of where found
+  circumstances String? // How/where it was found
+
+  // Location
+  cityId    String
+  latitude  Decimal? @db.Decimal(10, 8)
+  longitude Decimal? @db.Decimal(11, 8)
+
+  // Legal compliance
+  jurisdiction       Jurisdiction
+  authorityReported  Boolean      @default(false)
+  authorityName      String?
+  authorityContact   String?
+  reportedAt         DateTime?
+  waitingPeriodDays  Int // Days to wait before sale
+  availableForSaleAt DateTime? // When item can be sold
+
+  // Legal documentation
+  authorityEvidence String? // Evidence of authority reporting
+  legalDisclaimer   String?
+  complianceNotes   String?
+
+  // Finder information
+  finderId           String
+  finderContactEmail String?
+  finderContactPhone String?
+
+  // Claim process
+  claimDeadline     DateTime?
+  claimRequirements String? // What's needed to prove ownership
+
+  // Images and evidence
+  images        String[] // Photos of found item
+  foundEvidence String[] // Photos of where/how found
+
+  // If converted to listing
+  listingPrice         Decimal?  @db.Decimal(10, 2)
+  listingCurrency      String    @default("USD")
+  convertedToListingAt DateTime?
+  listingId            String?   @unique
+
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  claimedAt DateTime?
+  soldAt    DateTime?
+
+  // Relationships
+  brand   Brand    @relation(fields: [brandId], references: [id])
+  model   Model    @relation(fields: [modelId], references: [id])
+  city    City     @relation(fields: [cityId], references: [id])
+  finder  User     @relation(fields: [finderId], references: [id])
+  listing Listing? @relation(fields: [listingId], references: [id])
+  Match   Match[]
+
+  @@index([status, foundDate])
+  @@index([jurisdiction, status])
+  @@index([brandId, modelId])
+  @@map("found_items")
+}
+
+// ============================================================================
+// SMART MATCHING SYSTEM
+// ============================================================================
+
+enum MatchType {
+  LOST_TO_LISTING
+  LOST_TO_FOUND
+}
+
+enum MatchStatus {
+  PENDING
+  REVIEWED
+  CONFIRMED
+  REJECTED
+  EXPIRED
+}
+
+model Match {
+  id              String      @id @default(cuid())
+  type            MatchType
+  status          MatchStatus @default(PENDING)
+  confidenceScore Float // 0.0 to 1.0
+
+  // Matching criteria
+  identifierMatch  Boolean @default(false)
+  locationMatch    Boolean @default(false)
+  timelineMatch    Boolean @default(false)
+  descriptionMatch Boolean @default(false)
+
+  // Match details
+  matchReason      String? // Human-readable explanation
+  algorithmVersion String  @default("1.0")
+
+  // References
+  lostReportId String?
+  listingId    String?
+  foundItemId  String?
+
+  // User who initiated the match check
+  userId String
+
+  // Timestamps
+  createdAt  DateTime  @default(now())
+  reviewedAt DateTime?
+  expiresAt  DateTime? // Auto-expire after 30 days
+
+  // Relationships
+  lostReport LostReport? @relation(fields: [lostReportId], references: [id])
+  listing    Listing?    @relation(fields: [listingId], references: [id])
+  foundItem  FoundItem?  @relation(fields: [foundItemId], references: [id])
+  user       User        @relation(fields: [userId], references: [id])
+
+  @@index([type, status])
+  @@index([confidenceScore])
+  @@map("matches")
+}
+
+// ============================================================================
+// RATINGS & REVIEWS SYSTEM
+// ============================================================================
+
+enum RatingCategory {
+  OVERALL
+  COMFORT
+  AUTONOMY
+  CASE_RELOAD_TIME
+  EARBUD_RELOAD_TIME
+  MUSIC_QUALITY
+  VIDEO_QUALITY
+  GAME_QUALITY
+  AV_LAG
+  CALL_OVERALL
+  CALL_COWORKING
+  CALL_STREET
+  CALL_BIKE
+}
+
+model Rating {
+  id           String @id @default(cuid())
+  overallScore Float // Weighted overall score
+
+  // Individual criteria scores (1-5)
+  comfort          Int?
+  autonomy         Int? // Battery life hours
+  caseReloadTime   Int? // Minutes to full charge case
+  earbudReloadTime Int? // Minutes to full charge earbuds
+  musicQuality     Int?
+  videoQuality     Int?
+  gameQuality      Int?
+  avLag            Int? // Audio/video synchronization
+  callOverall      Int?
+  callCoworking    Int? // Quiet office environment
+  callStreet       Int? // Street noise environment
+  callBike         Int? // Wind/movement environment
+
+  // Text review
+  title   String?
+  comment String?
+  pros    String?
+  cons    String?
+
+  // Rating context
+  usageDuration String? // "1 week", "6 months", etc.
+  primaryUse    String[] // ["music", "calls", "gaming", "exercise"]
+
+  // Moderation
+  isModerated     Boolean @default(false)
+  isApproved      Boolean @default(false)
+  moderationNotes String?
+  isSpam          Boolean @default(false)
+
+  // User information
+  userId             String? // Null for guest ratings
+  guestEmail         String? // For guest ratings
+  guestName          String?
+  isVerifiedPurchase Boolean @default(false)
+
+  // Product reference
+  brandId String
+  modelId String
+
+  // Engagement
+  helpfulCount    Int @default(0)
+  notHelpfulCount Int @default(0)
+  reportCount     Int @default(0)
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  moderatedAt DateTime?
+
+  // Relationships
+  brand Brand @relation(fields: [brandId], references: [id])
+  model Model @relation(fields: [modelId], references: [id])
+  user  User? @relation(fields: [userId], references: [id])
+
+  @@index([brandId, modelId, isApproved])
+  @@index([overallScore])
+  @@index([createdAt])
+  @@map("ratings")
+}
+
+// ============================================================================
+// BLOG SYSTEM
+// ============================================================================
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model BlogPost {
+  id      String     @id @default(cuid())
+  title   String
+  slug    String     @unique
+  excerpt String?
+  content String // MDX content
+  status  PostStatus @default(DRAFT)
+
+  // SEO fields
+  metaTitle       String?
+  metaDescription String?
+  featuredImage   String?
+
+  // Categorization
+  tags     String[]
+  category String?
+  brandId  String?
+  modelId  String?
+
+  // Author
+  authorId String
+
+  // Engagement
+  views        Int @default(0)
+  likes        Int @default(0)
+  commentCount Int @default(0)
+  shareCount   Int @default(0)
+
+  // Publishing
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relationships
+  author   User      @relation(fields: [authorId], references: [id])
+  brand    Brand?    @relation(fields: [brandId], references: [id])
+  model    Model?    @relation(fields: [modelId], references: [id])
+  comments Comment[]
+
+  @@index([status, publishedAt])
+  @@index([brandId, modelId])
+  @@index([tags])
+  @@map("blog_posts")
+}
+
+model Comment {
+  id      String @id @default(cuid())
+  content String
+
+  // User information
+  userId     String? // Null for guest comments
+  guestEmail String?
+  guestName  String?
+
+  // Moderation
+  isModerated Boolean @default(false)
+  isApproved  Boolean @default(false)
+  isSpam      Boolean @default(false)
+
+  // Threading
+  parentId String?
+
+  // Reference
+  postId String
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  user    User?     @relation(fields: [userId], references: [id])
+  post    BlogPost  @relation(fields: [postId], references: [id])
+  parent  Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies Comment[] @relation("CommentReplies")
+
+  @@index([postId, isApproved])
+  @@index([parentId])
+  @@map("comments")
+}
+
+// ============================================================================
+// ORDERS & PAYMENTS
+// ============================================================================
+
+enum OrderStatus {
+  CREATED
+  PENDING
+  APPROVED
+  CAPTURED
+  CANCELLED
+  REFUNDED
+  DISPUTED
+}
+
+enum PaymentMethod {
+  PAYPAL
+  STRIPE
+  BANK_TRANSFER
+}
+
+model Order {
+  id          String @id @default(cuid())
+  orderNumber String @unique // Human-readable order number
+
+  // Order details
+  listingId String
+  buyerId   String
+  sellerId  String
+
+  // Payment details
+  amount        Decimal       @db.Decimal(10, 2)
+  currency      String        @default("USD")
+  paymentMethod PaymentMethod @default(PAYPAL)
+  status        OrderStatus   @default(CREATED)
+
+  // PayPal integration
+  paypalOrderId   String? // PayPal Order ID
+  paypalPayerId   String? // PayPal Payer ID
+  paypalPaymentId String? // PayPal Payment ID
+
+  // Escrow simulation
+  escrowHeld       Boolean   @default(false)
+  escrowReleasedAt DateTime?
+
+  // Order lifecycle
+  notes         String?
+  cancelReason  String?
+  refundReason  String?
+  disputeReason String?
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  approvedAt  DateTime?
+  capturedAt  DateTime?
+  cancelledAt DateTime?
+  refundedAt  DateTime?
+
+  // Relationships
+  listing Listing @relation(fields: [listingId], references: [id])
+  buyer   User    @relation(fields: [buyerId], references: [id])
+  seller  User    @relation("SellerOrders", fields: [sellerId], references: [id])
+
+  @@index([status])
+  @@index([buyerId])
+  @@index([sellerId])
+  @@map("orders")
+}
+
+// ============================================================================
+// SPONSORED CONTENT & REVENUE
+// ============================================================================
+
+enum SponsoredType {
+  AFFILIATE_LINK
+  BANNER_AD
+  FEATURED_LISTING
+  BRAND_PARTNERSHIP
+}
+
+enum PlacementType {
+  SIDEBAR
+  IN_CONTENT
+  HEADER
+  FOOTER
+  SEARCH_RESULTS
+}
+
+model SponsoredLink {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  url         String
+  imageUrl    String?
+  type        SponsoredType
+  placement   PlacementType
+
+  // Targeting
+  brandId   String?
+  modelId   String?
+  keywords  String[]
+  countries String[] // ISO country codes
+
+  // Campaign details
+  isActive     Boolean   @default(true)
+  startDate    DateTime?
+  endDate      DateTime?
+  budget       Decimal?  @db.Decimal(10, 2)
+  costPerClick Decimal?  @db.Decimal(10, 4)
+
+  // Analytics
+  impressions Int     @default(0)
+  clicks      Int     @default(0)
+  conversions Int     @default(0)
+  revenue     Decimal @default(0) @db.Decimal(10, 2)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  brand Brand? @relation(fields: [brandId], references: [id])
+  model Model? @relation(fields: [modelId], references: [id])
+
+  @@index([type, placement, isActive])
+  @@index([brandId, modelId])
+  @@map("sponsored_links")
+}
+
+// ============================================================================
+// SEARCH & ANALYTICS
+// ============================================================================
+
+model SavedSearch {
+  id                   String    @id @default(cuid())
+  userId               String
+  name                 String
+  filters              String    // JSON string of search filters
+  alertsEnabled        Boolean   @default(false)
+  lastNotificationSent DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  // Relationships
+  user User @relation("UserSavedSearches", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([alertsEnabled])
+  @@map("saved_searches")
+}
+
+model SearchAnalytics {
+  id             String   @id @default(cuid())
+  searchId       String   @unique
+  query          String?
+  filters        String   // JSON string of applied filters
+  userId         String?
+  timestamp      DateTime @default(now())
+  resultsCount   Int
+  searchDuration Int      // milliseconds
+  clickedListingIds String[] // Array of listing IDs that were clicked
+
+  // Relationships
+  user User? @relation("UserSearchAnalytics", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([timestamp])
+  @@index([query])
+  @@map("search_analytics")
+}
+
+// ============================================================================
+// FILE STORAGE
+// ============================================================================
+
+model File {
+  id           String   @id @default(cuid())
+  originalName String
+  filename     String   @unique
+  path         String
+  thumbnailPath String?
+  size         Int
+  mimeType     String
+  width        Int?
+  height       Int?
+  type         String   @default("listing") // "listing", "verification", "profile"
+  uploadedById String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relationships
+  uploadedBy User @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+
+  @@index([uploadedById, type])
+  @@index([filename])
+  @@map("files")
+}
+
+// ============================================================================
+// SYSTEM TABLES
+// ============================================================================
+
+model SystemConfig {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_config")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String // "CREATE", "UPDATE", "DELETE"
+  entity    String // "listing", "user", etc.
+  entityId  String
+  oldData   Json?
+  newData   Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}

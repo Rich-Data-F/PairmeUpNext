@@ -4,7 +4,7 @@ import { IdentifierService } from '../common/services/identifier.service';
 import { UploadService } from '../common/services/upload.service';
 import { GeoService } from '../common/services/geo.service';
 import { CreateListingDto, UpdateListingDto, ListingQueryDto, BulkUpdateListingDto } from './dto/listing.dto';
-import { ListingType, Condition, ListingStatus, Prisma } from '@earbudhub/db';
+import { ListingType, Condition, ListingStatus, Prisma } from '@prisma/client';
 
 @Injectable()
 export class ListingsService {

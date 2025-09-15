@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsEnum, IsNumber, IsBoolean, IsOptional, IsArray, Min, Max, Length, IsUUID, IsDecimal } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-import { ListingType, Condition } from '@earbudhub/db';
+import { ListingType, Condition } from '@prisma/client';
 
 export class CreateListingDto {
   @ApiProperty({ description: 'Listing title', example: 'Apple AirPods Pro Left Earbud - Like New' })
