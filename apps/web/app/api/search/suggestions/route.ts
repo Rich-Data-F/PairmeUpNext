@@ -4,8 +4,9 @@ export async function GET(request: NextRequest) {
   try {
     console.log('🔍 Fetching search suggestions');
     
-    // Call backend API
-    const backendUrl = 'http://localhost:4000/search/suggestions';
+  // Call backend API
+  const base = process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL || 'https://pairmeup.onrender.com';
+  const backendUrl = `${base}/search/suggestions`;
     console.log(`📡 Calling backend: ${backendUrl}`);
     
     const response = await fetch(backendUrl, {

@@ -7,8 +7,9 @@ export async function GET(request: NextRequest) {
     
     console.log(`🔍 Fetching featured listings (limit: ${limit})`);
     
-    // Call backend API
-    const backendUrl = `http://localhost:4000/search/featured?limit=${limit}`;
+  // Call backend API
+  const base = process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL || 'https://pairmeup.onrender.com';
+  const backendUrl = `${base}/search/featured?limit=${limit}`;
     console.log(`📡 Calling backend: ${backendUrl}`);
     
     const response = await fetch(backendUrl, {
@@ -21,12 +22,12 @@ export async function GET(request: NextRequest) {
 
     if (!response.ok) {
       console.error(`❌ Backend error: ${response.status}`);
-      // Return mock data for now
+    // Return empty data to avoid client-side errors
       return new Response(
         JSON.stringify({ 
           listings: [],
           total: 0,
-          message: 'Featured listings endpoint not yet implemented on backend'
+      message: 'Featured listings temporarily unavailable'
         }),
         { 
           status: 200,
