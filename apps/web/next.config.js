@@ -6,9 +6,7 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true, // Temporary for development
   },
-  experimental: {
-    typedRoutes: true,
-  },
+  typedRoutes: true,
   images: {
     remotePatterns: [
       {
@@ -55,10 +53,14 @@ const nextConfig = {
     ]
   },
   async rewrites() {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL;
+    if (!apiUrl) {
+      return [];
+    }
     return [
       {
         source: '/api/proxy/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL}/:path*`,
+        destination: `${apiUrl}/:path*`,
       },
     ]
   },
