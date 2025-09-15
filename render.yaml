@@ -5,7 +5,7 @@ services:
     env: node
     repo: https://github.com/Rich-Data-F/PairmeUpNext.git
     rootDir: apps/api
-    buildCommand: npm install && npm run build
+    buildCommand: npm ci && cp -r ../../packages/db/prisma ./prisma && npx prisma generate && npm install -g @nestjs/cli && nest build
     startCommand: npm run start:prod
     plan: free
     envVars:
