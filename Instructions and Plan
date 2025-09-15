@@ -1,0 +1,367 @@
+# Complete GitHub Copilot Prompt for EarbudHub Marketplace
+
+Copy this comprehensive prompt into your VS Code files to provide GitHub Copilot with complete project context:
+
+```
+/*
+EarbudHub Marketplace - Professional Earbud Parts Marketplace with Lost/Stolen Registry
+
+PROJECT OVERVIEW:
+- Full-stack marketplace for buying/selling individual earbuds, charging cases, and accessories
+- Integrated lost/stolen registry with smart matching algorithm
+- Advanced ratings system with 12+ criteria and weighted scoring
+- Blog system with brand/model taxonomy
+- City-level geolocation using GeoDB Cities API
+- Trust features: identifier masking, verification badges, escrow payments
+- Found items registry with legal compliance workflow
+
+TECHNICAL STACK:
+- Frontend: Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS
+- Backend: NestJS, TypeScript, Swagger documentation
+- Database: PostgreSQL with Prisma ORM
+- Authentication: NextAuth.js (planned)
+- Payment: PayPal Orders v2 API with escrow simulation
+- Geolocation: GeoDB Cities API for global city picker
+- File Upload: MinIO (S3-compatible)
+- Development: Docker Compose (PostgreSQL, Redis, MinIO)
+- Deployment: Railway (Backend + Database) + Vercel (Frontend)
+
+DEPLOYMENT ARCHITECTURE:
+Production:
+- Backend + PostgreSQL: Railway with managed services
+- Frontend: Vercel with edge functions and automatic Git deployments
+- File Storage: Railway MinIO or S3-compatible service
+- Redis: Railway addon for caching
+
+Development:
+- Local Docker Compose setup with PostgreSQL, Redis, MinIO
+- Alternative: Railway local CLI with remote database
+- Hot reloading for both frontend and backend
+
+PROJECT STRUCTURE:
+├── apps/
+│   ├── api/                 # NestJS Backend (Deploy to Railway)
+│   │   ├── src/
+│   │   │   ├── main.ts      # Entry point with Swagger setup
+│   │   │   ├── app.module.ts
+│   │   │   ├── prisma/      # Database service (global module)
+│   │   │   ├── auth/        # Authentication & authorization
+│   │   │   ├── brands/      # Brand management
+│   │   │   ├── models/      # Model management
+│   │   │   ├── cities/      # GeoDB Cities integration
+│   │   │   ├── listings/    # Marketplace listings
+│   │   │   ├── lost-reports/# Lost/stolen registry
+│   │   │   ├── found-items/ # Found items with legal compliance
+│   │   │   ├── ratings/     # Advanced ratings system
+│   │   │   ├── blog/        # Blog posts and content
+│   │   │   ├── orders/      # PayPal order management
+│   │   │   ├── sponsored/   # Sponsored content
+│   │   │   ├── health/      # Health check endpoints
+│   │   │   └── geo/         # GeoDB client service
+│   │   ├── railway.json     # Railway deployment config
+│   │   ├── Dockerfile       # Container config (alternative)
+│   │   ├── .env.development # Local development environment
+│   │   ├── .env.production  # Production environment template
+│   │   └── package.json
+│   └── web/                 # Next.js Frontend (Deploy to Vercel)
+│       ├── app/
+│       │   ├── layout.tsx   # Root layout with Navbar/Footer
+│       │   ├── page.tsx     # Homepage with hero section
+│       │   ├── marketplace/ # Marketplace pages
+│       │   ├── lost-stolen/ # Lost/stolen registry pages
+│       │   ├── found-items/ # Found items with legal workflow
+│       │   ├── blog/        # Blog pages
+│       │   ├── models/      # Model detail pages with ratings
+│       │   ├── brands/      # Brand pages
+│       │   ├── checkout/    # PayPal checkout flow
+│       │   └── api/         # Next.js API routes (health checks)
+│       ├── components/
+│       │   ├── ui/          # Reusable UI components
+│       │   ├── forms/       # CitySelect, RatingForm, etc.
+│       │   ├── layout/      # Navbar, Footer
+│       │   ├── home/        # Homepage components
+│       │   ├── listings/    # Listing components
+│       │   ├── ratings/     # Rating components
+│       │   ├── blog/        # Blog components
+│       │   └── sponsored/   # Sponsored content
+│       ├── lib/             # Utilities and helpers
+│       ├── vercel.json      # Vercel deployment config
+│       ├── next.config.js   # Next.js config with production optimizations
+│       ├── .env.development # Local development environment
+│       └── package.json
+└── packages/
+    └── db/                  # Shared database package
+        ├── prisma/
+        │   ├── schema.prisma # Complete database schema
+        │   └── seed.ts      # Database seeding
+        └── src/index.ts     # Prisma client exports
+
+ENVIRONMENT CONFIGURATION:
+
+Development (Local):
+Backend (.env.development):
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/earbudhub?schema=public"
+GEODB_BASE_URL=https://geodb-cities-api.wirefreethought.com
+PAYPAL_CLIENT_ID=your_paypal_sandbox_client_id
+PAYPAL_CLIENT_SECRET=your_paypal_sandbox_client_secret
+PAYPAL_ENV=sandbox
+JWT_SECRET=your_local_jwt_secret_32_chars_min
+ID_ENCRYPTION_KEY=your_local_encryption_key_32_chars
+MINIO_ENDPOINT=localhost
+MINIO_PORT=9000
+NODE_ENV=development
+PORT=4000
+CORS_ORIGINS=http://localhost:3000,http://localhost:3001
+
+Frontend (.env.development):
+NEXT_PUBLIC_API_URL=http://localhost:4000
+NEXT_PUBLIC_PAYPAL_CLIENT_ID=your_paypal_sandbox_client_id
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your_local_nextauth_secret
+NEXT_PUBLIC_APP_ENV=development
+
+Production:
+Backend (Railway Environment Variables):
+DATABASE_URL=${{Postgres.DATABASE_URL}}
+PAYPAL_CLIENT_ID=${{PAYPAL_CLIENT_ID}}
+PAYPAL_CLIENT_SECRET=${{PAYPAL_CLIENT_SECRET}}
+PAYPAL_ENV=live
+JWT_SECRET=${{JWT_SECRET}}
+ID_ENCRYPTION_KEY=${{ID_ENCRYPTION_KEY}}
+NODE_ENV=production
+CORS_ORIGINS=${{CORS_ORIGINS}}
+REDIS_URL=${{Redis.REDIS_URL}}
+
+Frontend (Vercel Environment Variables):
+NEXT_PUBLIC_API_URL=https://your-api.railway.app
+NEXT_PUBLIC_PAYPAL_CLIENT_ID=your_paypal_live_client_id
+NEXTAUTH_URL=https://your-app.vercel.app
+NEXTAUTH_SECRET=your_production_nextauth_secret
+NEXT_PUBLIC_APP_ENV=production
+
+CORE FEATURES TO IMPLEMENT:
+
+1. MARKETPLACE LISTINGS:
+   - Create, edit, delete listings for individual earbuds/cases
+   - Photo upload with multiple images (MinIO/S3)
+   - Price in multiple currencies
+   - Condition tracking (New, Like New, Good, Fair)
+   - City-level location with GeoDB integration
+   - Identifier capture with encryption and masking (****E5F6 format)
+   - Verification workflow with photo proof
+   - Search and filtering by brand, model, condition, price, location
+
+2. LOST/STOLEN REGISTRY:
+   - Report lost items with evidence upload
+   - City-level and optional precise geolocation (lat/lng with consent)
+   - Reward system
+   - Smart matching algorithm with confidence scoring
+   - Match notifications between lost reports and listings
+   - Privacy controls for location and identifier sharing
+
+3. FOUND ITEMS (LEGAL COMPLIANCE):
+   - Register found items with jurisdiction-specific workflow
+   - France: 3-year waiting period with commune/Paris reporting
+   - US: State-specific waiting periods with authority reporting
+   - Authority reporting attestation with evidence upload
+   - Conversion to for-sale after legal waiting period elapses
+   - Owner claim process with evidence verification
+   - Legal disclaimer and compliance warnings
+
+4. ADVANCED RATINGS SYSTEM:
+   - 12+ criteria: comfort, autonomy (hours), case/earbud reload times, 
+     music/video/game quality, A/V lag, call quality (overall, coworking, street, bike)
+   - Weighted overall score calculation with configurable weights
+   - Free-text comments with moderation and spam protection
+   - Guest and registered user ratings with different moderation flows
+   - Rate limiting and IP-based abuse prevention
+   - Aggregated statistics, histograms, and confidence intervals
+
+5. BLOG SYSTEM:
+   - Brand and model-focused content with SEO optimization
+   - MDX support for rich content and embedded components
+   - User and guest comments with moderation queue
+   - Content discovery by brand/model tags and categories
+   - Featured images and social media previews
+   - Related posts by brand/model relationships
+
+6. TRUST & SECURITY:
+   - Identifier masking by default (****E5F6 format)
+   - "Request Full Identifier" workflow with verification requirements
+   - Photo verification for identifiers with admin approval
+   - User verification badges and reputation system
+   - Suspicious listing reporting with admin review
+   - Automated fraud detection patterns
+   - Admin moderation queues and bulk actions
+
+7. GEOLOCATION & CITIES:
+   - GeoDB Cities API integration with autocomplete
+   - Global city picker with population and coordinates
+   - Canonical city storage with denormalized fields
+   - Privacy-aware location handling (city vs precise coordinates)
+   - Distance-based matching for lost items with Haversine calculations
+   - Reverse geocoding for mobile "use my location" features
+
+8. PAYMENTS & ESCROW:
+   - PayPal Orders v2 integration with proper error handling
+   - Escrow-style payment holding simulation with status tracking
+   - Order lifecycle management (created, approved, captured, cancelled)
+   - Buyer/seller protection messaging and dispute handling
+   - Multi-currency support and conversion rates
+   - Refund and chargeback handling
+
+9. SPONSORED CONTENT & REVENUE:
+   - AliExpress spare parts integration with affiliate tracking
+   - Full-set retailer partnerships (alazon.com placeholder)
+   - Context-aware sponsored placements (sidebar, in-content)
+   - Revenue tracking and analytics dashboard
+   - A/B testing for sponsored content effectiveness
+   - Compliance with advertising disclosure requirements
+
+DATABASE SCHEMA (Prisma):
+- User: authentication, verification status, admin roles, reputation
+- Brand: Apple, Samsung, Huawei, etc. with logos and metadata
+- Model: specific earbuds models with technical specs (ANC, battery, codecs)
+- City: GeoDB cities with coordinates, population, and country codes
+- Listing: marketplace items with encrypted identifiers and status
+- LostReport: lost/stolen items with optional precise location and rewards
+- FoundItem: found items with legal compliance workflow and jurisdiction rules
+- Rating: detailed ratings with weighted scoring and moderated comments
+- BlogPost: content with brand/model relationships and SEO metadata
+- Comment: moderated comments on blog posts with spam protection
+- SponsoredLink: sponsored content placements with tracking
+- Order: PayPal order management with status tracking
+- Identifier: encrypted storage with masked display and verification
+- Match: automated matching between lost reports and listings with confidence scores
+
+API PATTERNS (NestJS):
+- RESTful endpoints with comprehensive Swagger documentation
+- Global validation pipe with class-validator and custom decorators
+- Prisma service as global module with connection pooling
+- Rate limiting with @nestjs/throttler and Redis backing
+- File upload handling with multer and MinIO integration
+- CORS configuration for multiple origins (dev/prod)
+- Comprehensive error handling with proper HTTP status codes
+- Request logging and performance monitoring hooks
+- Health check endpoints for Railway deployment monitoring
+
+FRONTEND PATTERNS (Next.js 14):
+- App Router with TypeScript and proper SEO metadata
+- Server-side rendering for marketplace listings and blog posts
+- Client-side state management with React hooks and context
+- Responsive design with Tailwind CSS and mobile-first approach
+- Form handling with react-hook-form + zod validation
+- Toast notifications with react-hot-toast and error boundaries
+- Image optimization with Next.js Image and lazy loading
+- Progressive enhancement and comprehensive loading states
+- Accessibility compliance with semantic HTML and ARIA labels
+
+DEPLOYMENT CONFIGURATION:
+
+Railway (Backend):
+- Nixpacks or Docker-based builds
+- Automatic deployments from Git commits
+- Environment variables management through Railway dashboard
+- Health check monitoring and automatic restarts
+- Managed PostgreSQL and Redis addon integration
+- Logging and metrics collection
+
+Vercel (Frontend):
+- Automatic deployments from Git with preview environments
+- Edge functions support for API routes
+- Image optimization and CDN distribution
+- Environment variables per deployment environment
+- Analytics and performance monitoring
+- Custom domains and SSL certificates
+
+SECURITY CONSIDERATIONS:
+- Input sanitization and XSS protection
+- SQL injection prevention through Prisma ORM
+- Rate limiting on sensitive endpoints
+- CORS configuration for production origins
+- Helmet.js for security headers
+- Environment variable encryption for sensitive data
+- Regular security audits and dependency updates
+
+CODING PATTERNS TO FOLLOW:
+- Use TypeScript strictly with proper typing and interfaces
+- Follow NestJS decorators, guards, and dependency injection patterns
+- Use Prisma client with proper relations and transactions
+- Implement comprehensive error handling with custom exception filters
+- Use React hooks and functional components with proper memoization
+- Follow REST API conventions with consistent response formats
+- Implement proper loading states and error boundaries
+- Use consistent naming conventions (camelCase for variables, PascalCase for components)
+- Add comprehensive JSDoc comments for complex business logic
+- Implement proper security measures (input sanitization, rate limiting)
+- Follow responsive design principles with mobile-first CSS
+- Use semantic HTML and accessibility features (ARIA labels, keyboard navigation)
+
+SPECIFIC IMPLEMENTATIONS NEEDED:
+1. CitySelect component with GeoDB autocomplete and persistence to backend
+2. RatingForm with 12+ criteria sliders and weighted scoring calculation
+3. IdentifierMasking service with AES encryption/decryption
+4. PayPal Orders service with proper webhook handling and status updates
+5. Smart matching algorithm for lost items using identifier and location data
+6. Legal compliance workflow for found items with jurisdiction-specific rules
+7. Content moderation system for comments and ratings with admin dashboard
+8. Image upload and optimization with MinIO/S3 integration
+9. Advanced search and filtering system with faceted navigation
+10. Admin dashboard for moderation, analytics, and sponsored content management
+
+DEVELOPMENT COMMANDS:
+Local development:
+npm install
+docker-compose up -d
+npm run db:migrate
+npm run db:seed
+npm run dev
+
+Production deployment:
+# Backend to Railway
+railway up --service api
+
+# Frontend to Vercel  
+vercel --prod
+
+Health check endpoints:
+Backend: GET /health
+Frontend: GET /api/health
+
+TAM/SAM/SOM CONTEXT:
+- US TWS market: ~$18B (2024), replacement parts estimated 3-7% = $540M-$1.26B TAM
+- France TWS market: ~$1.0-1.6B (2024), replacement parts estimated 3-7% = $30-112M TAM
+- Target SAM: 50-65% of replacement market addressable by marketplace vs OEM channels
+- Target SOM: 2-4% market share capture through vertical focus and trust features
+
+When suggesting code:
+- Consider this is a production-ready marketplace with legal compliance requirements
+- Security, trust, and fraud prevention are paramount
+- Performance optimization and SEO are critical for marketplace success
+- Mobile-first responsive design with accessibility compliance
+- Legal compliance for found items varies by jurisdiction (France: 3 years, US: state-specific)
+- Rate limiting and abuse prevention on all user-generated content
+- Comprehensive error handling with user-friendly messages
+- Proper logging and monitoring for production debugging
+- Railway deployment constraints and Vercel edge function limitations
+*/
+```
+
+## Usage Instructions:
+
+1. **Add this prompt** as a comment block at the top of your main files:
+   - `apps/api/src/main.ts`
+   - `apps/web/app/layout.tsx`
+   - `packages/db/prisma/schema.prisma`
+
+2. **Update the prompt** as you implement features or change architecture
+
+3. **GitHub Copilot will now provide suggestions** that are:
+   - Aligned with your Railway + Vercel deployment architecture
+   - Following your environment configuration patterns
+   - Implementing the EarbudHub marketplace features correctly
+   - Using the proper technical stack and coding patterns
+   - Considering legal compliance requirements for found items
+   - Optimized for production deployment and security
+
+This comprehensive prompt gives Copilot complete context about your EarbudHub marketplace project, including the deployment architecture, environment configuration, and all technical requirements discussed.

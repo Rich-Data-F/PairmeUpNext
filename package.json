@@ -1,0 +1,59 @@
+{
+  "name": "earbudhub-marketplace",
+  "version": "1.0.0",
+  "description": "Professional earbud parts marketplace with lost/stolen registry",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "cd apps/api && npm run start:dev",
+    "dev:web": "cd apps/web && npm run dev",
+    "build": "npm run build:db && npm run build:api && npm run build:web",
+    "build:db": "cd packages/db && npm run build",
+    "build:api": "cd apps/api && npm run build",
+    "build:web": "cd apps/web && npm run build",
+    "db:migrate": "cd packages/db && npm run db:migrate",
+    "db:generate": "cd packages/db && npm run db:generate",
+    "db:seed": "cd packages/db && npm run db:seed",
+    "db:studio": "cd packages/db && npm run db:studio",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "clean": "npm run clean:node_modules && npm run clean:dist",
+    "clean:node_modules": "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
+    "clean:dist": "find . -name 'dist' -type d -prune -exec rm -rf '{}' +",
+    "lint": "npm run lint:api && npm run lint:web",
+    "lint:api": "cd apps/api && npm run lint",
+    "lint:web": "cd apps/web && npm run lint",
+    "test": "npm run test:api && npm run test:web",
+    "test:api": "cd apps/api && npm run test",
+    "test:web": "cd apps/web && npm run test"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "axios": "^1.12.2",
+    "concurrently": "^8.2.2",
+    "form-data": "^4.0.4",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "keywords": [
+    "marketplace",
+    "earbud",
+    "parts",
+    "lost",
+    "found",
+    "registry",
+    "nextjs",
+    "nestjs",
+    "postgresql",
+    "prisma"
+  ],
+  "author": "EarbudHub Team",
+  "license": "MIT"
+}

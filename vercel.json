@@ -1,0 +1,31 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "apps/web/package.json",
+      "use": "@vercel/next",
+      "config": {
+        "projectSettings": {
+          "framework": "nextjs"
+        }
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "apps/web/$1"
+    }
+  ],
+  "env": {
+    "NEXTAUTH_URL": "$NEXTAUTH_URL",
+    "NEXTAUTH_SECRET": "$NEXTAUTH_SECRET",
+    "API_BASE_URL": "$API_BASE_URL",
+    "DATABASE_URL": "$DATABASE_URL"
+  },
+  "functions": {
+    "apps/web/app/**": {
+      "maxDuration": 30
+    }
+  }
+}
