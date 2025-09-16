@@ -193,6 +193,15 @@ export class AuthService {
   }
 
   /**
+   * Register a new user
+   */
+  async register(registerDto: any) {
+    const user = await this.createUser(registerDto);
+    // Auto-login after registration
+    return this.login(registerDto.email, registerDto.password);
+  }
+
+  /**
    * Get user by ID (for NextAuth.js)
    */
   async findById(id: string) {

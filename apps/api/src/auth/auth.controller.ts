@@ -36,6 +36,28 @@ export class AuthController {
     return this.authService.login(body.email, body.password);
   }
 
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Register a new user' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', format: 'email' },
+        password: { type: 'string', minLength: 8 },
+        name: { type: 'string', minLength: 2 },
+        phoneNumber: { type: 'string' },
+        bio: { type: 'string' },
+        location: { type: 'string' },
+      },
+      required: ['email', 'password', 'name'],
+    },
+  })
+  @ApiResponse({ status: 201, description: 'User registered and logged in successfully' })
+  async register(@Body() registerDto: any) {
+    return this.authService.register(registerDto);
+  }
+
   @Post('request-password-reset')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ 
