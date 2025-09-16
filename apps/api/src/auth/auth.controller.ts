@@ -10,6 +10,7 @@ import {
   Patch,
 } from '@nestjs/common';
 import { AuthService, RequestPasswordResetDto, ResetPasswordDto } from './auth.service';
+import { RegisterDto } from './dto/auth.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
@@ -54,7 +55,7 @@ export class AuthController {
     },
   })
   @ApiResponse({ status: 201, description: 'User registered and logged in successfully' })
-  async register(@Body() registerDto: any) {
+  async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
 
