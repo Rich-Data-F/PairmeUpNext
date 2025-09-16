@@ -3,11 +3,6 @@
   "builds": [
     { "src": "apps/web/package.json", "use": "@vercel/next" }
   ],
-  "functions": {
-    "apps/web/app/api/**/*.ts": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "rewrites": [
     {
       "source": "/api/(.*)",
