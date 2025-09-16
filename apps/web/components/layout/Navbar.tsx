@@ -39,7 +39,7 @@ export function Navbar() {
               Brands
             </Link>
             {/* Create Listing CTA */}
-            <Link href="/sell" className="btn-primary btn-sm">
+            <Link href="/sell" className="btn-primary btn-sm" title="Create a new listing">
               Create Listing
             </Link>
             
