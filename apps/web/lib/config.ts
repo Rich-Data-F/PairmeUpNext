@@ -3,5 +3,6 @@ export function getApiBase() {
   if (explicit) return explicit;
   // Safe defaults
   if (process.env.NODE_ENV === 'development') return 'http://localhost:4000';
-  return 'https://pairmeup.onrender.com';
+  // Match Render service name in render.yaml (name: pairmeup-api)
+  return 'https://pairmeup-api.onrender.com';
 }
