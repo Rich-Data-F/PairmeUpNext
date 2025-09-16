@@ -60,34 +60,10 @@ export async function GET(request: NextRequest) {
 // POST /api/conversations - Start new conversation
 export async function POST(request: NextRequest) {
   try {
-    console.log('💬 Creating new conversation');
-    
-    const body = await request.json();
-    
-    console.log('📡 Calling backend:', `${API_BASE_URL}/conversations`);
-
-    const response = await fetch(`${API_BASE_URL}/conversations`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': request.headers.get('Authorization') || '',
-      },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(10000),
-    });
-
-    if (!response.ok) {
-      console.error('❌ Backend error:', response.status);
-      return NextResponse.json(
-        { error: 'Failed to create conversation' },
-        { status: response.status }
-      );
-    }
-
-    const data = await response.json();
-    console.log('✅ Conversation created successfully');
-    
-    return NextResponse.json(data);
+  console.log('💬 Creating new conversation (stub)');
+  const body = await request.json().catch(() => ({}));
+  // Return a stubbed conversation to avoid auth flow until implemented
+  return NextResponse.json({ id: 'conv-tmp', ...body });
   } catch (error) {
     console.error('❌ Error creating conversation:', error);
     
