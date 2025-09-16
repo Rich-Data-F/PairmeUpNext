@@ -4,6 +4,8 @@
   "compilerOptions": {
     "deleteOutDir": true,
     "watchAssets": true,
-    "assets": ["**/*.proto"]
-  }
+    "assets": ["**/*.proto"],
+    "tsConfigPath": "tsconfig.json"
+  },
+  "entryFile": "src/main"
 }

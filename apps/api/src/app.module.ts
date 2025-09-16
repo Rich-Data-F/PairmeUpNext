@@ -19,6 +19,7 @@ import { SponsoredModule } from './sponsored/sponsored.module';
 import { HealthModule } from './health/health.module';
 import { GeoModule } from './geo/geo.module';
 import { NegotiationModule } from './negotiation/negotiation.module';
+import { SupportModule } from './support/support.module';
 
 @Module({
   imports: [
@@ -58,7 +59,8 @@ import { NegotiationModule } from './negotiation/negotiation.module';
     SponsoredModule,
     HealthModule,
     GeoModule,
-  NegotiationModule,
+    NegotiationModule,
+    SupportModule,
   ],
 })
 export class AppModule {}

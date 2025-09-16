@@ -1,11 +1,31 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
+  const [user, setUser] = useState<any | null>(null)
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const res = await fetch('/api/proxy/auth/profile', { cache: 'no-store' })
+        if (!mounted) return
+        if (res.ok) {
+          const data = await res.json()
+          setUser(data)
+        }
+      } catch {
+        /* ignore */
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200">
@@ -53,15 +73,26 @@ export function Navbar() {
               />
             </div>
 
-            {/* Auth Buttons */}
-            <div className="flex items-center space-x-4">
-              <Link href="/auth/signin" className="btn-ghost btn-sm">
-                Sign In
-              </Link>
-              <Link href="/auth/signup" className="btn-primary btn-sm">
-                Sign Up
-              </Link>
-            </div>
+            {/* Auth */}
+            {user ? (
+              <div className="flex items-center space-x-3">
+                <Link href="/profile" className="text-gray-700 hover:text-blue-600 text-sm">
+                  {user?.name || user?.email}
+                </Link>
+                <form action="/api/proxy/auth/logout" method="post">
+                  <button className="btn-ghost btn-sm" type="submit">Logout</button>
+                </form>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-4">
+                <Link href="/auth/signin" className="btn-ghost btn-sm">
+                  Sign In
+                </Link>
+                <Link href="/auth/signup" className="btn-primary btn-sm">
+                  Sign Up
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -110,12 +141,16 @@ export function Navbar() {
               />
             </div>
             <div className="px-3 py-2 space-y-2">
-              <Link href="/auth/signin" className="block w-full text-center btn-ghost btn-sm">
-                Sign In
-              </Link>
-              <Link href="/auth/signup" className="block w-full text-center btn-primary btn-sm">
-                Sign Up
-              </Link>
+              {user ? (
+                <form action="/api/proxy/auth/logout" method="post">
+                  <button className="block w-full text-center btn-ghost btn-sm" type="submit">Logout</button>
+                </form>
+              ) : (
+                <>
+                  <Link href="/auth/signin" className="block w-full text-center btn-ghost btn-sm">Sign In</Link>
+                  <Link href="/auth/signup" className="block w-full text-center btn-primary btn-sm">Sign Up</Link>
+                </>
+              )}
             </div>
           </div>
         </div>

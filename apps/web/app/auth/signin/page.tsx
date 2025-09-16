@@ -8,6 +8,10 @@ export default function SignInPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSupport, setShowSupport] = useState(false);
+  const [supportMessage, setSupportMessage] = useState('');
+  const [supportLoading, setSupportLoading] = useState(false);
+  const [supportSuccess, setSupportSuccess] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +33,28 @@ export default function SignInPage() {
       setError('Unexpected error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const onSupportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSupportLoading(true);
+    try {
+      const res = await fetch('/api/proxy/support/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category: 'credentials_issue', message: supportMessage }),
+      });
+      if (res.ok) {
+        setSupportSuccess(true);
+        setSupportMessage('');
+      } else {
+        alert('Failed to send support request');
+      }
+    } catch {
+      alert('Unexpected error');
+    } finally {
+      setSupportLoading(false);
     }
   };
 
@@ -61,6 +87,42 @@ export default function SignInPage() {
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
+        <div className="text-center space-y-2">
+          <a href="/auth/reset" className="text-sm text-blue-600 hover:underline">
+            Forgot password?
+          </a>
+          <div>
+            <button onClick={() => setShowSupport(!showSupport)} className="text-sm text-blue-600 hover:underline">
+              Need help with sign in?
+            </button>
+          </div>
+          <div>
+            <a href="https://hubspot.com" className="text-sm text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
+              Contact Support via HubSpot
+            </a>
+          </div>
+        </div>
+        {showSupport && (
+          <div className="border-t pt-4">
+            <h3 className="text-lg font-medium mb-2">Request Support</h3>
+            {supportSuccess ? (
+              <p className="text-green-600">Support request sent successfully!</p>
+            ) : (
+              <form onSubmit={onSupportSubmit} className="space-y-2">
+                <textarea
+                  className="textarea textarea-bordered w-full"
+                  placeholder="Describe your issue..."
+                  value={supportMessage}
+                  onChange={(e) => setSupportMessage(e.target.value)}
+                  required
+                />
+                <button className="btn btn-secondary" disabled={supportLoading}>
+                  {supportLoading ? 'Sending...' : 'Send Request'}
+                </button>
+              </form>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

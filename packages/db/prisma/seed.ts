@@ -1,16 +1,32 @@
 import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('🌱 Starting database seed...');
 
+  // Hash admin password
+  const adminPassword = 'AdminPass123!';
+  const saltRounds = 12;
+  const hashedPassword = await bcrypt.hash(adminPassword, saltRounds);
+
   // Create admin user
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@earbudhub.com' },
-    update: {},
+    update: {
+      password: hashedPassword,
+      name: 'EarbudHub Admin',
+      isAdmin: true,
+      isVerified: true,
+      verificationBadge: 'premium',
+      reputation: 1000,
+      trustLevel: 'platinum',
+      bio: 'EarbudHub platform administrator',
+    },
     create: {
       email: 'admin@earbudhub.com',
+      password: hashedPassword,
       name: 'EarbudHub Admin',
       isAdmin: true,
       isVerified: true,
@@ -22,6 +38,7 @@ async function main() {
   });
 
   console.log('✅ Admin user created:', adminUser.email);
+  console.log('🔐 Admin password: AdminPass123!');
 
   // Create brands
   const brands = [
