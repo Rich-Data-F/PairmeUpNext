@@ -1,12 +1,12 @@
 {
   "version": 2,
   "builds": [
-    { "src": "apps/web/package.json", "use": "@vercel/next" }
-  ],
-  "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "src": "apps/web/package.json",
+      "use": "@vercel/next",
+      "config": {
+        "rootDirectory": "apps/web"
+      }
     }
   ]
 }
