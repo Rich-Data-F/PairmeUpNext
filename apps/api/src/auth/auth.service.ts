@@ -5,6 +5,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 
@@ -28,7 +29,10 @@ export interface ResetPasswordDto {
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   /**
    * Create user with password (for NextAuth.js credentials provider)
@@ -171,6 +175,21 @@ export class AuthService {
     return {
       message: 'Password reset successful. You can now login with your new password.',
     };
+  }
+
+  /**
+   * Login with email and password and return JWT access token
+   */
+  async login(email: string, password: string) {
+    const user = await this.verifyCredentials(email, password);
+    if (!user) {
+      throw new BadRequestException('Invalid email or password');
+    }
+
+    const payload = { sub: user.id, email: user.email };
+    const access_token = await this.jwtService.signAsync(payload);
+
+    return { access_token, user };
   }
 
   /**

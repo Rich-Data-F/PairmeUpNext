@@ -18,6 +18,24 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Login with email and password' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', format: 'email' },
+        password: { type: 'string', minLength: 1 },
+      },
+      required: ['email', 'password'],
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Login successful' })
+  async login(@Body() body: { email: string; password: string }) {
+    return this.authService.login(body.email, body.password);
+  }
+
   @Post('request-password-reset')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ 

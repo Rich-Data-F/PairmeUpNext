@@ -54,7 +54,9 @@ async function bootstrap() {
   }));
 
   // CORS configuration
-  const corsOrigins = configService.get<string>('CORS_ORIGINS')?.split(',') || ['http://localhost:3000'];
+  const corsEnv = configService.get<string>('CORS_ORIGINS');
+  const corsOrigins = (corsEnv ? corsEnv.split(',').map(o => o.trim()).filter(Boolean) : ['http://localhost:3000']);
+  console.log('CORS origins:', corsOrigins);
   app.enableCors({
     origin: corsOrigins,
     credentials: true,
