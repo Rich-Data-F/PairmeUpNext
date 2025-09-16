@@ -28,57 +28,16 @@ export async function GET(request: NextRequest) {
         console.log('✅ Successfully fetched facets from backend');
         return NextResponse.json(data);
       } else {
-        console.warn('⚠️ Backend facets failed, falling back to mock data');
+        console.warn('⚠️ Backend facets failed, returning empty facets');
+        return NextResponse.json({ brands: [], models: [], conditions: [], cities: [], priceRanges: [] });
       }
     } catch (backendError) {
-      console.warn('⚠️ Backend facets error, falling back to mock data:', backendError);
+      console.warn('⚠️ Backend facets error, returning empty facets:', backendError);
+      return NextResponse.json({ brands: [], models: [], conditions: [], cities: [], priceRanges: [] });
     }
-
-    // Fallback to getting brands from brands API and other mock data
-    const brandsResponse = await fetch(`${API_BASE_URL}/brands?include=_count`, {
-      signal: AbortSignal.timeout(5000),
-    });
-    
-    let brands = [];
-    if (brandsResponse.ok) {
-      const brandsData = await brandsResponse.json();
-      brands = (brandsData.items || []).map((brand: any) => ({
-        id: brand.id,
-        name: brand.name,
-        count: brand._count?.models || 0
-      }));
-    }
-
-    // Mock data with real brands
-    const mockFacetsResponse = {
-      brands,
-      models: [
-        { id: '1', name: 'AirPods Pro (2nd generation)', count: 1 },
-        { id: '2', name: 'Galaxy Buds2 Pro', count: 1 },
-        { id: '3', name: 'WF-1000XM4', count: 1 },
-      ],
-      conditions: [
-        { value: 'NEW', label: 'New', count: 2 },
-        { value: 'LIKE_NEW', label: 'Like New', count: 1 },
-        { value: 'GOOD', label: 'Good', count: 1 },
-        { value: 'FAIR', label: 'Fair', count: 0 },
-        { value: 'PARTS_ONLY', label: 'Parts Only', count: 0 },
-      ],
-      cities: [
-        { id: '1', name: 'New York', count: 1 },
-        { id: '2', name: 'Los Angeles', count: 1 },
-        { id: '3', name: 'Chicago', count: 2 },
-      ],
-      priceRanges: [
-        { min: 0, max: 100, count: 0 },
-        { min: 100, max: 150, count: 1 },
-        { min: 150, max: 200, count: 2 },
-        { min: 200, max: 300, count: 1 },
-      ],
-    };
-    
-    console.log('📊 Returning facets with real brands data');
-    return NextResponse.json(mockFacetsResponse);
+    // If we got here without returning, return empty facets
+    console.log('📊 Returning empty facets');
+    return NextResponse.json({ brands: [], models: [], conditions: [], cities: [], priceRanges: [] });
     
   } catch (error) {
     console.error('Facets API error:', error);

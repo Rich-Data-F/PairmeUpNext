@@ -52,19 +52,10 @@ const nextConfig = {
       },
     ]
   },
+  // Important: Do not rewrite /api/proxy in Next.js; we have route handlers under app/api/proxy/*
+  // Rewriting here would bypass our handlers in production and cause different behavior than local.
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL;
-  // Tip: In development, set NEXT_PUBLIC_API_URL=http://localhost:4000
-  // In production (Vercel), set NEXT_PUBLIC_API_URL=https://pairmeup.onrender.com
-    if (!apiUrl) {
-      return [];
-    }
-    return [
-      {
-        source: '/api/proxy/:path*',
-        destination: `${apiUrl}/:path*`,
-      },
-    ]
+    return [];
   },
 }
 

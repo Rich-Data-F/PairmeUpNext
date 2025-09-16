@@ -49,26 +49,38 @@ export async function GET(request: NextRequest) {
     });
 
     if (!response.ok) {
-      throw new Error(`Backend API error: ${response.status} ${response.statusText}`);
+      console.warn(`⚠️ Backend search failed (${response.status}). Returning empty results.`);
+      return NextResponse.json({
+        listings: [],
+        total: 0,
+        page: page || 1,
+        totalPages: 1,
+        hasMore: false,
+      });
     }
 
-    const data = await response.json();
-    console.log(`✅ Backend returned ${data.listings?.length || 0} listings, applied ${data.appliedFilters || 0} filters`);
+    const raw = await response.json();
+    const listings = raw?.listings || raw?.items || [];
+    const total = raw?.pagination?.total ?? raw?.total ?? listings.length ?? 0;
+    const currentPage = raw?.pagination?.page ?? page ?? 1;
+    const limitUsed = raw?.pagination?.limit ?? limit ?? 20;
+    const totalPages = raw?.pagination?.pages ?? (limitUsed ? Math.max(1, Math.ceil(total / limitUsed)) : 1);
+    const hasMore = currentPage < totalPages;
 
-    return NextResponse.json(data);
+    const shaped = { listings, total, page: currentPage, totalPages, hasMore };
+    console.log(`✅ Search shaped: total=${total}, page=${currentPage}, pages=${totalPages}, listings=${listings.length}`);
+
+    return NextResponse.json(shaped);
     
   } catch (error) {
     console.error('❌ Search API error:', error);
-    
-    // Return a fallback response in case of errors
-    return NextResponse.json(
-      { 
-        error: 'Search service temporarily unavailable',
-        listings: [],
-        pagination: { page: 1, limit: 20, total: 0, pages: 0 },
-        aggregations: { brands: [], models: [], conditions: [], priceRange: { min: 0, max: 1000 }, locations: [], totalListings: 0 }
-      },
-      { status: 500 }
-    );
+    // Return graceful empty results so UI does not error
+    return NextResponse.json({
+      listings: [],
+      total: 0,
+      page: 1,
+      totalPages: 1,
+      hasMore: false,
+    });
   }
 }
