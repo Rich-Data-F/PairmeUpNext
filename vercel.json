@@ -1,6 +1,17 @@
 {
   "version": 2,
   "builds": [
-    { "src": "apps/web/next.config.js", "use": "@vercel/next" }
+    { "src": "apps/web/package.json", "use": "@vercel/next" }
+  ],
+  "functions": {
+    "apps/web/app/api/**/*.ts": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    }
   ]
 }
