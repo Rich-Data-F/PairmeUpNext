@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-
 import { getApiBase } from '@/lib/config';
+import { withAuthHeader } from '@/lib/auth-headers';
+export const runtime = 'nodejs';
 const API_BASE_URL = getApiBase();
 
 // GET /api/conversations - Get user's conversations
@@ -18,15 +19,8 @@ export async function GET(request: NextRequest) {
     
     console.log('📡 Calling backend:', backendUrl);
 
-    const response = await fetch(backendUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        // Forward auth headers
-        'Authorization': request.headers.get('Authorization') || '',
-      },
-      signal: AbortSignal.timeout(10000),
-    });
+  const init = await withAuthHeader({ method: 'GET', headers: { 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(10000) });
+  const response = await fetch(backendUrl, init);
 
     if (!response.ok) {
       console.error('❌ Backend error:', response.status);
@@ -60,10 +54,17 @@ export async function GET(request: NextRequest) {
 // POST /api/conversations - Start new conversation
 export async function POST(request: NextRequest) {
   try {
-  console.log('💬 Creating new conversation (stub)');
-  const body = await request.json().catch(() => ({}));
-  // Return a stubbed conversation to avoid auth flow until implemented
-  return NextResponse.json({ id: 'conv-tmp', ...body });
+    const body = await request.json().catch(() => ({}));
+    const backendUrl = `${API_BASE_URL}/conversations`;
+    const init = await withAuthHeader({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(10000) });
+    const resp = await fetch(backendUrl, init);
+    if (!resp.ok) {
+      const text = await resp.text();
+      console.error('❌ Backend error creating conversation:', resp.status, text);
+      return NextResponse.json({ error: 'Failed to create conversation' }, { status: resp.status });
+    }
+    const data = await resp.json();
+    return NextResponse.json(data);
   } catch (error) {
     console.error('❌ Error creating conversation:', error);
     

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   MapPinIcon,
@@ -74,6 +74,8 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isLiked, setIsLiked] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
+  const negotiationRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     fetchListing();
@@ -100,6 +102,25 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
     }
   };
 
+  // Try to get the current user id (if authenticated). No error if not.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const resp = await fetch('/api/proxy/auth/profile', { cache: 'no-store' });
+        if (resp.ok) {
+          const profile = await resp.json();
+          if (!cancelled) setCurrentUserId(profile?.id);
+        } else {
+          if (!cancelled) setCurrentUserId(undefined);
+        }
+      } catch {
+        if (!cancelled) setCurrentUserId(undefined);
+      }
+    })();
+    return () => { cancelled = true };
+  }, []);
+
   const handleLike = () => {
     setIsLiked(!isLiked);
     // TODO: Implement like functionality with API
@@ -118,9 +139,33 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
     }
   };
 
-  const handleContactSeller = () => {
-    // TODO: Implement contact seller functionality
-    alert('Contact seller functionality coming soon!');
+  const handleContactSeller = async () => {
+    if (!listing) return;
+    // If not authenticated, send to sign in and return to this listing
+    if (!currentUserId) {
+      router.push(`/auth/signin?next=/listings/${listing.id}`);
+      return;
+    }
+    // If the viewer is the seller, no-op
+    if (currentUserId === listing.seller.id) return;
+
+    try {
+      // Create or get conversation, then scroll to panel
+      const resp = await fetch('/api/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listingId: listing.id, sellerId: listing.seller.id })
+      });
+      // Ignore response content; NegotiationPanel will (re)initialize
+      if (negotiationRef.current) {
+        negotiationRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } catch (e) {
+      // soft-fail silently on click
+      if (negotiationRef.current) {
+        negotiationRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
   };
 
   const formatPrice = (price: string, currency: string) => {
@@ -421,13 +466,15 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
         </div>
 
         {/* Negotiation Panel */}
-        <NegotiationPanel
-          listingId={listing.id}
-          sellerId={listing.seller.id}
-          currentUserId={undefined} // TODO: Get from auth context
-          listingPrice={parseFloat(listing.price)}
-          listingCurrency={listing.currency}
-        />
+        <div ref={negotiationRef}>
+          <NegotiationPanel
+            listingId={listing.id}
+            sellerId={listing.seller.id}
+            currentUserId={currentUserId}
+            listingPrice={parseFloat(listing.price)}
+            listingCurrency={listing.currency}
+          />
+        </div>
       </div>
     </div>
   );

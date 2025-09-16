@@ -27,6 +27,7 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { ListingsService } from './listings.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UploadService } from '../common/services/upload.service';
 import {
   CreateListingDto,
@@ -46,6 +47,7 @@ export class ListingsController {
   ) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Create a new listing' })
   @ApiResponse({ status: 201, description: 'Listing created successfully', type: ListingResponseDto })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
@@ -80,6 +82,7 @@ export class ListingsController {
   @Get('my-listings')
   @ApiOperation({ summary: 'Get current user listings' })
   @ApiResponse({ status: 200, description: 'User listings retrieved successfully' })
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async getUserListings(@Query() query: ListingQueryDto, @Request() req: any) {
     return this.listingsService.getUserListings(req.user.sub, query);
@@ -100,6 +103,7 @@ export class ListingsController {
   @ApiParam({ name: 'id', description: 'Listing ID' })
   @ApiResponse({ status: 200, description: 'Listing updated successfully', type: ListingResponseDto })
   @ApiResponse({ status: 404, description: 'Listing not found' })
+  @UseGuards(JwtAuthGuard)
   async update(
     @Param('id') id: string,
     @Body() updateListingDto: UpdateListingDto,
@@ -115,6 +119,7 @@ export class ListingsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - not listing owner' })
   @ApiResponse({ status: 404, description: 'Listing not found' })
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   async remove(@Param('id') id: string, @Request() req: any) {
@@ -126,6 +131,7 @@ export class ListingsController {
   @ApiResponse({ status: 200, description: 'Listings updated successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - not listing owner' })
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async bulkUpdate(@Body() bulkUpdateDto: BulkUpdateListingDto, @Request() req: any) {
     return this.listingsService.bulkUpdate(req.user.sub, bulkUpdateDto);
@@ -153,6 +159,7 @@ export class ListingsController {
   @ApiResponse({ status: 201, description: 'Images uploaded successfully' })
   @ApiResponse({ status: 400, description: 'Invalid file format or size' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @UseInterceptors(FilesInterceptor('images', 10))
   async uploadImages(@UploadedFiles() files: Express.Multer.File[], @Request() req: any) {
@@ -206,6 +213,7 @@ export class ListingsController {
   @ApiResponse({ status: 201, description: 'Verification photo uploaded successfully' })
   @ApiResponse({ status: 400, description: 'Invalid file format or size' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @UseInterceptors(FilesInterceptor('verification', 1))
   async uploadVerification(@UploadedFiles() files: Express.Multer.File[], @Request() req: any) {

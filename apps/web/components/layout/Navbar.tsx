@@ -38,6 +38,10 @@ export function Navbar() {
             <Link href="/brands" className="text-gray-700 hover:text-blue-600 font-medium">
               Brands
             </Link>
+            {/* Create Listing CTA */}
+            <Link href="/sell" className="btn-primary btn-sm">
+              Create Listing
+            </Link>
             
             {/* Search */}
             <div className="relative">
@@ -94,6 +98,9 @@ export function Navbar() {
             </Link>
             <Link href="/brands" className="block px-3 py-2 text-gray-700 hover:text-blue-600">
               Brands
+            </Link>
+            <Link href="/sell" className="block px-3 py-2 text-gray-700 hover:text-blue-600">
+              Create Listing
             </Link>
             <div className="px-3 py-2">
               <input
