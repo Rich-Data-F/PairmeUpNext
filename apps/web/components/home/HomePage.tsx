@@ -59,8 +59,15 @@ export function HomePage() {
       const featured = await featuredResponse.json();
       const suggestionsData = await suggestionsResponse.json();
 
-      setFeaturedListings(featured);
-      setSuggestions(suggestionsData);
+      const featuredArray = Array.isArray(featured)
+        ? featured
+        : (featured?.listings ?? []);
+
+      setFeaturedListings(featuredArray);
+      setSuggestions({
+        popular: suggestionsData?.popular ?? [],
+        trending: suggestionsData?.trending ?? [],
+      });
     } catch (error) {
       console.error('Error fetching homepage data:', error);
     } finally {
