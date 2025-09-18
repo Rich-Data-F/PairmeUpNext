@@ -29,16 +29,36 @@ export class UploadController {
   async uploadImage(
     @UploadedFile() file: Express.Multer.File,
     @GetUser() user: any,
-    @Body() body: { category?: 'listing' | 'verification' | 'profile'; description?: string },
+    @Body() body: any, // Allow any body for multipart form data
   ): Promise<UploadedFileDto> {
     if (!file) {
       throw new BadRequestException('No image file provided');
+    }
+
+    // Get source from body - handle both string and object cases
+    let source: 'camera' | 'upload' = 'upload';
+    if (body) {
+      if (typeof body === 'object' && body.source) {
+        source = body.source;
+      } else if (typeof body === 'string') {
+        // Try to parse as JSON or get source from string
+        try {
+          const parsed = JSON.parse(body);
+          if (parsed.source) source = parsed.source;
+        } catch {
+          // If it's not JSON, it might be the source value directly
+          if (body === 'camera' || body === 'upload') {
+            source = body;
+          }
+        }
+      }
     }
 
     return this.uploadService.uploadImage(
       file,
       user.id,
       body.category || 'listing',
+      source
     );
   }
 
@@ -66,21 +86,53 @@ export class UploadController {
   async uploadMultipleImages(
     @UploadedFiles() files: Express.Multer.File[],
     @GetUser() user: any,
-    @Body() body: { category?: string; description?: string },
+    @Body() body: any, // Allow any body for multipart form data
   ): Promise<UploadedFileDto[]> {
     if (!files || files.length === 0) {
       throw new BadRequestException('No image files provided');
     }
 
-    const uploadPromises = files.map(file =>
-      this.uploadService.uploadImage(
-        file,
-        user.id,
-        'listing',
-      ),
-    );
+    // Get sources from body - can be array or single value
+    let sources: ('camera' | 'upload')[] = [];
+    if (body) {
+      if (typeof body === 'object' && body.sources) {
+        // Handle array of sources
+        if (Array.isArray(body.sources)) {
+          sources = body.sources.map(s => s === 'camera' ? 'camera' : 'upload');
+        } else {
+          sources = [body.sources === 'camera' ? 'camera' : 'upload'];
+        }
+      } else if (typeof body === 'string') {
+        // Try to parse as JSON or get source from string
+        try {
+          const parsed = JSON.parse(body);
+          if (parsed.sources && Array.isArray(parsed.sources)) {
+            sources = parsed.sources.map(s => s === 'camera' ? 'camera' : 'upload');
+          } else if (parsed.source) {
+            sources = [parsed.source === 'camera' ? 'camera' : 'upload'];
+          }
+        } catch {
+          // If it's not JSON, it might be the source value directly
+          const source = body === 'camera' ? 'camera' : 'upload';
+          sources = [source];
+        }
+      }
+    }
 
-    return Promise.all(uploadPromises);
+    // If we don't have enough sources, fill with 'upload' default
+    while (sources.length < files.length) {
+      sources.push('upload');
+    }
+
+    // Trim to match file count
+    sources = sources.slice(0, files.length);
+
+    return this.uploadService.uploadMultipleImages(
+      files,
+      user.id,
+      'listing',
+      sources
+    );
   }
 
   @Get('serve/:fileId')

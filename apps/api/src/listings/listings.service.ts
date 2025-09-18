@@ -16,9 +16,16 @@ export class ListingsService {
   ) {}
 
   async create(sellerId: string, createListingDto: CreateListingDto) {
+    // Validate that sellerId is provided
+    if (!sellerId) {
+      throw new BadRequestException('User authentication required to create a listing');
+    }
+
     const {
       brandId,
       modelId,
+      customBrand,
+      customModel,
       cityId,
       serialNumber,
       images = [],
@@ -26,18 +33,118 @@ export class ListingsService {
       ...listingData
     } = createListingDto;
 
-    // Verify brand and model exist
-    const [brand, model] = await Promise.all([
-      this.prisma.brand.findUnique({ where: { id: brandId } }),
-      this.prisma.model.findUnique({ where: { id: modelId, brandId } }),
-    ]);
+    let finalBrandId = brandId;
+    let finalModelId = modelId;
 
-    if (!brand) {
-      throw new BadRequestException('Brand not found');
+    // Handle custom brand
+    if (customBrand && !brandId) {
+      // Check if a proposed brand with this name already exists
+      const existingProposedBrand = await this.prisma.proposedBrand.findUnique({
+        where: { name: customBrand },
+      });
+
+      let proposedBrand;
+      if (existingProposedBrand) {
+        proposedBrand = existingProposedBrand;
+      } else {
+        // Create a proposed brand
+        proposedBrand = await this.prisma.proposedBrand.create({
+          data: {
+            name: customBrand,
+            submittedBy: sellerId,
+            submissionNote: `Proposed brand from listing creation`,
+          },
+        });
+      }
+      
+      // Check if a temporary brand with this name already exists
+      const existingTempBrand = await this.prisma.brand.findFirst({
+        where: { 
+          name: customBrand,
+          slug: { startsWith: 'temp-' }
+        },
+      });
+
+      if (existingTempBrand) {
+        finalBrandId = existingTempBrand.id;
+      } else {
+        // Create a temporary brand entry for the listing
+        const tempBrand = await this.prisma.brand.create({
+          data: {
+            name: customBrand,
+            slug: `temp-${proposedBrand.id}`,
+            status: 'PENDING',
+            submittedBy: sellerId,
+          },
+        });
+        finalBrandId = tempBrand.id;
+      }
     }
 
-    if (!model) {
-      throw new BadRequestException('Model not found or does not belong to the specified brand');
+    // Handle custom model
+    if (customModel && !modelId) {
+      // Check if a proposed model with this name and brand already exists
+      const existingProposedModel = await this.prisma.proposedModel.findFirst({
+        where: { 
+          name: customModel,
+          brandId: finalBrandId 
+        },
+      });
+
+      let proposedModel;
+      if (existingProposedModel) {
+        proposedModel = existingProposedModel;
+      } else {
+        // Create a proposed model
+        proposedModel = await this.prisma.proposedModel.create({
+          data: {
+            name: customModel,
+            brandId: finalBrandId,
+            submittedBy: sellerId,
+            submissionNote: `Proposed model from listing creation`,
+          },
+        });
+      }
+      
+      // Check if a temporary model with this name and brand already exists
+      const existingTempModel = await this.prisma.model.findFirst({
+        where: { 
+          name: customModel,
+          brandId: finalBrandId,
+          slug: { startsWith: 'temp-' }
+        },
+      });
+
+      if (existingTempModel) {
+        finalModelId = existingTempModel.id;
+      } else {
+        // Create a temporary model entry for the listing
+        const tempModel = await this.prisma.model.create({
+          data: {
+            name: customModel,
+            slug: `temp-${proposedModel.id}`,
+            brandId: finalBrandId,
+            status: 'PENDING',
+            submittedBy: sellerId,
+          },
+        });
+        finalModelId = tempModel.id;
+      }
+    }
+
+    // Verify brand and model exist (for canonical entries)
+    if (!customBrand) {
+      const brand = await this.prisma.brand.findUnique({ where: { id: finalBrandId } });
+      if (!brand) {
+        throw new BadRequestException('Brand not found');
+      }
+    }
+
+    if (!customModel) {
+      const model = await this.prisma.model.findUnique({ where: { id: finalModelId, brandId: finalBrandId } });
+      if (!model) {
+        throw new BadRequestException('Model not found or does not belong to the specified brand');
+      }
     }
 
     // Verify city exists
@@ -55,27 +162,21 @@ export class ListingsService {
       maskedIdentifier = this.identifierService.mask(serialNumber);
     }
 
-    // Process images
-    const processedImages = await Promise.all(
-      images.map(async (imageKey) => {
-        const { thumbnailUrl, fullUrl } = await this.uploadService.getImageUrls(imageKey);
-        return {
-          originalKey: imageKey,
-          thumbnailUrl,
-          fullUrl,
-        };
-      })
-    );
+    // Process images - now we receive image URLs directly from the upload
+    let processedImages: string[] = [];
+    let associatedFiles: any[] = [];
+
+    if (images && images.length > 0) {
+      processedImages = images; // Images are now URLs from the upload service
+
+      // Associate uploaded files with the listing (we'll do this after listing creation)
+      // For now, store the URLs as before
+    }
 
     // Process verification photo
-    let processedVerificationPhoto;
+    let processedVerificationPhoto: string | undefined;
     if (verificationPhoto) {
-      const { thumbnailUrl, fullUrl } = await this.uploadService.getImageUrls(verificationPhoto);
-      processedVerificationPhoto = {
-        originalKey: verificationPhoto,
-        thumbnailUrl,
-        fullUrl,
-      };
+      processedVerificationPhoto = verificationPhoto; // Now it's already a URL
     }
 
     // Create listing
@@ -83,12 +184,12 @@ export class ListingsService {
       data: {
         ...listingData,
         sellerId: sellerId,
-        brandId,
-        modelId,
+        brandId: finalBrandId,
+        modelId: finalModelId,
         cityId,
         identifierFull: encryptedIdentifier,
         identifierMasked: maskedIdentifier,
-        images: processedImages.map(img => img.fullUrl), // Just store URLs as strings
+        images: processedImages, // Store URLs as strings
         verificationPhoto: processedVerificationPhoto,
         status: ListingStatus.ACTIVE,
         publishedAt: new Date(),

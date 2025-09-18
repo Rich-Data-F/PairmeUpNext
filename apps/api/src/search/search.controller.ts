@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { SearchService, SearchFilters } from './search.service';
 import { AdvancedSearchService } from './advanced-search.service';
 import { FacetedSearchService } from './faceted-search.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 @ApiTags('search')
 @Controller('search')
@@ -11,6 +12,7 @@ export class SearchController {
     private readonly searchService: SearchService,
     private readonly advancedSearchService: AdvancedSearchService,
     private readonly facetedSearchService: FacetedSearchService,
+    private readonly prisma: PrismaService,
   ) {}
 
   @Get('listings')
@@ -111,14 +113,40 @@ export class SearchController {
     }
 
     const cityLimit = limit ? parseInt(limit) : 10;
-    
-    // Use the geo service for city autocomplete
+
+    // First try to find cities in local database
+    const localCities = await this.prisma.city.findMany({
+      where: {
+        searchText: {
+          contains: query.toLowerCase(),
+        },
+      },
+      orderBy: [
+        { population: 'desc' },
+        { name: 'asc' },
+      ],
+      take: cityLimit,
+    });
+
+    if (localCities.length > 0) {
+      return {
+        cities: localCities.map(city => ({
+          id: city.id, // Use Prisma CUID, not GeoDB ID
+          name: city.name,
+          displayName: city.displayName,
+          country: city.country,
+          countryCode: city.countryCode,
+        })),
+      };
+    }
+
+    // If no local results, use geo service for GeoDB API
     const geoService = this.searchService['geoService'];
     const cities = await geoService.autocomplete(query, cityLimit);
 
     return {
       cities: cities.map(city => ({
-        id: city.id,
+        id: city.id.toString(), // Convert GeoDB numeric ID to string
         name: city.name,
         displayName: `${city.name}, ${city.country}`,
         country: city.country,

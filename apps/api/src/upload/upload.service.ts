@@ -49,7 +49,8 @@ export class UploadService {
   async uploadImage(
     file: Express.Multer.File,
     userId: string,
-    type: 'listing' | 'verification' | 'profile' = 'listing'
+    type: 'listing' | 'verification' | 'profile' = 'listing',
+    source: 'camera' | 'upload' = 'upload'
   ): Promise<UploadedFile> {
     // Validate file type
     if (!file.mimetype.startsWith('image/')) {
@@ -74,7 +75,7 @@ export class UploadService {
 
     try {
       // Process and save the main image
-      const imageBuffer = await sharp(file.buffer)
+      const imageBuffer = await sharp(file.path)
         .jpeg({ quality: 90 }) // Convert to JPEG and compress
         .resize(1920, 1920, { 
           fit: 'inside', 
@@ -85,7 +86,7 @@ export class UploadService {
       await fs.writeFile(filePath, imageBuffer);
 
       // Generate thumbnail
-      const thumbnailBuffer = await sharp(file.buffer)
+      const thumbnailBuffer = await sharp(file.path)
         .jpeg({ quality: 80 })
         .resize(300, 300, { 
           fit: 'cover',
@@ -96,7 +97,7 @@ export class UploadService {
       await fs.writeFile(thumbnailPath, thumbnailBuffer);
 
       // Get image metadata
-      const metadata = await sharp(file.buffer).metadata();
+      const metadata = await sharp(file.path).metadata();
 
       // Save file metadata to database
       const fileRecord = await this.prisma.file.create({
@@ -112,7 +113,8 @@ export class UploadService {
           height: metadata.height,
           uploadedById: userId,
           type,
-        },
+          source,
+        } as any, // Temporary type assertion to bypass TypeScript error
       });
 
       return {
@@ -143,9 +145,17 @@ export class UploadService {
   async uploadMultipleImages(
     files: Express.Multer.File[],
     userId: string,
-    type: 'listing' | 'verification' | 'profile' = 'listing'
+    type: 'listing' | 'verification' | 'profile' = 'listing',
+    sources: ('camera' | 'upload')[] = []
   ): Promise<UploadedFile[]> {
-    const uploadPromises = files.map(file => this.uploadImage(file, userId, type));
+    // Ensure we have a source for each file, defaulting to 'upload'
+    const fileSources = sources.length >= files.length 
+      ? sources.slice(0, files.length)
+      : [...sources, ...Array(files.length - sources.length).fill('upload')];
+
+    const uploadPromises = files.map((file, index) => 
+      this.uploadImage(file, userId, type, fileSources[index])
+    );
     return Promise.all(uploadPromises);
   }
 

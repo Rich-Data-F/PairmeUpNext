@@ -20,6 +20,7 @@ import { HealthModule } from './health/health.module';
 import { GeoModule } from './geo/geo.module';
 import { NegotiationModule } from './negotiation/negotiation.module';
 import { SupportModule } from './support/support.module';
+// import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { SupportModule } from './support/support.module';
     GeoModule,
     NegotiationModule,
     SupportModule,
+    // AdminModule,
   ],
 })
 export class AppModule {}

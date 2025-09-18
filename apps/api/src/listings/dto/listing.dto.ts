@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsEnum, IsNumber, IsBoolean, IsOptional, IsArray, Min, Max, Length, IsUUID, IsDecimal } from 'class-validator';
+import { IsString, IsEnum, IsNumber, IsBoolean, IsOptional, IsArray, Min, Max, Length, IsUUID, IsDecimal, ValidateIf, ValidationArguments } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { ListingType, Condition } from '@prisma/client';
 
@@ -34,13 +34,31 @@ export class CreateListingDto {
   @Length(3, 3)
   currency?: string = 'USD';
 
-  @ApiProperty({ description: 'Brand ID' })
-  @IsUUID()
-  brandId: string;
+  @ApiPropertyOptional({ description: 'Brand ID (required if not using customBrand)' })
+  @IsOptional()
+  @IsString()
+  @ValidateIf((o) => !o.customBrand)
+  brandId?: string;
 
-  @ApiProperty({ description: 'Model ID' })
-  @IsUUID()
-  modelId: string;
+  @ApiPropertyOptional({ description: 'Model ID (required if not using customModel)' })
+  @IsOptional()
+  @IsString()
+  @ValidateIf((o) => !o.customModel)
+  modelId?: string;
+
+  @ApiPropertyOptional({ description: 'Custom brand name (required if not using brandId)' })
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  @ValidateIf((o) => !o.brandId)
+  customBrand?: string;
+
+  @ApiPropertyOptional({ description: 'Custom model name (required if not using modelId)' })
+  @IsOptional()
+  @IsString()
+  @Length(1, 100)
+  @ValidateIf((o) => !o.modelId)
+  customModel?: string;
 
   @ApiPropertyOptional({ description: 'Serial number or device identifier' })
   @IsOptional()
@@ -49,7 +67,7 @@ export class CreateListingDto {
   serialNumber?: string;
 
   @ApiProperty({ description: 'City ID for location' })
-  @IsUUID()
+  @IsString()
   cityId: string;
 
   @ApiPropertyOptional({ description: 'Hide exact location coordinates', default: true })

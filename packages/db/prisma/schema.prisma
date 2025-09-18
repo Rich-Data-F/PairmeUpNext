@@ -96,10 +96,20 @@ model User {
   // Brand and Model submissions and approvals
   submittedBrands Brand[] @relation("BrandSubmissions")
   approvedBrands  Brand[] @relation("BrandApprovals")
+  createdBrands   Brand[] @relation("BrandCreators")
+  updatedBrands   Brand[] @relation("BrandUpdaters")
   submittedModels Model[] @relation("ModelSubmissions")
   approvedModels  Model[] @relation("ModelApprovals")
+  createdModels   Model[] @relation("ModelCreators")
+  updatedModels   Model[] @relation("ModelUpdaters")
+  proposedBrands  ProposedBrand[] @relation("UserProposedBrands")
+  reviewedBrands  ProposedBrand[] @relation("AdminBrandReviews")
   proposedModels  ProposedModel[] @relation("UserProposedModels")
   reviewedModels  ProposedModel[] @relation("AdminModelReviews")
+
+  // Audit history
+  brandAudits     BrandAudit[]
+  modelAudits     ModelAudit[]
 
   @@map("users")
 }
@@ -164,8 +174,11 @@ model Brand {
   approvedAt      DateTime?
   rejectionReason String?
   
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  // Audit fields
+  createdBy   String?     // User ID who created this brand
+  createdAt   DateTime    @default(now())
+  updatedBy   String?     // User ID who last updated this brand
+  updatedAt   DateTime    @updatedAt
 
   // SEO fields
   metaTitle       String?
@@ -181,11 +194,44 @@ model Brand {
   SponsoredLink  SponsoredLink[]
   submitter      User?        @relation("BrandSubmissions", fields: [submittedBy], references: [id])
   approver       User?        @relation("BrandApprovals", fields: [approvedBy], references: [id])
+  creator        User?        @relation("BrandCreators", fields: [createdBy], references: [id])
+  updater        User?        @relation("BrandUpdaters", fields: [updatedBy], references: [id])
   
   // Proposed models by users (pending approval)
   proposedModels ProposedModel[]
 
+  // Audit history
+  auditHistory    BrandAudit[]
+
   @@map("brands")
+}
+
+model ProposedBrand {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  website     String?
+  
+  // Submission details
+  submittedBy     String
+  submissionNote  String? // User's note about why this brand should be added
+  adminNote       String? // Admin's note about approval/rejection
+  
+  // Status and approval
+  status         BrandStatus @default(PENDING)
+  reviewedBy     String?     // Admin who reviewed
+  reviewedAt     DateTime?
+  rejectionReason String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relationships
+  submitter User  @relation("UserProposedBrands", fields: [submittedBy], references: [id])
+  reviewer  User? @relation("AdminBrandReviews", fields: [reviewedBy], references: [id])
+  
+  @@unique([name])
+  @@map("proposed_brands")
 }
 
 model Model {
@@ -238,6 +284,10 @@ model Model {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Audit fields
+  createdBy String?
+  updatedBy String?
+
   // Relationships
   brand         Brand           @relation(fields: [brandId], references: [id])
   listings      Listing[]
@@ -248,6 +298,11 @@ model Model {
   SponsoredLink SponsoredLink[]
   submitter     User?           @relation("ModelSubmissions", fields: [submittedBy], references: [id])
   approver      User?           @relation("ModelApprovals", fields: [approvedBy], references: [id])
+  creator       User?           @relation("ModelCreators", fields: [createdBy], references: [id])
+  updater       User?           @relation("ModelUpdaters", fields: [updatedBy], references: [id])
+
+  // Audit history
+  auditHistory   ModelAudit[]
 
   @@unique([brandId, name])
   @@map("models")
@@ -291,6 +346,46 @@ model ProposedModel {
   
   @@unique([brandId, name])
   @@map("proposed_models")
+}
+
+// ============================================================================
+// AUDIT HISTORY TABLES
+// ============================================================================
+
+model BrandAudit {
+  id          String   @id @default(cuid())
+  brandId     String
+  action      String   // "CREATE", "UPDATE", "DELETE", "APPROVE", "REJECT"
+  field       String?  // Field that was changed
+  oldValue    String?  // Previous value
+  newValue    String?  // New value
+  changedBy   String   // User ID who made the change
+  changedAt   DateTime @default(now())
+  notes       String?  // Optional notes about the change
+
+  // Relationships
+  brand   Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  user    User  @relation(fields: [changedBy], references: [id])
+
+  @@map("brand_audits")
+}
+
+model ModelAudit {
+  id          String   @id @default(cuid())
+  modelId     String
+  action      String   // "CREATE", "UPDATE", "DELETE", "APPROVE", "REJECT"
+  field       String?  // Field that was changed
+  oldValue    String?  // Previous value
+  newValue    String?  // New value
+  changedBy   String   // User ID who made the change
+  changedAt   DateTime @default(now())
+  notes       String?  // Optional notes about the change
+
+  // Relationships
+  model   Model @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  user    User  @relation(fields: [changedBy], references: [id])
+
+  @@map("model_audits")
 }
 
 // ============================================================================
@@ -383,6 +478,8 @@ model Listing {
   // Product details
   brandId          String
   modelId          String
+  customBrand      String? // Custom brand name if not in canonical list
+  customModel      String? // Custom model name if not in canonical list
   serialNumber     String? // Encrypted
   identifierMasked String? // "****E5F6" format
   identifierFull   String? // Encrypted full identifier
@@ -395,7 +492,8 @@ model Listing {
   longitude         Decimal? @db.Decimal(11, 8)
 
   // Media
-  images            String[] // Array of image URLs
+  images            String[] // Array of image URLs (legacy support)
+  files             File[]   // Direct relationship to uploaded files
   verificationPhoto String? // Photo of identifier for verification
 
   // Seller information
@@ -1111,15 +1209,19 @@ model File {
   width        Int?
   height       Int?
   type         String   @default("listing") // "listing", "verification", "profile"
+  source       String   @default("upload") // "camera", "upload" - tracks if photo was taken live or uploaded
   uploadedById String
+  listingId    String?  // Reference to listing if this file belongs to a listing
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   // Relationships
-  uploadedBy User @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  uploadedBy User     @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  listing    Listing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
   @@index([uploadedById, type])
   @@index([filename])
+  @@index([listingId])
   @@map("files")
 }
 

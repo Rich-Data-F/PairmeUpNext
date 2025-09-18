@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import PhotoUpload, { UploadedPhoto } from '@/components/PhotoUpload';
 
 type Brand = { id: string; name: string; slug: string };
 type Model = { id: string; name: string; slug: string };
@@ -33,6 +34,10 @@ export default function SellPage() {
   const [condition, setCondition] = useState('GOOD');
   const [brandId, setBrandId] = useState('');
   const [modelId, setModelId] = useState('');
+  const [customBrand, setCustomBrand] = useState('');
+  const [customModel, setCustomModel] = useState('');
+  const [showCustomBrand, setShowCustomBrand] = useState(false);
+  const [showCustomModel, setShowCustomModel] = useState(false);
   const [serialNumber, setSerialNumber] = useState('');
   const [sellerNotes, setSellerNotes] = useState('');
   const [cityQuery, setCityQuery] = useState('');
@@ -40,10 +45,60 @@ export default function SellPage() {
   const [cities, setCities] = useState<City[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [models, setModels] = useState<Model[]>([]);
+  const [photos, setPhotos] = useState<UploadedPhoto[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [descriptionError, setDescriptionError] = useState<string | null>(null);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  // Gate: must be authenticated
+  // Description validation
+  const validateDescription = (value: string) => {
+    if (value.length < 20) {
+      setDescriptionError(`Description must be at least 20 characters (currently ${value.length})`);
+      return false;
+    }
+    setDescriptionError(null);
+    return true;
+  };
+
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setDescription(value);
+    validateDescription(value);
+  };
+
+  // Form validation
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+
+    if (!title.trim()) errors.title = 'Title is required';
+    if (!description.trim()) errors.description = 'Description is required';
+    else if (description.length < 20) errors.description = 'Description must be at least 20 characters';
+    if (price === '' || price <= 0) errors.price = 'Valid price is required';
+
+    const hasValidBrand = showCustomBrand ? (customBrand.trim().length > 0) : !!brandId;
+    const hasValidModel = showCustomModel ? (customModel.trim().length > 0) : !!modelId;
+
+    if (!hasValidBrand) errors.brand = 'Please select a brand or enter a custom brand';
+    if (!hasValidModel) errors.model = 'Please select a model or enter a custom model';
+    if (!cityId) errors.city = 'Please select a city';
+
+    // CUID validation for brands, models, and cities (Prisma CUID format)
+    if (brandId && !/^c[a-z0-9]{24}$/i.test(brandId)) {
+      errors.brand = 'Invalid brand selection';
+    }
+    if (modelId && !/^c[a-z0-9]{24}$/i.test(modelId)) {
+      errors.model = 'Invalid model selection';
+    }
+    if (cityId && !/^c[a-z0-9]{24}$/i.test(cityId)) {
+      errors.city = 'Invalid city selection';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Check authentication
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -53,9 +108,10 @@ export default function SellPage() {
         if (!res.ok) {
           setAuthed(false);
           router.replace('/auth/signin?next=/sell');
-        } else {
-          setAuthed(true);
+          return;
         }
+        const user = await res.json();
+        setAuthed(true);
       } catch {
         if (mounted) {
           setAuthed(false);
@@ -86,7 +142,12 @@ export default function SellPage() {
   useEffect(() => {
     let abort = false;
     async function loadModels() {
-      if (!brandId) { setModels([]); setModelId(''); return; }
+      if (!brandId || brandId === 'custom') { 
+        setModels([]); 
+        setModelId(''); 
+        setShowCustomModel(false);
+        return; 
+      }
       try {
         // fetch brand details that include models
         const brand = brands.find(b => b.id === brandId);
@@ -119,14 +180,47 @@ export default function SellPage() {
   }, [cityQuery]);
 
   const canSubmit = useMemo(() => {
-    return !!title && !!description && price !== '' && !!brandId && !!modelId && !!cityId && !!type && !!condition;
-  }, [title, description, price, brandId, modelId, cityId, type, condition]);
+    const hasValidBrand = showCustomBrand ? (customBrand.trim().length > 0) : !!brandId;
+    const hasValidModel = showCustomModel ? (customModel.trim().length > 0) : !!modelId;
+    return !!title && !!description && price !== '' && hasValidBrand && hasValidModel && !!cityId && !!type && !!condition;
+  }, [title, description, price, brandId, modelId, customBrand, customModel, showCustomBrand, showCustomModel, cityId, type, condition]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate form before submission
+    if (!validateForm()) {
+      return;
+    }
+    
     setError(null);
     setLoading(true);
     try {
+      // First, upload photos if any
+      let uploadedPhotoUrls: string[] = [];
+      if (photos.length > 0) {
+        const formData = new FormData();
+        photos.forEach((photo, index) => {
+          formData.append('images', photo.file);
+        });
+        // Send array of sources for each photo
+        const sources = photos.map(photo => photo.source);
+        formData.append('sources', JSON.stringify(sources));
+
+        const uploadRes = await fetch('/api/proxy/upload/multiple', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!uploadRes.ok) {
+          const uploadData = await uploadRes.json().catch(() => ({}));
+          throw new Error(uploadData?.error || 'Failed to upload photos');
+        }
+
+        const uploadData = await uploadRes.json();
+        uploadedPhotoUrls = uploadData.map((file: any) => file.url);
+      }
+
       const payload = {
         title,
         description,
@@ -134,13 +228,15 @@ export default function SellPage() {
         condition,
         price: Number(price),
         currency,
-        brandId,
-        modelId,
+        brandId: showCustomBrand ? undefined : brandId,
+        modelId: showCustomModel ? undefined : modelId,
+        customBrand: showCustomBrand ? customBrand : undefined,
+        customModel: showCustomModel ? customModel : undefined,
         cityId,
         serialNumber: serialNumber || undefined,
         sellerNotes: sellerNotes || undefined,
         hideExactLocation: true,
-        images: [],
+        images: uploadedPhotoUrls,
       };
       const res = await fetch('/api/proxy/listings/create', {
         method: 'POST',
@@ -169,8 +265,22 @@ export default function SellPage() {
       <h1 className="text-2xl font-semibold mb-4">Create a listing</h1>
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="grid gap-4">
-          <input className="input input-bordered w-full" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} required />
-          <textarea className="textarea textarea-bordered w-full" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} required />
+          <div>
+            <input className="input input-bordered w-full" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+            {formErrors.title && <p className="text-sm text-red-600 mt-1">{formErrors.title}</p>}
+          </div>
+          
+          <div>
+            <textarea 
+              className="textarea textarea-bordered w-full" 
+              placeholder="Description (minimum 20 characters)" 
+              value={description} 
+              onChange={handleDescriptionChange} 
+              required 
+            />
+            {descriptionError && <p className="text-sm text-red-600 mt-1">{descriptionError}</p>}
+            {formErrors.description && <p className="text-sm text-red-600 mt-1">{formErrors.description}</p>}
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <select className="select select-bordered" value={type} onChange={(e) => setType(e.target.value)}>
               {LISTING_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
@@ -180,14 +290,76 @@ export default function SellPage() {
             </select>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <select className="select select-bordered" value={brandId} onChange={(e) => setBrandId(e.target.value)} required>
-              <option value="">Select brand…</option>
-              {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-            </select>
-            <select className="select select-bordered" value={modelId} onChange={(e) => setModelId(e.target.value)} required disabled={!brandId || models.length === 0}>
-              <option value="">{brandId ? 'Select model…' : 'Pick brand first'}</option>
-              {models.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-            </select>
+            <div>
+              <select 
+                className="select select-bordered w-full" 
+                value={showCustomBrand ? 'custom' : brandId} 
+                onChange={(e) => {
+                  if (e.target.value === 'custom') {
+                    setShowCustomBrand(true);
+                    setBrandId('');
+                    setModelId('');
+                    setShowCustomModel(false);
+                    setCustomModel('');
+                  } else {
+                    setShowCustomBrand(false);
+                    setBrandId(e.target.value);
+                    setCustomBrand('');
+                  }
+                }} 
+                required
+              >
+                <option value="">Select brand…</option>
+                {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                <option value="custom">➕ Other/New Brand</option>
+              </select>
+              {showCustomBrand && (
+                <input 
+                  className="input input-bordered w-full mt-2" 
+                  placeholder="Enter brand name…" 
+                  value={customBrand} 
+                  onChange={(e) => setCustomBrand(e.target.value)} 
+                  required 
+                />
+              )}
+              {formErrors.brand && <p className="text-sm text-red-600 mt-1">{formErrors.brand}</p>}
+            </div>
+            <div>
+              <select 
+                className="select select-bordered w-full" 
+                value={showCustomModel ? 'custom' : modelId} 
+                onChange={(e) => {
+                  if (e.target.value === 'custom') {
+                    setShowCustomModel(true);
+                    setModelId('');
+                    setCustomModel('');
+                  } else {
+                    setShowCustomModel(false);
+                    setModelId(e.target.value);
+                    setCustomModel('');
+                  }
+                }} 
+                required 
+                disabled={showCustomBrand && !customBrand.trim()}
+              >
+                <option value="">
+                  {showCustomBrand ? (customBrand.trim() ? 'Select model…' : 'Enter brand first') : 
+                   brandId ? 'Select model…' : 'Pick brand first'}
+                </option>
+                {models.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                <option value="custom">➕ Other/New Model</option>
+              </select>
+              {showCustomModel && (
+                <input 
+                  className="input input-bordered w-full mt-2" 
+                  placeholder="Enter model name…" 
+                  value={customModel} 
+                  onChange={(e) => setCustomModel(e.target.value)} 
+                  required 
+                />
+              )}
+              {formErrors.model && <p className="text-sm text-red-600 mt-1">{formErrors.model}</p>}
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
@@ -203,10 +375,14 @@ export default function SellPage() {
               </ul>
             )}
             <input type="hidden" value={cityId} />
+            {formErrors.city && <p className="text-sm text-red-600 mt-1">{formErrors.city}</p>}
           </div>
           <div className="grid grid-cols-3 gap-3 items-center">
-            <input type="number" className="input input-bordered" placeholder="Price" value={price}
-                   onChange={(e) => setPrice(e.target.value === '' ? '' : Number(e.target.value))} min={0} step="0.01" required />
+            <div>
+              <input type="number" className="input input-bordered" placeholder="Price" value={price}
+                     onChange={(e) => setPrice(e.target.value === '' ? '' : Number(e.target.value))} min={0} step="0.01" required />
+              {formErrors.price && <p className="text-sm text-red-600 mt-1">{formErrors.price}</p>}
+            </div>
             <select className="select select-bordered" value={currency} onChange={(e) => setCurrency(e.target.value)}>
               <option value="USD">USD</option>
               <option value="EUR">EUR</option>
@@ -216,6 +392,15 @@ export default function SellPage() {
           </div>
           <textarea className="textarea textarea-bordered w-full" placeholder="Seller notes (optional)" value={sellerNotes} onChange={(e) => setSellerNotes(e.target.value)} />
         </div>
+
+        {/* Photo Upload Section */}
+        <div className="border-t pt-6">
+          <PhotoUpload
+            onPhotosChange={setPhotos}
+            maxPhotos={3}
+          />
+        </div>
+
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button className="btn btn-primary" disabled={loading || !canSubmit}>
           {loading ? 'Posting…' : 'Post listing'}

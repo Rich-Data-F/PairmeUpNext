@@ -54,7 +54,7 @@ export class ListingsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiBearerAuth()
   async create(@Body() createListingDto: CreateListingDto, @Request() req: any) {
-    return this.listingsService.create(req.user.sub, createListingDto);
+    return this.listingsService.create(req.user.id, createListingDto);
   }
 
   @Get()
@@ -85,7 +85,7 @@ export class ListingsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async getUserListings(@Query() query: ListingQueryDto, @Request() req: any) {
-    return this.listingsService.getUserListings(req.user.sub, query);
+    return this.listingsService.getUserListings(req.user.id, query);
   }
 
   @Get(':id')
@@ -104,12 +104,8 @@ export class ListingsController {
   @ApiResponse({ status: 200, description: 'Listing updated successfully', type: ListingResponseDto })
   @ApiResponse({ status: 404, description: 'Listing not found' })
   @UseGuards(JwtAuthGuard)
-  async update(
-    @Param('id') id: string,
-    @Body() updateListingDto: UpdateListingDto,
-    @Request() req: any,
-  ) {
-    return this.listingsService.update(id, req.user.sub, updateListingDto);
+  async update(@Param('id') id: string, @Body() updateListingDto: UpdateListingDto, @Request() req: any) {
+    return this.listingsService.update(id, req.user.id, updateListingDto);
   }
 
   @Delete(':id')
@@ -123,7 +119,7 @@ export class ListingsController {
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   async remove(@Param('id') id: string, @Request() req: any) {
-    return this.listingsService.remove(id, req.user.sub);
+    return this.listingsService.remove(id, req.user.id);
   }
 
   @Patch('bulk-update')
@@ -134,7 +130,7 @@ export class ListingsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async bulkUpdate(@Body() bulkUpdateDto: BulkUpdateListingDto, @Request() req: any) {
-    return this.listingsService.bulkUpdate(req.user.sub, bulkUpdateDto);
+    return this.listingsService.bulkUpdate(req.user.id, bulkUpdateDto);
   }
 
   @Post('upload-images')
@@ -178,7 +174,7 @@ export class ListingsController {
           buffer: file.buffer,
         },
         'listings',
-        req.user.sub,
+        req.user.id,
       );
 
       return {
@@ -232,7 +228,7 @@ export class ListingsController {
         buffer: file.buffer,
       },
       'verification',
-      req.user.sub,
+      req.user.id,
     );
 
     return {

@@ -15,6 +15,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { NegotiationPanel } from './NegotiationPanel';
+import AuthenticityBadge from '@/components/AuthenticityBadge';
 
 interface ListingDetail {
   id: string;
@@ -75,6 +76,7 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [isLiked, setIsLiked] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const negotiationRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -282,12 +284,68 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
           <div className="space-y-4">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               {listing.images.length > 0 ? (
-                <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
-                  <img
-                    src={listing.images[0]}
-                    alt={listing.title}
-                    className="max-w-full max-h-full object-contain rounded-lg"
-                  />
+                <div className="space-y-4">
+                  {/* Main Image Display */}
+                  <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center relative">
+                    <img
+                      src={listing.images[currentImageIndex]}
+                      alt={`${listing.title} - Image ${currentImageIndex + 1}`}
+                      className="max-w-full max-h-full object-contain rounded-lg"
+                    />
+                    
+                    {/* Authenticity Badge - For now, assume first image might be camera */}
+                    {currentImageIndex === 0 && (
+                      <div className="absolute top-4 left-4">
+                        <AuthenticityBadge source="camera" />
+                      </div>
+                    )}
+                    
+                    {/* Image Navigation */}
+                    {listing.images.length > 1 && (
+                      <>
+                        <button
+                          onClick={() => setCurrentImageIndex(prev => prev > 0 ? prev - 1 : listing.images.length - 1)}
+                          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75 transition-opacity"
+                        >
+                          ‹
+                        </button>
+                        <button
+                          onClick={() => setCurrentImageIndex(prev => prev < listing.images.length - 1 ? prev + 1 : 0)}
+                          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75 transition-opacity"
+                        >
+                          ›
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  
+                  {/* Thumbnail Navigation */}
+                  {listing.images.length > 1 && (
+                    <div className="flex gap-2 overflow-x-auto pb-2">
+                      {listing.images.map((image, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setCurrentImageIndex(index)}
+                          className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
+                            index === currentImageIndex ? 'border-blue-500' : 'border-gray-200'
+                          }`}
+                        >
+                          <img
+                            src={image}
+                            alt={`Thumbnail ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Image Counter */}
+                  {listing.images.length > 1 && (
+                    <div className="text-center text-sm text-gray-500">
+                      {currentImageIndex + 1} of {listing.images.length} photos
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">

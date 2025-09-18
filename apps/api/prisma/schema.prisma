@@ -424,6 +424,7 @@ model Listing {
   orders    Order[]
   matches   Match[]
   FoundItem FoundItem?
+  files     File[]
 
   // Negotiations
   conversations Conversation[]
@@ -1111,15 +1112,19 @@ model File {
   width        Int?
   height       Int?
   type         String   @default("listing") // "listing", "verification", "profile"
+  source       String   @default("upload") // "camera", "upload" - tracks if photo was taken live or uploaded
   uploadedById String
+  listingId    String?  // Reference to listing if this file belongs to a listing
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   // Relationships
-  uploadedBy User @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  uploadedBy User     @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  listing    Listing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
   @@index([uploadedById, type])
   @@index([filename])
+  @@index([listingId])
   @@map("files")
 }
 

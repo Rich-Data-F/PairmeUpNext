@@ -18,7 +18,7 @@ export class BrandsService {
     return this.prisma.paginate(this.prisma.brand, {
       page: parseInt(page),
       limit: parseInt(limit),
-      where: { ...where, isActive: true },
+      where: { ...where, isActive: true, status: { in: ['APPROVED', 'PENDING'] } },
       orderBy: { name: 'asc' },
       include: {
         _count: {
@@ -33,7 +33,7 @@ export class BrandsService {
       where: { slug },
       include: {
         models: {
-          where: { isActive: true },
+          where: { isActive: true, status: { in: ['APPROVED', 'PENDING'] } },
           orderBy: { name: 'asc' },
         },
         _count: {
