@@ -22,6 +22,11 @@ const nextConfig = {
         hostname: 'localhost',
         port: '9000',
       },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '4000',
+      },
     ],
     formats: ['image/webp', 'image/avif'],
   },

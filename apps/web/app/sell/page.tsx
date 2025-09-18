@@ -218,7 +218,9 @@ export default function SellPage() {
         }
 
         const uploadData = await uploadRes.json();
+        console.log('Upload response:', uploadData);
         uploadedPhotoUrls = uploadData.map((file: any) => file.url);
+        console.log('Uploaded photo URLs:', uploadedPhotoUrls);
       }
 
       const payload = {
@@ -238,6 +240,7 @@ export default function SellPage() {
         hideExactLocation: true,
         images: uploadedPhotoUrls,
       };
+      console.log('Final payload:', payload);
       const res = await fetch('/api/proxy/listings/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -293,10 +293,11 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
                       className="max-w-full max-h-full object-contain rounded-lg"
                     />
                     
-                    {/* Authenticity Badge - For now, assume first image might be camera */}
+                    {/* Authenticity Badge - TODO: Get actual source from API */}
                     {currentImageIndex === 0 && (
                       <div className="absolute top-4 left-4">
-                        <AuthenticityBadge source="camera" />
+                        {/* Temporarily disabled until source info is available from API */}
+                        {/* <AuthenticityBadge source="camera" /> */}
                       </div>
                     )}
                     
