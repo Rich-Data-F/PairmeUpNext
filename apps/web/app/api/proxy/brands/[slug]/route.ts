@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getApiBase } from '@/lib/config';
 
 export async function GET(
-  _req: NextRequest,
-  { params }: { params: { slug: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
+    const { slug } = await params;
     const apiBase = getApiBase();
-    const res = await fetch(`${apiBase}/brands/${params.slug}`, {
+    const res = await fetch(`${apiBase}/brands/${slug}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       signal: AbortSignal.timeout(10000),

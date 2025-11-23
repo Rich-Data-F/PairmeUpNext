@@ -37,7 +37,9 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   // Static file serving for uploads
-  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+  const uploadsPath = join(__dirname, '..', '..', 'uploads');
+  console.log('Serving static uploads from:', uploadsPath);
+  app.useStaticAssets(uploadsPath, {
     prefix: '/uploads/',
   });
 

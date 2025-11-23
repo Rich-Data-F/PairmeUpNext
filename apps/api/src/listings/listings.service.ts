@@ -610,7 +610,7 @@ export class ListingsService {
 
     return {
       ...baseResponse,
-      images: listing.images?.map((img: any) => img.fullUrl) || [],
+      images: listing.images || [],
       ...(isAuthenticated && {
         fullDescription: listing.description,
         contactInfo: {

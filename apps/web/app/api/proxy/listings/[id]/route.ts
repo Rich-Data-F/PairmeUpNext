@@ -2,14 +2,15 @@ import { NextRequest } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    console.log(`🔍 Fetching listing details for ID: ${params.id}`);
+    const { id } = await params;
+    console.log(`🔍 Fetching listing details for ID: ${id}`);
     
     // Call backend API
   const { getApiBase } = await import('@/lib/config');
-  const backendUrl = `${getApiBase()}/listings/${params.id}`;
+  const backendUrl = `${getApiBase()}/listings/${id}`;
     console.log(`📡 Calling backend: ${backendUrl}`);
     
     const response = await fetch(backendUrl, {

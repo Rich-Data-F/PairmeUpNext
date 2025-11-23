@@ -20,7 +20,7 @@ export interface SearchFacets {
 
 @Injectable()
 export class FacetedSearchService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async getFacetCounts(
     query?: string,
@@ -104,8 +104,8 @@ export class FacetedSearchService {
     const brandCounts = await this.prisma.listing.groupBy({
       by: ['brandId'],
       where,
-      _count: { brandId: true },
-      orderBy: { _count: { brandId: 'desc' } },
+      _count: { _all: true },
+      orderBy: { _count: { _all: 'desc' } },
       take: 20,
     });
 
@@ -179,11 +179,11 @@ export class FacetedSearchService {
 
       const count = await this.prisma.listing.count({ where: rangeWhere });
       if (count > 0) {
-        results.push({ 
-          range: range.range, 
+        results.push({
+          range: range.range,
           min: range.min,
           max: range.max,
-          count 
+          count
         });
       }
     }

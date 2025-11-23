@@ -127,8 +127,8 @@ export class UploadService {
         mimeType: fileRecord.mimeType,
         width: fileRecord.width || undefined,
         height: fileRecord.height || undefined,
-        url: `${this.baseUrl}/uploads/${typeDir}/${filename}`,
-        thumbnailUrl: `${this.baseUrl}/uploads/thumbnails/${thumbnailFilename}`,
+        url: `${this.baseUrl}/uploads/${typeDir}/${fileRecord.filename}`,
+        thumbnailUrl: fileRecord.thumbnailPath ? `${this.baseUrl}/uploads/thumbnails/thumb_${fileRecord.filename}` : undefined,
       };
     } catch (error) {
       // Clean up files on error

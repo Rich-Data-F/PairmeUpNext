@@ -130,7 +130,7 @@ export default function SellPage() {
         const res = await fetch('/api/proxy/brands?limit=100');
         const data = await res.json();
         if (!abort && res.ok) {
-          const items = (data?.data || data || []).map((b: any) => ({ id: b.id, name: b.name, slug: b.slug }));
+          const items = (data?.items || []).map((b: any) => ({ id: b.id, name: b.name, slug: b.slug }));
           setBrands(items);
         }
       } catch {}
