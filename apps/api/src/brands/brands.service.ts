@@ -3,11 +3,11 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class BrandsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async findAll(query: any) {
     const { page = 1, limit = 10, search } = query;
-    
+
     const where = search ? {
       OR: [
         { name: { contains: search, mode: 'insensitive' } },
@@ -18,7 +18,7 @@ export class BrandsService {
     return this.prisma.paginate(this.prisma.brand, {
       page: parseInt(page),
       limit: parseInt(limit),
-      where: { ...where, isActive: true, status: { in: ['APPROVED', 'PENDING'] } },
+      where: { ...where, isActive: true, status: { in: ['APPROVED', 'SYSTEM'] } },
       orderBy: { name: 'asc' },
       include: {
         _count: {
@@ -37,7 +37,7 @@ export class BrandsService {
           orderBy: { name: 'asc' },
         },
         _count: {
-          select: { 
+          select: {
             models: true,
             blogPosts: true,
           },

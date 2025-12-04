@@ -48,7 +48,9 @@ async function main() {
       description: 'Premium consumer electronics company known for AirPods and other audio products.',
       website: 'https://www.apple.com',
       metaTitle: 'Apple AirPods - Premium True Wireless Earbuds',
-      metaDescription: 'Find replacement Apple AirPods, charging cases, and accessories on EarbudHub marketplace.'
+      metaDescription: 'Find replacement Apple AirPods, charging cases, and accessories on EarbudHub marketplace.',
+      status: 'SYSTEM' as const,
+      isVerified: true
     },
     {
       name: 'Samsung',
@@ -56,7 +58,9 @@ async function main() {
       description: 'South Korean electronics giant with Galaxy Buds series.',
       website: 'https://www.samsung.com',
       metaTitle: 'Samsung Galaxy Buds - True Wireless Earbuds',
-      metaDescription: 'Shop Samsung Galaxy Buds replacements and accessories on EarbudHub.'
+      metaDescription: 'Shop Samsung Galaxy Buds replacements and accessories on EarbudHub.',
+      status: 'SYSTEM' as const,
+      isVerified: true
     },
     {
       name: 'Sony',
@@ -64,7 +68,9 @@ async function main() {
       description: 'Japanese electronics company with WF series true wireless earbuds.',
       website: 'https://www.sony.com',
       metaTitle: 'Sony WF Series - Professional Audio Earbuds',
-      metaDescription: 'Find Sony WF series earbuds and replacement parts on EarbudHub.'
+      metaDescription: 'Find Sony WF series earbuds and replacement parts on EarbudHub.',
+      status: 'SYSTEM' as const,
+      isVerified: true
     },
     {
       name: 'Bose',
@@ -72,7 +78,9 @@ async function main() {
       description: 'Premium audio company known for noise-cancelling technology.',
       website: 'https://www.bose.com',
       metaTitle: 'Bose QuietComfort - Premium Noise Cancelling Earbuds',
-      metaDescription: 'Shop Bose QuietComfort earbuds and replacement parts on EarbudHub.'
+      metaDescription: 'Shop Bose QuietComfort earbuds and replacement parts on EarbudHub.',
+      status: 'SYSTEM' as const,
+      isVerified: true
     },
     {
       name: 'Jabra',
@@ -80,7 +88,9 @@ async function main() {
       description: 'Danish audio company specializing in professional and consumer audio.',
       website: 'https://www.jabra.com',
       metaTitle: 'Jabra Elite Series - Professional True Wireless Earbuds',
-      metaDescription: 'Find Jabra Elite series earbuds and accessories on EarbudHub marketplace.'
+      metaDescription: 'Find Jabra Elite series earbuds and accessories on EarbudHub marketplace.',
+      status: 'SYSTEM' as const,
+      isVerified: true
     }
   ];
 
@@ -174,7 +184,9 @@ async function main() {
         create: {
           ...modelData,
           brandId: brand.id,
-          currency: 'USD'
+          currency: 'USD',
+          status: 'SYSTEM',
+          isVerified: true
         },
       });
       console.log(`✅ Model created: ${model.name}`);
