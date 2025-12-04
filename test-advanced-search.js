@@ -12,7 +12,7 @@
 
 const axios = require('axios');
 
-const BASE_URL = 'http://localhost:4000';
+const BASE_URL = 'http://localhost:4001';
 const TIMEOUT = 30000;
 
 class AdvancedSearchTester {

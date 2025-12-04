@@ -101,7 +101,9 @@ export class FacetedSearchService {
     // Remove brand filter to get all available brands
     delete where.brandId;
 
-    const brandCounts = await this.prisma.listing.groupBy({
+    // Use explicit typing to avoid circular reference errors
+    // @ts-ignore - Prisma groupBy has circular type reference issues in v6.16.1
+    const brandCounts: any = await this.prisma.listing.groupBy({
       by: ['brandId'],
       where,
       _count: { _all: true },
@@ -109,18 +111,18 @@ export class FacetedSearchService {
       take: 20,
     });
 
-    const brandIds = brandCounts.map(b => b.brandId);
+    const brandIds = brandCounts.map((b: any) => b.brandId);
     const brands = await this.prisma.brand.findMany({
       where: { id: { in: brandIds } },
       select: { id: true, name: true },
     });
 
-    return brandCounts.map(count => {
+    return brandCounts.map((count: any) => {
       const brand = brands.find(b => b.id === count.brandId);
       return {
         id: count.brandId,
         name: brand?.name || 'Unknown',
-        count: count._count.brandId,
+        count: count._count._all,
       };
     });
   }
@@ -130,7 +132,8 @@ export class FacetedSearchService {
     // Remove model filter to get all available models
     delete where.modelId;
 
-    const modelCounts = await this.prisma.listing.groupBy({
+    // @ts-ignore - Prisma groupBy has circular type reference issues in v6.16.1
+    const modelCounts: any = await this.prisma.listing.groupBy({
       by: ['modelId'],
       where,
       _count: { modelId: true },
@@ -138,13 +141,13 @@ export class FacetedSearchService {
       take: 20,
     });
 
-    const modelIds = modelCounts.map(m => m.modelId);
+    const modelIds = modelCounts.map((m: any) => m.modelId);
     const models = await this.prisma.model.findMany({
       where: { id: { in: modelIds } },
       select: { id: true, name: true, brandId: true },
     });
 
-    return modelCounts.map(count => {
+    return modelCounts.map((count: any) => {
       const model = models.find(m => m.id === count.modelId);
       return {
         id: count.modelId,
@@ -195,14 +198,15 @@ export class FacetedSearchService {
     const where = { ...baseWhere };
     delete where.condition;
 
-    const conditions = await this.prisma.listing.groupBy({
+    // @ts-ignore - Prisma groupBy has circular type reference issues in v6.16.1
+    const conditions: any = await this.prisma.listing.groupBy({
       by: ['condition'],
       where,
       _count: { condition: true },
       orderBy: { condition: 'asc' },
     });
 
-    return conditions.map(item => ({
+    return conditions.map((item: any) => ({
       value: item.condition,
       count: item._count.condition,
     }));
@@ -212,7 +216,8 @@ export class FacetedSearchService {
     const where = { ...baseWhere };
     delete where.cityId;
 
-    const cityCounts = await this.prisma.listing.groupBy({
+    // @ts-ignore - Prisma groupBy has circular type reference issues in v6.16.1
+    const cityCounts: any = await this.prisma.listing.groupBy({
       by: ['cityId'],
       where,
       _count: { cityId: true },
@@ -220,13 +225,13 @@ export class FacetedSearchService {
       take: 20,
     });
 
-    const cityIds = cityCounts.map(c => c.cityId);
+    const cityIds = cityCounts.map((c: any) => c.cityId);
     const cities = await this.prisma.city.findMany({
       where: { id: { in: cityIds } },
       select: { id: true, name: true },
     });
 
-    return cityCounts.map(count => {
+    return cityCounts.map((count: any) => {
       const city = cities.find(c => c.id === count.cityId);
       return {
         id: count.cityId,
