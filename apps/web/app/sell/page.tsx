@@ -12,6 +12,7 @@ const LISTING_TYPES = [
   { value: 'EARBUD_RIGHT', label: 'Right earbud' },
   { value: 'EARBUD_PAIR', label: 'Pair of earbuds' },
   { value: 'CHARGING_CASE', label: 'Charging case' },
+  { value: 'FULL_SET', label: 'Full set (earbuds + case)' },
   { value: 'ACCESSORIES', label: 'Accessories' },
 ];
 
@@ -50,6 +51,18 @@ export default function SellPage() {
   const [loading, setLoading] = useState(false);
   const [descriptionError, setDescriptionError] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  // Trading preferences (NEW)
+  const [primaryIntent, setPrimaryIntent] = useState<'SELLING' | 'BUYING' | 'TRADING'>('SELLING');
+  const [openToAlternate, setOpenToAlternate] = useState(false);
+
+  // Item availability (NEW)
+  const [hasLeftEarbud, setHasLeftEarbud] = useState(false);
+  const [hasRightEarbud, setHasRightEarbud] = useState(false);
+  const [hasChargingCase, setHasChargingCase] = useState(false);
+  const [needsLeftEarbud, setNeedsLeftEarbud] = useState(false);
+  const [needsRightEarbud, setNeedsRightEarbud] = useState(false);
+  const [needsChargingCase, setNeedsChargingCase] = useState(false);
 
   // Description validation
   const validateDescription = (value: string) => {
@@ -133,7 +146,7 @@ export default function SellPage() {
           const items = (data?.items || []).map((b: any) => ({ id: b.id, name: b.name, slug: b.slug }));
           setBrands(items);
         }
-      } catch {}
+      } catch { }
     })();
     return () => { abort = true };
   }, []);
@@ -142,11 +155,11 @@ export default function SellPage() {
   useEffect(() => {
     let abort = false;
     async function loadModels() {
-      if (!brandId || brandId === 'custom') { 
-        setModels([]); 
-        setModelId(''); 
+      if (!brandId || brandId === 'custom') {
+        setModels([]);
+        setModelId('');
         setShowCustomModel(false);
-        return; 
+        return;
       }
       try {
         // fetch brand details that include models
@@ -159,7 +172,7 @@ export default function SellPage() {
           const ms = (data?.models || []).map((m: any) => ({ id: m.id, name: m.name, slug: m.slug }));
           setModels(ms);
         }
-      } catch {}
+      } catch { }
     }
     loadModels();
     return () => { abort = true };
@@ -174,7 +187,7 @@ export default function SellPage() {
         const res = await fetch(`/api/proxy/search/autocomplete/cities?q=${encodeURIComponent(cityQuery)}&limit=8`, { signal: controller.signal });
         const data = await res.json();
         if (res.ok) setCities(data?.cities || []);
-      } catch {}
+      } catch { }
     }, 250);
     return () => { controller.abort(); clearTimeout(handler); };
   }, [cityQuery]);
@@ -187,12 +200,12 @@ export default function SellPage() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate form before submission
     if (!validateForm()) {
       return;
     }
-    
+
     setError(null);
     setLoading(true);
     try {
@@ -239,6 +252,16 @@ export default function SellPage() {
         sellerNotes: sellerNotes || undefined,
         hideExactLocation: true,
         images: uploadedPhotoUrls,
+        // Trading preferences (NEW)
+        primaryIntent,
+        openToAlternate,
+        // Item availability (NEW)
+        hasLeftEarbud: hasLeftEarbud || undefined,
+        hasRightEarbud: hasRightEarbud || undefined,
+        hasChargingCase: hasChargingCase || undefined,
+        needsLeftEarbud: needsLeftEarbud || undefined,
+        needsRightEarbud: needsRightEarbud || undefined,
+        needsChargingCase: needsChargingCase || undefined,
       };
       console.log('Final payload:', payload);
       const res = await fetch('/api/proxy/listings/create', {
@@ -272,14 +295,14 @@ export default function SellPage() {
             <input className="input input-bordered w-full" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} required />
             {formErrors.title && <p className="text-sm text-red-600 mt-1">{formErrors.title}</p>}
           </div>
-          
+
           <div>
-            <textarea 
-              className="textarea textarea-bordered w-full" 
-              placeholder="Description (minimum 20 characters)" 
-              value={description} 
-              onChange={handleDescriptionChange} 
-              required 
+            <textarea
+              className="textarea textarea-bordered w-full"
+              placeholder="Description (minimum 20 characters)"
+              value={description}
+              onChange={handleDescriptionChange}
+              required
             />
             {descriptionError && <p className="text-sm text-red-600 mt-1">{descriptionError}</p>}
             {formErrors.description && <p className="text-sm text-red-600 mt-1">{formErrors.description}</p>}
@@ -294,9 +317,9 @@ export default function SellPage() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <select 
-                className="select select-bordered w-full" 
-                value={showCustomBrand ? 'custom' : brandId} 
+              <select
+                className="select select-bordered w-full"
+                value={showCustomBrand ? 'custom' : brandId}
                 onChange={(e) => {
                   if (e.target.value === 'custom') {
                     setShowCustomBrand(true);
@@ -309,7 +332,7 @@ export default function SellPage() {
                     setBrandId(e.target.value);
                     setCustomBrand('');
                   }
-                }} 
+                }}
                 required
               >
                 <option value="">Select brand…</option>
@@ -317,20 +340,20 @@ export default function SellPage() {
                 <option value="custom">➕ Other/New Brand</option>
               </select>
               {showCustomBrand && (
-                <input 
-                  className="input input-bordered w-full mt-2" 
-                  placeholder="Enter brand name…" 
-                  value={customBrand} 
-                  onChange={(e) => setCustomBrand(e.target.value)} 
-                  required 
+                <input
+                  className="input input-bordered w-full mt-2"
+                  placeholder="Enter brand name…"
+                  value={customBrand}
+                  onChange={(e) => setCustomBrand(e.target.value)}
+                  required
                 />
               )}
               {formErrors.brand && <p className="text-sm text-red-600 mt-1">{formErrors.brand}</p>}
             </div>
             <div>
-              <select 
-                className="select select-bordered w-full" 
-                value={showCustomModel ? 'custom' : modelId} 
+              <select
+                className="select select-bordered w-full"
+                value={showCustomModel ? 'custom' : modelId}
                 onChange={(e) => {
                   if (e.target.value === 'custom') {
                     setShowCustomModel(true);
@@ -341,24 +364,24 @@ export default function SellPage() {
                     setModelId(e.target.value);
                     setCustomModel('');
                   }
-                }} 
-                required 
+                }}
+                required
                 disabled={showCustomBrand && !customBrand.trim()}
               >
                 <option value="">
-                  {showCustomBrand ? (customBrand.trim() ? 'Select model…' : 'Enter brand first') : 
-                   brandId ? 'Select model…' : 'Pick brand first'}
+                  {showCustomBrand ? (customBrand.trim() ? 'Select model…' : 'Enter brand first') :
+                    brandId ? 'Select model…' : 'Pick brand first'}
                 </option>
                 {models.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                 <option value="custom">➕ Other/New Model</option>
               </select>
               {showCustomModel && (
-                <input 
-                  className="input input-bordered w-full mt-2" 
-                  placeholder="Enter model name…" 
-                  value={customModel} 
-                  onChange={(e) => setCustomModel(e.target.value)} 
-                  required 
+                <input
+                  className="input input-bordered w-full mt-2"
+                  placeholder="Enter model name…"
+                  value={customModel}
+                  onChange={(e) => setCustomModel(e.target.value)}
+                  required
                 />
               )}
               {formErrors.model && <p className="text-sm text-red-600 mt-1">{formErrors.model}</p>}
@@ -371,7 +394,7 @@ export default function SellPage() {
               <ul className="mt-2 max-h-48 overflow-auto border rounded-md">
                 {cities.map(c => (
                   <li key={c.id} className={`px-3 py-2 cursor-pointer hover:bg-gray-50 ${cityId === c.id ? 'bg-blue-50' : ''}`}
-                      onClick={() => { setCityId(c.id); setCityQuery(c.displayName); }}>
+                    onClick={() => { setCityId(c.id); setCityQuery(c.displayName); }}>
                     {c.displayName}
                   </li>
                 ))}
@@ -383,7 +406,7 @@ export default function SellPage() {
           <div className="grid grid-cols-3 gap-3 items-center">
             <div>
               <input type="number" className="input input-bordered" placeholder="Price" value={price}
-                     onChange={(e) => setPrice(e.target.value === '' ? '' : Number(e.target.value))} min={0} step="0.01" required />
+                onChange={(e) => setPrice(e.target.value === '' ? '' : Number(e.target.value))} min={0} step="0.01" required />
               {formErrors.price && <p className="text-sm text-red-600 mt-1">{formErrors.price}</p>}
             </div>
             <select className="select select-bordered" value={currency} onChange={(e) => setCurrency(e.target.value)}>
@@ -394,6 +417,111 @@ export default function SellPage() {
             <input className="input input-bordered" placeholder="Serial/identifier (optional)" value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} />
           </div>
           <textarea className="textarea textarea-bordered w-full" placeholder="Seller notes (optional)" value={sellerNotes} onChange={(e) => setSellerNotes(e.target.value)} />
+
+          {/* Trading Preferences Section (NEW) */}
+          <div className="border-t pt-6 space-y-4">
+            <h3 className="text-lg font-semibold">Trading Preferences</h3>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">What do you want to do?</label>
+              <select
+                className="select select-bordered w-full"
+                value={primaryIntent}
+                onChange={(e) => setPrimaryIntent(e.target.value as 'SELLING' | 'BUYING' | 'TRADING')}
+              >
+                <option value="SELLING">I want to sell</option>
+                <option value="BUYING">I want to buy</option>
+                <option value="TRADING">I want to trade</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="openToAlternate"
+                className="checkbox checkbox-primary"
+                checked={openToAlternate}
+                onChange={(e) => setOpenToAlternate(e.target.checked)}
+              />
+              <label htmlFor="openToAlternate" className="text-sm">
+                {primaryIntent === 'SELLING' && "I'm also open to buying"}
+                {primaryIntent === 'BUYING' && "I'm also open to selling"}
+                {primaryIntent === 'TRADING' && "I'm also open to buying or selling"}
+              </label>
+            </div>
+          </div>
+
+          {/* Item Availability Section (NEW) */}
+          <div className="border-t pt-6 space-y-4">
+            <h3 className="text-lg font-semibold">What do you have and what do you need?</h3>
+            <p className="text-sm text-gray-600">This helps us match you with potential buyers/sellers</p>
+
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <p className="font-medium mb-2">I have:</p>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      className="checkbox checkbox-sm"
+                      checked={hasLeftEarbud}
+                      onChange={(e) => setHasLeftEarbud(e.target.checked)}
+                    />
+                    <span className="text-sm">Left earbud</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      className="checkbox checkbox-sm"
+                      checked={hasRightEarbud}
+                      onChange={(e) => setHasRightEarbud(e.target.checked)}
+                    />
+                    <span className="text-sm">Right earbud</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      className="checkbox checkbox-sm"
+                      checked={hasChargingCase}
+                      onChange={(e) => setHasChargingCase(e.target.checked)}
+                    />
+                    <span className="text-sm">Charging case</span>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <p className="font-medium mb-2">I need:</p>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      className="checkbox checkbox-sm"
+                      checked={needsLeftEarbud}
+                      onChange={(e) => setNeedsLeftEarbud(e.target.checked)}
+                    />
+                    <span className="text-sm">Left earbud</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      className="checkbox checkbox-sm"
+                      checked={needsRightEarbud}
+                      onChange={(e) => setNeedsRightEarbud(e.target.checked)}
+                    />
+                    <span className="text-sm">Right earbud</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      className="checkbox checkbox-sm"
+                      checked={needsChargingCase}
+                      onChange={(e) => setNeedsChargingCase(e.target.checked)}
+                    />
+                    <span className="text-sm">Charging case</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Photo Upload Section */}

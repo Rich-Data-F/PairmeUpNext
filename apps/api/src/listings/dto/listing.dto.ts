@@ -105,6 +105,48 @@ export class CreateListingDto {
   @IsOptional()
   @IsString()
   verificationPhoto?: string;
+
+  // Trading preferences (NEW)
+  @ApiPropertyOptional({ description: 'Primary intent: SELLING, BUYING, or TRADING', enum: ['SELLING', 'BUYING', 'TRADING'], default: 'SELLING' })
+  @IsOptional()
+  @IsEnum(['SELLING', 'BUYING', 'TRADING'])
+  primaryIntent?: 'SELLING' | 'BUYING' | 'TRADING' = 'SELLING';
+
+  @ApiPropertyOptional({ description: 'Open to alternate transaction type', default: false })
+  @IsOptional()
+  @IsBoolean()
+  openToAlternate?: boolean = false;
+
+  // Item availability (NEW)
+  @ApiPropertyOptional({ description: 'User has left earbud' })
+  @IsOptional()
+  @IsBoolean()
+  hasLeftEarbud?: boolean;
+
+  @ApiPropertyOptional({ description: 'User has right earbud' })
+  @IsOptional()
+  @IsBoolean()
+  hasRightEarbud?: boolean;
+
+  @ApiPropertyOptional({ description: 'User has charging case' })
+  @IsOptional()
+  @IsBoolean()
+  hasChargingCase?: boolean;
+
+  @ApiPropertyOptional({ description: 'User needs left earbud' })
+  @IsOptional()
+  @IsBoolean()
+  needsLeftEarbud?: boolean;
+
+  @ApiPropertyOptional({ description: 'User needs right earbud' })
+  @IsOptional()
+  @IsBoolean()
+  needsRightEarbud?: boolean;
+
+  @ApiPropertyOptional({ description: 'User needs charging case' })
+  @IsOptional()
+  @IsBoolean()
+  needsChargingCase?: boolean;
 }
 
 export class UpdateListingDto {
