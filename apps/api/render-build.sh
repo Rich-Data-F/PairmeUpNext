@@ -20,5 +20,11 @@ grep "model ProposedBrand" prisma/schema.prisma || echo "ProposedBrand NOT FOUND
 echo "Generating Prisma Client..."
 npx prisma generate
 
+# Run migrations with retry logic
+until npx prisma migrate deploy; do
+  echo "⚠️ Migration failed, retrying in 5 seconds..."
+  sleep 5
+done
+
 echo "Building NestJS app..."
 npx nest build
