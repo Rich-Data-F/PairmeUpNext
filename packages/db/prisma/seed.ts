@@ -98,7 +98,15 @@ async function main() {
   for (const brand of brands) {
     const createdBrand = await prisma.brand.upsert({
       where: { slug: brand.slug },
-      update: {},
+      update: {
+        name: brand.name,
+        description: brand.description,
+        website: brand.website,
+        metaTitle: brand.metaTitle,
+        metaDescription: brand.metaDescription,
+        status: brand.status,
+        isVerified: brand.isVerified,
+      },
       create: brand,
     });
     createdBrands.push(createdBrand);
@@ -180,7 +188,24 @@ async function main() {
       const { brandName, ...modelData } = model;
       await prisma.model.upsert({
         where: { slug: model.slug },
-        update: {},
+        update: {
+          name: model.name,
+          description: model.description,
+          hasANC: model.hasANC,
+          batteryLife: model.batteryLife,
+          caseChargeTime: model.caseChargeTime,
+          earbudChargeTime: model.earbudChargeTime,
+          waterResistance: model.waterResistance,
+          bluetoothVersion: model.bluetoothVersion,
+          codecs: model.codecs,
+          originalPrice: model.originalPrice,
+          currentPrice: model.currentPrice,
+          metaTitle: model.metaTitle,
+          metaDescription: model.metaDescription,
+          currency: 'USD',
+          status: 'SYSTEM',
+          isVerified: true
+        },
         create: {
           ...modelData,
           brandId: brand.id,

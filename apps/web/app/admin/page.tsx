@@ -201,8 +201,20 @@ export default function AdminPage() {
   const handleBrandAction = async (brandId: string, action: 'approve' | 'reject') => {
     setLoading(true);
     try {
+      let body: any = undefined;
+      if (action === 'approve') {
+        // Prompt for admin options: create canonical (default true) vs single-use
+        const createCanonical = window.confirm('Create canonical brand? OK = Yes (create canonical), Cancel = No (single-use approval)');
+        const name = window.prompt('Edit name (leave blank to keep current)') || undefined;
+        const description = window.prompt('Edit description (leave blank to keep current)') || undefined;
+        const website = window.prompt('Edit website (leave blank to keep current)') || undefined;
+        body = { createCanonical, name, description, website };
+      }
+
       const res = await fetch(`/api/proxy/admin/proposed-brands/${brandId}/${action}`, {
         method: 'POST',
+        headers: body ? { 'Content-Type': 'application/json' } : undefined,
+        body: body ? JSON.stringify(body) : undefined,
       });
 
       if (res.ok) {
@@ -223,8 +235,17 @@ export default function AdminPage() {
   const handleModelAction = async (modelId: string, action: 'approve' | 'reject') => {
     setLoading(true);
     try {
+      let body: any = undefined;
+      if (action === 'approve') {
+        const createCanonical = window.confirm('Create canonical model? OK = Yes (create canonical), Cancel = No (single-use)');
+        const name = window.prompt('Edit model name (leave blank to keep current)') || undefined;
+        const description = window.prompt('Edit model description (leave blank to keep current)') || undefined;
+        body = { createCanonical, name, description };
+      }
       const res = await fetch(`/api/proxy/admin/proposed-models/${modelId}/${action}`, {
         method: 'POST',
+        headers: body ? { 'Content-Type': 'application/json' } : undefined,
+        body: body ? JSON.stringify(body) : undefined,
       });
 
       if (res.ok) {

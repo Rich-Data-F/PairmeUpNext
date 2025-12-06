@@ -6,6 +6,7 @@ const API_BASE_URL = getApiBase();
 export async function GET(request: NextRequest) {
   try {
     console.log('🏢 Brands API called');
+    console.log('🔎 Using API base:', API_BASE_URL);
     
     // Forward query parameters
     const url = new URL(request.url);
@@ -30,7 +31,8 @@ export async function GET(request: NextRequest) {
     });
 
     if (!response.ok) {
-      console.error('❌ Backend error:', response.status, response.statusText);
+      const body = await response.text().catch(() => '');
+      console.error('❌ Backend error:', response.status, response.statusText, 'Body:', body);
       return NextResponse.json(
         { error: 'Failed to fetch brands from backend' },
         { status: response.status }

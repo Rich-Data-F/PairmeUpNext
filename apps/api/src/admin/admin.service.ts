@@ -32,7 +32,7 @@ export class AdminService {
     });
   }
 
-  async approveBrand(brandId: string, adminId: string) {
+  async approveBrand(brandId: string, adminId: string, options?: { createCanonical?: boolean; name?: string; description?: string; website?: string }) {
     // Get the proposed brand
     const proposedBrand = await this.prisma.proposedBrand.findUnique({
       where: { id: brandId }
@@ -42,31 +42,101 @@ export class AdminService {
       throw new Error('Proposed brand not found');
     }
 
-    // Create the approved brand
-    const approvedBrand = await this.prisma.brand.create({
-      data: {
-        name: proposedBrand.name,
-        description: proposedBrand.description,
-        website: proposedBrand.website,
-        slug: proposedBrand.name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-        status: 'APPROVED',
-        submittedBy: proposedBrand.submittedBy,
-        approvedBy: adminId,
-        approvedAt: new Date(),
-      }
+    // Determine final values with optional overrides
+    const name = options?.name || proposedBrand.name;
+    const description = options?.description || proposedBrand.description;
+    const website = options?.website || proposedBrand.website;
+    const createCanonical = options?.createCanonical !== false; // default true
+
+    // Find any temporary brand records that belong to this approval
+    const tempBrands = await this.prisma.brand.findMany({
+      where: { slug: { startsWith: `temp-${proposedBrand.id}` } },
     });
 
-    // Update the proposed brand status
-    await this.prisma.proposedBrand.update({
-      where: { id: brandId },
-      data: {
-        status: 'APPROVED',
-        reviewedBy: adminId,
-        reviewedAt: new Date(),
+    // Run in a transaction: either create canonical and migrate listings, or
+    // approve temporary brands for single-use without creating canonical.
+    return this.prisma.$transaction(async (tx) => {
+      if (createCanonical) {
+        // Create the canonical approved brand
+        const approvedBrand = await tx.brand.create({
+          data: {
+            name,
+            description,
+            website,
+            slug: name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+            status: 'APPROVED',
+            isVerified: true,
+            submittedBy: proposedBrand.submittedBy,
+            approvedBy: adminId,
+            approvedAt: new Date(),
+          }
+        });
+
+        // Reassign listings referencing temporary brands to the new canonical brand
+        for (const tb of tempBrands) {
+          await tx.listing.updateMany({
+            where: { brandId: tb.id },
+            data: { brandId: approvedBrand.id },
+          });
+
+          // Reassign any models that were attached to the temporary brand
+          const tempModelsForBrand = await tx.model.findMany({ where: { brandId: tb.id } });
+          for (const tm of tempModelsForBrand) {
+            await tx.model.update({ where: { id: tm.id }, data: { brandId: approvedBrand.id, updatedBy: adminId } });
+          }
+
+          // Mark the temporary brand as inactive and note it was migrated
+          await tx.brand.update({
+            where: { id: tb.id },
+            data: { isActive: false, updatedBy: adminId },
+          });
+        }
+
+        // update proposed brand status
+        await tx.proposedBrand.update({
+          where: { id: brandId },
+          data: {
+            status: 'APPROVED',
+            reviewedBy: adminId,
+            reviewedAt: new Date(),
+          }
+        });
+
+        // Audit
+        await tx.brandAudit.create({
+          data: {
+            brandId: approvedBrand.id,
+            action: 'CREATE',
+            changedBy: adminId,
+            notes: `Approved canonical brand from proposed ${brandId}`,
+          },
+        });
+
+        return approvedBrand;
+      } else {
+        // Single-use approval: mark all temp brands as APPROVED so they show where needed
+        const updates = [] as any[];
+        for (const tb of tempBrands) {
+          updates.push(tx.brand.update({
+            where: { id: tb.id },
+            data: { status: 'APPROVED', approvedBy: adminId, approvedAt: new Date(), updatedBy: adminId },
+          }));
+        }
+        await Promise.all(updates);
+
+        // update proposed brand status
+        await tx.proposedBrand.update({
+          where: { id: brandId },
+          data: {
+            status: 'APPROVED',
+            reviewedBy: adminId,
+            reviewedAt: new Date(),
+          }
+        });
+
+        return tempBrands;
       }
     });
-
-    return approvedBrand;
   }
 
   async rejectBrand(brandId: string, adminId: string) {
@@ -80,7 +150,7 @@ export class AdminService {
     });
   }
 
-  async approveModel(modelId: string, adminId: string) {
+  async approveModel(modelId: string, adminId: string, options?: { createCanonical?: boolean; name?: string; description?: string }) {
     // Get the proposed model
     const proposedModel = await this.prisma.proposedModel.findUnique({
       where: { id: modelId },
@@ -91,31 +161,84 @@ export class AdminService {
       throw new Error('Proposed model not found');
     }
 
-    // Create the approved model
-    const approvedModel = await this.prisma.model.create({
-      data: {
-        name: proposedModel.name,
-        slug: proposedModel.name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-        brandId: proposedModel.brandId,
-        description: proposedModel.description,
-        status: 'APPROVED',
-        submittedBy: proposedModel.submittedBy,
-        approvedBy: adminId,
-        approvedAt: new Date(),
-      }
+    const name = options?.name || proposedModel.name;
+    const description = options?.description || proposedModel.description;
+    const createCanonical = options?.createCanonical !== false;
+
+    // Find any temporary model records associated with this proposed model
+    const tempModels = await this.prisma.model.findMany({
+      where: { slug: { startsWith: `temp-${proposedModel.id}` } },
     });
 
-    // Update the proposed model status
-    await this.prisma.proposedModel.update({
-      where: { id: modelId },
-      data: {
-        status: 'APPROVED',
-        reviewedBy: adminId,
-        reviewedAt: new Date(),
+    return this.prisma.$transaction(async (tx) => {
+      if (createCanonical) {
+        const approvedModel = await tx.model.create({
+          data: {
+            name,
+            slug: name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+            brandId: proposedModel.brandId,
+            description,
+            status: 'APPROVED',
+            isVerified: true,
+            submittedBy: proposedModel.submittedBy,
+            approvedBy: adminId,
+            approvedAt: new Date(),
+          }
+        });
+
+        // Reassign listings that reference temporary models to the new canonical model
+        for (const tm of tempModels) {
+          await tx.listing.updateMany({
+            where: { modelId: tm.id },
+            data: { modelId: approvedModel.id },
+          });
+
+          // deactivate the temporary model
+          await tx.model.update({ where: { id: tm.id }, data: { isActive: false, updatedBy: adminId } });
+        }
+
+        await tx.proposedModel.update({
+          where: { id: modelId },
+          data: {
+            status: 'APPROVED',
+            reviewedBy: adminId,
+            reviewedAt: new Date(),
+          }
+        });
+
+        await tx.modelAudit.create({
+          data: {
+            modelId: approvedModel.id,
+            action: 'CREATE',
+            changedBy: adminId,
+            notes: `Approved canonical model from proposed ${modelId}`,
+          }
+        });
+
+        return approvedModel;
+      } else {
+        // Single-use: mark temp models as approved without creating canonical model
+        const updates = [] as any[];
+        for (const tm of tempModels) {
+          updates.push(tx.model.update({
+            where: { id: tm.id },
+            data: { status: 'APPROVED', approvedBy: adminId, approvedAt: new Date(), updatedBy: adminId },
+          }));
+        }
+        await Promise.all(updates);
+
+        await tx.proposedModel.update({
+          where: { id: modelId },
+          data: {
+            status: 'APPROVED',
+            reviewedBy: adminId,
+            reviewedAt: new Date(),
+          }
+        });
+
+        return tempModels;
       }
     });
-
-    return approvedModel;
   }
 
   async rejectModel(modelId: string, adminId: string) {

@@ -28,6 +28,8 @@
     "lint:api": "cd apps/api && npm run lint",
     "lint:web": "cd apps/web && npm run lint",
     "test": "npm run test:api && npm run test:web",
+    "test:admin:approve": "bash scripts/test/admin_approve_flow.sh",
+    "test:admin:approve:single": "bash scripts/test/admin_approve_single_use_flow.sh",
     "test:api": "cd apps/api && npm run test",
     "test:web": "cd apps/web && npm run test"
   },

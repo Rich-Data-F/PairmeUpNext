@@ -8,6 +8,7 @@ export async function GET(
   try {
     const { slug } = await params;
     const apiBase = getApiBase();
+    console.log('📡 Brand detail backend:', `${apiBase}/brands/${slug}`);
     const res = await fetch(`${apiBase}/brands/${slug}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },

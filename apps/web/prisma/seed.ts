@@ -72,7 +72,7 @@ async function main() {
     const createdBrand = await prisma.brand.upsert({
       where: { slug: brand.slug },
       update: {},
-      create: brand,
+      create: { ...brand, isActive: true, status: 'SYSTEM' },
     });
     createdBrands.push(createdBrand);
     console.log(`✅ Brand created: ${createdBrand.name}`);
@@ -157,7 +157,9 @@ async function main() {
         create: {
           ...modelData,
           brandId: brand.id,
-          currency: 'USD'
+          currency: 'USD',
+          isActive: true,
+          status: 'APPROVED',
         },
       });
       console.log(`✅ Model created: ${model.name}`);
