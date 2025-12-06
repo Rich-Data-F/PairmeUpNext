@@ -9,11 +9,13 @@ export async function POST(
     const url = new URL(request.url);
     const action = url.pathname.split('/').pop(); // approve or reject
 
+    const body = await request.json().catch(() => null);
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/proposed-brands/${id}/${action}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      body: body ? JSON.stringify(body) : undefined,
     });
 
     if (!response.ok) {

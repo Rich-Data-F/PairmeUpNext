@@ -27,8 +27,9 @@ export class AdminController {
   @Post('proposed-brands/:id/approve')
   @ApiOperation({ summary: 'Approve a proposed brand' })
   @ApiResponse({ status: 200, description: 'Brand approved successfully' })
-  async approveBrand(@Param('id') id: string, @Request() req: any) {
-    return this.adminService.approveBrand(id, req.user.sub);
+  async approveBrand(@Param('id') id: string, @Request() req: any, @Body() body?: any) {
+    // body.accepts options: { createCanonical?: boolean, name?: string, description?: string, website?: string }
+    return this.adminService.approveBrand(id, req.user.sub, body || {});
   }
 
   @Post('proposed-brands/:id/reject')
@@ -41,8 +42,9 @@ export class AdminController {
   @Post('proposed-models/:id/approve')
   @ApiOperation({ summary: 'Approve a proposed model' })
   @ApiResponse({ status: 200, description: 'Model approved successfully' })
-  async approveModel(@Param('id') id: string, @Request() req: any) {
-    return this.adminService.approveModel(id, req.user.sub);
+  async approveModel(@Param('id') id: string, @Request() req: any, @Body() body?: any) {
+    // body.accepts options: { createCanonical?: boolean, name?: string, description?: string }
+    return this.adminService.approveModel(id, req.user.sub, body || {});
   }
 
   @Post('proposed-models/:id/reject')

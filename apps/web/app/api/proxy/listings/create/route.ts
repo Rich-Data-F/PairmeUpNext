@@ -6,6 +6,7 @@ import { withAuthHeader } from '@/lib/auth-headers';
 export async function POST(req: NextRequest) {
   try {
     const apiBase = getApiBase();
+    console.log('📡 Create listing backend:', apiBase);
     const body = await req.json();
     const resp = await fetch(`${apiBase}/listings`, await withAuthHeader({
       method: 'POST',
