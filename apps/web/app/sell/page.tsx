@@ -1,3 +1,4 @@
+// Rebuild trigger - updated on 2025-12-05
 "use client";
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
