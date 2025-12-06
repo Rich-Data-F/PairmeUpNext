@@ -431,6 +431,7 @@ enum ListingType {
   EARBUD_RIGHT
   EARBUD_PAIR
   CHARGING_CASE
+  FULL_SET        // Complete set: both earbuds + charging case
   ACCESSORIES
 }
 
@@ -465,6 +466,12 @@ enum ModelStatus {
   SYSTEM     // Created by system/admin (pre-approved)
 }
 
+enum ListingIntent {
+  SELLING      // User wants to sell
+  BUYING       // User wants to buy
+  TRADING      // User wants to trade
+}
+
 model Listing {
   id          String        @id @default(cuid())
   title       String
@@ -484,6 +491,18 @@ model Listing {
   identifierMasked String? // "****E5F6" format
   identifierFull   String? // Encrypted full identifier
   isVerified       Boolean @default(false)
+
+  // Trading preferences (NEW)
+  primaryIntent    ListingIntent @default(SELLING) // What user primarily wants to do
+  openToAlternate  Boolean       @default(false)   // Open to buying if selling, or vice versa
+  
+  // Item availability (NEW) - What parts the user has/needs
+  hasLeftEarbud    Boolean? // User has left earbud
+  hasRightEarbud   Boolean? // User has right earbud
+  hasChargingCase  Boolean? // User has charging case
+  needsLeftEarbud  Boolean? // User needs left earbud
+  needsRightEarbud Boolean? // User needs right earbud
+  needsChargingCase Boolean? // User needs charging case
 
   // Location
   cityId            String
@@ -530,8 +549,10 @@ model Listing {
   @@index([brandId, modelId])
   @@index([cityId])
   @@index([type, condition])
+  @@index([primaryIntent, openToAlternate]) // NEW: For matching buyers/sellers
   @@map("listings")
 }
+
 
 // ============================================================================
 // LOST/STOLEN REGISTRY
