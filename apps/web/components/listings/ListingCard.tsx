@@ -27,6 +27,7 @@ interface ListingCardProps {
       isVerified: boolean;
     };
     publishedAt: string;
+    primaryIntent?: string;
   };
 }
 
@@ -114,7 +115,7 @@ export function ListingCard({ listing }: ListingCardProps) {
             <div className="text-6xl opacity-30">🎧</div>
           </div>
         )}
-        
+
         {/* Like Button */}
         <button
           onClick={handleLikeClick}
@@ -128,10 +129,15 @@ export function ListingCard({ listing }: ListingCardProps) {
         </button>
 
         {/* Condition Badge */}
-        <div className="absolute top-3 left-3">
+        <div className="absolute top-3 left-3 flex flex-col gap-2">
           <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getConditionColor(listing.condition)}`}>
             {listing.condition}
           </span>
+          {listing.primaryIntent === 'TRADING' && (
+            <span className="px-2 py-1 text-xs font-medium rounded-full border bg-purple-100 text-purple-800 border-purple-200">
+              Trading
+            </span>
+          )}
         </div>
 
         {/* Brand Logo */}

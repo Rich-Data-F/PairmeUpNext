@@ -63,6 +63,15 @@ interface ListingDetail {
     longitude: string;
     approximate: boolean;
   };
+  // New fields
+  primaryIntent?: 'SELLING' | 'BUYING' | 'TRADING';
+  openToAlternate?: boolean;
+  hasLeftEarbud?: boolean;
+  hasRightEarbud?: boolean;
+  hasChargingCase?: boolean;
+  needsLeftEarbud?: boolean;
+  needsRightEarbud?: boolean;
+  needsChargingCase?: boolean;
 }
 
 interface ListingDetailPageProps {
@@ -71,6 +80,7 @@ interface ListingDetailPageProps {
 
 export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
   const router = useRouter();
+  // ... existing state ...
   const [listing, setListing] = useState<ListingDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,6 +89,7 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const negotiationRef = useRef<HTMLDivElement | null>(null);
 
+  // ... existing useEffects and handlers ...
   useEffect(() => {
     fetchListing();
   }, [listingId]);
@@ -89,7 +100,7 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
       setError(null);
 
       const response = await fetch(`/api/proxy/listings/${listingId}`);
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch listing: ${response.status}`);
       }
@@ -104,7 +115,7 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
     }
   };
 
-  // Try to get the current user id (if authenticated). No error if not.
+  // ... existing auth check ...
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -292,7 +303,7 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
                       alt={`${listing.title} - Image ${currentImageIndex + 1}`}
                       className="max-w-full max-h-full object-contain rounded-lg"
                     />
-                    
+
                     {/* Authenticity Badge - TODO: Get actual source from API */}
                     {currentImageIndex === 0 && (
                       <div className="absolute top-4 left-4">
@@ -300,7 +311,7 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
                         {/* <AuthenticityBadge source="camera" /> */}
                       </div>
                     )}
-                    
+
                     {/* Image Navigation */}
                     {listing.images.length > 1 && (
                       <>
@@ -319,7 +330,7 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
                       </>
                     )}
                   </div>
-                  
+
                   {/* Thumbnail Navigation */}
                   {listing.images.length > 1 && (
                     <div className="flex gap-2 overflow-x-auto pb-2">
@@ -327,9 +338,8 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
                         <button
                           key={index}
                           onClick={() => setCurrentImageIndex(index)}
-                          className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
-                            index === currentImageIndex ? 'border-blue-500' : 'border-gray-200'
-                          }`}
+                          className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${index === currentImageIndex ? 'border-blue-500' : 'border-gray-200'
+                            }`}
                         >
                           <img
                             src={image}
@@ -340,7 +350,7 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
                       ))}
                     </div>
                   )}
-                  
+
                   {/* Image Counter */}
                   {listing.images.length > 1 && (
                     <div className="text-center text-sm text-gray-500">
@@ -446,6 +456,51 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
               </div>
             </div>
 
+            {/* Trading Preferences & Availability (NEW) */}
+            {(listing.primaryIntent || listing.hasLeftEarbud || listing.hasRightEarbud || listing.hasChargingCase) && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Trading & Availability</h3>
+
+                {listing.primaryIntent && (
+                  <div className="mb-4">
+                    <span className="text-sm text-gray-500 block mb-1">Looking to</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium px-3 py-1 bg-blue-50 text-blue-700 rounded-full">
+                        {listing.primaryIntent}
+                      </span>
+                      {listing.openToAlternate && (
+                        <span className="text-sm text-gray-600">(Open to other options)</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  {(listing.hasLeftEarbud || listing.hasRightEarbud || listing.hasChargingCase) && (
+                    <div>
+                      <span className="text-sm text-gray-500 block mb-2">Has available</span>
+                      <ul className="space-y-1">
+                        {listing.hasLeftEarbud && <li className="flex items-center text-sm"><CheckBadgeIcon className="h-4 w-4 text-green-500 mr-1" /> Left Earbud</li>}
+                        {listing.hasRightEarbud && <li className="flex items-center text-sm"><CheckBadgeIcon className="h-4 w-4 text-green-500 mr-1" /> Right Earbud</li>}
+                        {listing.hasChargingCase && <li className="flex items-center text-sm"><CheckBadgeIcon className="h-4 w-4 text-green-500 mr-1" /> Charging Case</li>}
+                      </ul>
+                    </div>
+                  )}
+
+                  {(listing.needsLeftEarbud || listing.needsRightEarbud || listing.needsChargingCase) && (
+                    <div>
+                      <span className="text-sm text-gray-500 block mb-2">Looking for</span>
+                      <ul className="space-y-1">
+                        {listing.needsLeftEarbud && <li className="flex items-center text-sm"><span className="h-4 w-4 rounded-full border border-gray-400 mr-1 inline-block"></span> Left Earbud</li>}
+                        {listing.needsRightEarbud && <li className="flex items-center text-sm"><span className="h-4 w-4 rounded-full border border-gray-400 mr-1 inline-block"></span> Right Earbud</li>}
+                        {listing.needsChargingCase && <li className="flex items-center text-sm"><span className="h-4 w-4 rounded-full border border-gray-400 mr-1 inline-block"></span> Charging Case</li>}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Seller Info */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Seller Information</h3>
@@ -482,7 +537,7 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Description</h3>
               <p className="text-gray-700 whitespace-pre-wrap">{listing.description}</p>
-              
+
               {listing.sellerNotes && (
                 <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                   <h4 className="font-medium text-gray-900 mb-2">Seller Notes</h4>
