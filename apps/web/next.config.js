@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Trigger Vercel Rebuild
+  // Trigger Vercel Rebuild 2
   typescript: {
     ignoreBuildErrors: true, // Temporary for development
   },
