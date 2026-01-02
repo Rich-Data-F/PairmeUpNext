@@ -198,3 +198,4 @@ types/
 prisma/migrations/dev.db*
 
 Learn
+learn/
