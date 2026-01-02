@@ -106,8 +106,8 @@ export class FacetedSearchService {
     const brandCounts: any = await this.prisma.listing.groupBy({
       by: ['brandId'],
       where,
-      _count: { _all: true },
-      orderBy: { _count: { _all: 'desc' } },
+      _count: { brandId: true },
+      orderBy: { _count: { brandId: 'desc' } },
       take: 20,
     });
 
@@ -122,7 +122,7 @@ export class FacetedSearchService {
       return {
         id: count.brandId,
         name: brand?.name || 'Unknown',
-        count: count._count._all,
+        count: count._count.brandId,
       };
     });
   }
