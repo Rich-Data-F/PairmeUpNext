@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
+import { useTranslations } from 'next-intl';
 
 interface SearchHeaderProps {
   query: string;
@@ -18,6 +19,7 @@ export function SearchHeader({
   resultsCount, 
   loading 
 }: SearchHeaderProps) {
+  const t = useTranslations('search')
   const [localQuery, setLocalQuery] = useState(query);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -43,7 +45,7 @@ export function SearchHeader({
                 type="text"
                 value={localQuery}
                 onChange={handleInputChange}
-                placeholder="Search for earbuds, AirPods, cases..."
+                placeholder={t('placeholder')}
                 className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -56,7 +58,7 @@ export function SearchHeader({
               {loading ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               ) : (
-                'Search'
+                t('searchButton')
               )}
             </button>
 
@@ -67,7 +69,7 @@ export function SearchHeader({
               className="lg:hidden inline-flex items-center px-4 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               <FunnelIcon className="h-5 w-5 mr-2" />
-              Filters
+              {t('filters')}
             </button>
           </form>
 
@@ -77,23 +79,23 @@ export function SearchHeader({
               {loading ? (
                 <div className="flex items-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400 mr-2"></div>
-                  Searching...
+                  {t('searching')}
                 </div>
               ) : (
                 <span>
                   {resultsCount > 0 ? (
                     <>
-                      Showing <span className="font-medium">{resultsCount.toLocaleString()}</span> result{resultsCount !== 1 ? 's' : ''}
+                      {t('showing')} <span className="font-medium">{resultsCount.toLocaleString()}</span> {resultsCount !== 1 ? t('results') : t('result')}
                       {query && (
                         <>
-                          {' '}for <span className="font-medium">"{query}"</span>
+                          {' '}{t('for')} <span className="font-medium">"{query}"</span>
                         </>
                       )}
                     </>
                   ) : query ? (
-                    <>No results found for <span className="font-medium">"{query}"</span></>
+                    <>{t('noResults')} <span className="font-medium">"{query}"</span></>
                   ) : (
-                    'Enter a search term to find listings'
+                    t('enterSearch')
                   )}
                 </span>
               )}

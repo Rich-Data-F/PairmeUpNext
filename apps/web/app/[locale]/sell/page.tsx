@@ -2,26 +2,27 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import PhotoUpload, { UploadedPhoto } from '@/components/PhotoUpload';
+import { useTranslations } from 'next-intl';
 
 type Brand = { id: string; name: string; slug: string };
 type Model = { id: string; name: string; slug: string };
 type City = { id: string; name: string; displayName: string; countryCode: string };
 
 const LISTING_TYPES = [
-  { value: 'EARBUD_LEFT', label: 'Left earbud' },
-  { value: 'EARBUD_RIGHT', label: 'Right earbud' },
-  { value: 'EARBUD_PAIR', label: 'Pair of earbuds (L+R)' },
-  { value: 'CHARGING_CASE', label: 'Charging case' },
-  { value: 'FULL_SET', label: 'Full complete kit (Earbuds + Case)' },
-  { value: 'ACCESSORIES', label: 'Accessories' },
+  { value: 'EARBUD_LEFT', labelKey: 'types.EARBUD_LEFT' },
+  { value: 'EARBUD_RIGHT', labelKey: 'types.EARBUD_RIGHT' },
+  { value: 'EARBUD_PAIR', labelKey: 'types.EARBUD_PAIR' },
+  { value: 'CHARGING_CASE', labelKey: 'types.CHARGING_CASE' },
+  { value: 'FULL_SET', labelKey: 'types.FULL_SET' },
+  { value: 'ACCESSORIES', labelKey: 'types.ACCESSORIES' },
 ];
 
 const CONDITIONS = [
-  { value: 'NEW', label: 'New' },
-  { value: 'LIKE_NEW', label: 'Like new' },
-  { value: 'GOOD', label: 'Good' },
-  { value: 'FAIR', label: 'Fair' },
-  { value: 'PARTS_ONLY', label: 'For parts' },
+  { value: 'NEW', labelKey: 'conditions.NEW' },
+  { value: 'LIKE_NEW', labelKey: 'conditions.LIKE_NEW' },
+  { value: 'GOOD', labelKey: 'conditions.GOOD' },
+  { value: 'FAIR', labelKey: 'conditions.FAIR' },
+  { value: 'PARTS_ONLY', labelKey: 'conditions.PARTS_ONLY' },
 ];
 
 const COUNTRIES = [
@@ -38,6 +39,7 @@ const COUNTRIES = [
 ];
 
 export default function SellPage() {
+  const t = useTranslations('sell')
   const router = useRouter();
   const [authed, setAuthed] = useState<boolean | null>(null);
   const [title, setTitle] = useState('');
@@ -338,23 +340,23 @@ export default function SellPage() {
   };
 
   if (authed === null) {
-    return <div className="max-w-2xl mx-auto p-6">Checking authentication…</div>;
+    return <div className="max-w-2xl mx-auto p-6">{t('checkingAuth')}</div>;
   }
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-2xl font-semibold mb-4">Create a listing</h1>
+      <h1 className="text-2xl font-semibold mb-4">{t('createListing')}</h1>
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="grid gap-4">
           <div>
-            <input className="input input-bordered w-full" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+            <input className="input input-bordered w-full" placeholder={t('titlePlaceholder')} value={title} onChange={(e) => setTitle(e.target.value)} required />
             {formErrors.title && <p className="text-sm text-red-600 mt-1">{formErrors.title}</p>}
           </div>
 
           <div>
             <textarea
               className="textarea textarea-bordered w-full"
-              placeholder="Description (minimum 20 characters)"
+              placeholder={t('descriptionPlaceholder')}
               value={description}
               onChange={handleDescriptionChange}
               required
@@ -364,10 +366,10 @@ export default function SellPage() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <select className="select select-bordered" value={type} onChange={(e) => setType(e.target.value)}>
-              {LISTING_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+              {LISTING_TYPES.map(lt => <option key={lt.value} value={lt.value}>{t(lt.labelKey as any)}</option>)}
             </select>
             <select className="select select-bordered" value={condition} onChange={(e) => setCondition(e.target.value)}>
-              {CONDITIONS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+              {CONDITIONS.map(c => <option key={c.value} value={c.value}>{t(c.labelKey as any)}</option>)}
             </select>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -390,18 +392,18 @@ export default function SellPage() {
                 }}
                 required
               >
-                <option value="">Select brand…</option>
+                <option value="">{t('selectBrand')}</option>
                 {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                 {brands.length === 0 && !brandsError && (
-                  <option disabled>Loading brands…</option>
+                  <option disabled>{t('loadingBrands')}</option>
                 )}
-                <option value="custom">➕ Other/New Brand</option>
+                <option value="custom">➕ {t('otherBrand')}</option>
               </select>
               {brandsError && <p className="text-sm text-red-600 mt-1">{brandsError}</p>}
               {showCustomBrand && (
                 <input
                   className="input input-bordered w-full mt-2"
-                  placeholder="Enter brand name…"
+                  placeholder={t('enterBrandName')}
                   value={customBrand}
                   onChange={(e) => setCustomBrand(e.target.value)}
                   required
@@ -428,16 +430,16 @@ export default function SellPage() {
                 disabled={showCustomBrand && !customBrand.trim()}
               >
                 <option value="">
-                  {showCustomBrand ? (customBrand.trim() ? 'Select model…' : 'Enter brand first') :
-                    brandId ? 'Select model…' : 'Pick brand first'}
+                  {showCustomBrand ? (customBrand.trim() ? t('selectModel') : t('enterBrandFirst')) :
+                    brandId ? t('selectModel') : t('pickBrandFirst')}
                 </option>
                 {models.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-                <option value="custom">➕ Other/New Model</option>
+                <option value="custom">➕ {t('otherModel')}</option>
               </select>
               {showCustomModel && (
                 <input
                   className="input input-bordered w-full mt-2"
-                  placeholder="Enter model name…"
+                  placeholder={t('enterModelName')}
                   value={customModel}
                   onChange={(e) => setCustomModel(e.target.value)}
                   required
@@ -450,71 +452,71 @@ export default function SellPage() {
           {/* Advanced Match Matrix - Intent / Action Selection */}
           <div className="bg-gray-100 p-5 rounded-lg space-y-5 border border-gray-200">
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-2">What is the intent of this listing?</label>
+              <label className="block text-sm font-semibold text-gray-800 mb-2">{t('listingIntent')}</label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <button type="button" onClick={() => setPrimaryIntent('SELLING')} className={`btn ${primaryIntent === 'SELLING' ? 'btn-primary' : 'btn-outline bg-white'}`}>Sell an item</button>
-                <button type="button" onClick={() => setPrimaryIntent('BUYING')} className={`btn ${primaryIntent === 'BUYING' ? 'btn-primary' : 'btn-outline bg-white'}`}>Find/Buy an item</button>
-                <button type="button" onClick={() => setPrimaryIntent('TRADING')} className={`btn ${primaryIntent === 'TRADING' ? 'btn-primary' : 'btn-outline bg-white'}`}>Trade/Swap</button>
+                <button type="button" onClick={() => setPrimaryIntent('SELLING')} className={`btn ${primaryIntent === 'SELLING' ? 'btn-primary' : 'btn-outline bg-white'}`}>{t('intentSell')}</button>
+                <button type="button" onClick={() => setPrimaryIntent('BUYING')} className={`btn ${primaryIntent === 'BUYING' ? 'btn-primary' : 'btn-outline bg-white'}`}>{t('intentBuy')}</button>
+                <button type="button" onClick={() => setPrimaryIntent('TRADING')} className={`btn ${primaryIntent === 'TRADING' ? 'btn-primary' : 'btn-outline bg-white'}`}>{t('intentTrade')}</button>
               </div>
             </div>
 
             <div className="border-t border-gray-300 pt-3">
-              <label className="block text-sm font-semibold text-gray-800 mb-2">Item Status Matrix (Are you offering or requesting these parts?)</label>
+              <label className="block text-sm font-semibold text-gray-800 mb-2">{t('matrixLabel')}</label>
               
               <div className="bg-white rounded shadow-sm border border-gray-200 divide-y divide-gray-100">
                 {/* Left Earbud */}
                 <div className="flex items-center justify-between p-3">
-                  <span className="text-sm font-medium w-1/3">Left Earbud</span>
+                  <span className="text-sm font-medium w-1/3">{t('leftEarbud')}</span>
                   <div className="flex space-x-3 w-2/3 justify-end">
                     <label className="flex items-center space-x-1 cursor-pointer">
                       <input type="radio" name="leftEarbud" className="radio radio-sm radio-primary" checked={leftEarbudStatus === 'HAVE'} onChange={() => setLeftEarbudStatus('HAVE')} />
-                      <span className="text-sm">I Have It</span>
+                      <span className="text-sm">{t('iHaveIt')}</span>
                     </label>
                     <label className="flex items-center space-x-1 cursor-pointer">
                       <input type="radio" name="leftEarbud" className="radio radio-sm radio-secondary" checked={leftEarbudStatus === 'NEED'} onChange={() => setLeftEarbudStatus('NEED')} />
-                      <span className="text-sm">I Need It</span>
+                      <span className="text-sm">{t('iNeedIt')}</span>
                     </label>
                     <label className="flex items-center space-x-1 cursor-pointer text-gray-500">
                       <input type="radio" name="leftEarbud" className="radio radio-sm" checked={leftEarbudStatus === 'NONE'} onChange={() => setLeftEarbudStatus('NONE')} />
-                      <span className="text-sm">N/A</span>
+                      <span className="text-sm">{t('na')}</span>
                     </label>
                   </div>
                 </div>
 
                 {/* Right Earbud */}
                 <div className="flex items-center justify-between p-3">
-                  <span className="text-sm font-medium w-1/3">Right Earbud</span>
+                  <span className="text-sm font-medium w-1/3">{t('rightEarbud')}</span>
                   <div className="flex space-x-3 w-2/3 justify-end">
                     <label className="flex items-center space-x-1 cursor-pointer">
                       <input type="radio" name="rightEarbud" className="radio radio-sm radio-primary" checked={rightEarbudStatus === 'HAVE'} onChange={() => setRightEarbudStatus('HAVE')} />
-                      <span className="text-sm">I Have It</span>
+                      <span className="text-sm">{t('iHaveIt')}</span>
                     </label>
                     <label className="flex items-center space-x-1 cursor-pointer">
                       <input type="radio" name="rightEarbud" className="radio radio-sm radio-secondary" checked={rightEarbudStatus === 'NEED'} onChange={() => setRightEarbudStatus('NEED')} />
-                      <span className="text-sm">I Need It</span>
+                      <span className="text-sm">{t('iNeedIt')}</span>
                     </label>
                     <label className="flex items-center space-x-1 cursor-pointer text-gray-500">
                       <input type="radio" name="rightEarbud" className="radio radio-sm" checked={rightEarbudStatus === 'NONE'} onChange={() => setRightEarbudStatus('NONE')} />
-                      <span className="text-sm">N/A</span>
+                      <span className="text-sm">{t('na')}</span>
                     </label>
                   </div>
                 </div>
 
                 {/* Charging Case */}
                 <div className="flex items-center justify-between p-3">
-                  <span className="text-sm font-medium w-1/3">Charging Case</span>
+                  <span className="text-sm font-medium w-1/3">{t('chargingCase')}</span>
                   <div className="flex space-x-3 w-2/3 justify-end">
                     <label className="flex items-center space-x-1 cursor-pointer">
                       <input type="radio" name="chargingCase" className="radio radio-sm radio-primary" checked={chargingCaseStatus === 'HAVE'} onChange={() => setChargingCaseStatus('HAVE')} />
-                      <span className="text-sm">I Have It</span>
+                      <span className="text-sm">{t('iHaveIt')}</span>
                     </label>
                     <label className="flex items-center space-x-1 cursor-pointer">
                       <input type="radio" name="chargingCase" className="radio radio-sm radio-secondary" checked={chargingCaseStatus === 'NEED'} onChange={() => setChargingCaseStatus('NEED')} />
-                      <span className="text-sm">I Need It</span>
+                      <span className="text-sm">{t('iNeedIt')}</span>
                     </label>
                     <label className="flex items-center space-x-1 cursor-pointer text-gray-500">
                       <input type="radio" name="chargingCase" className="radio radio-sm" checked={chargingCaseStatus === 'NONE'} onChange={() => setChargingCaseStatus('NONE')} />
-                      <span className="text-sm">N/A</span>
+                      <span className="text-sm">{t('na')}</span>
                     </label>
                   </div>
                 </div>
@@ -524,13 +526,13 @@ export default function SellPage() {
             <div className="bg-blue-50 p-3 rounded border border-blue-200">
               <label className="flex items-center space-x-3 cursor-pointer">
                 <input type="checkbox" className="checkbox checkbox-primary" checked={openToAlternate} onChange={(e) => setOpenToAlternate(e.target.checked)} />
-                <span className="text-sm font-medium text-blue-900">I'm flexible! (e.g., I'm willing to sell my remaining parts if I can't find the replacement I need)</span>
+                <span className="text-sm font-medium text-blue-900">{t('flexibleLabel')}</span>
               </label>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('location')}</label>
             <div className="grid grid-cols-3 gap-3">
               <select 
                 className="select select-bordered w-full" 
@@ -542,11 +544,11 @@ export default function SellPage() {
                   setCities([]);
                 }}
               >
-                <option value="">All Countries</option>
+                <option value="">{t('allCountries')}</option>
                 {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
               </select>
               <div className="col-span-2">
-                <input className="input input-bordered w-full" placeholder="Start typing your city…" value={cityQuery} onChange={(e) => setCityQuery(e.target.value)} />
+                <input className="input input-bordered w-full" placeholder={t('cityPlaceholder')} value={cityQuery} onChange={(e) => setCityQuery(e.target.value)} />
               </div>
             </div>
             
@@ -584,7 +586,7 @@ export default function SellPage() {
           </div>
           <div className="grid grid-cols-3 gap-3 items-center">
             <div>
-              <input type="number" className="input input-bordered" placeholder="Price" value={price}
+              <input type="number" className="input input-bordered" placeholder={t('price')} value={price}
                 onChange={(e) => setPrice(e.target.value === '' ? '' : Number(e.target.value))} min={0} step="0.01" required />
               {formErrors.price && <p className="text-sm text-red-600 mt-1">{formErrors.price}</p>}
             </div>
@@ -593,9 +595,9 @@ export default function SellPage() {
               <option value="EUR">EUR</option>
               <option value="GBP">GBP</option>
             </select>
-            <input className="input input-bordered" placeholder="Serial/identifier (optional)" value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} />
+            <input className="input input-bordered" placeholder={t('serialNumber')} value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} />
           </div>
-          <textarea className="textarea textarea-bordered w-full" placeholder="Seller notes (optional)" value={sellerNotes} onChange={(e) => setSellerNotes(e.target.value)} />
+          <textarea className="textarea textarea-bordered w-full" placeholder={t('sellerNotes')} value={sellerNotes} onChange={(e) => setSellerNotes(e.target.value)} />
         </div>
 
         {/* Photo Upload Section */}
@@ -612,9 +614,9 @@ export default function SellPage() {
             {loading ? (
               <span className="flex items-center gap-2">
                 <span className="loading loading-spinner"></span>
-                Posting...
+                {t('posting')}
               </span>
-            ) : 'Post listing'}
+            ) : t('postListing')}
           </button>
         </div>
       </form>

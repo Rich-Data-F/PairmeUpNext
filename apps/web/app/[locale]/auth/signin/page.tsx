@@ -1,8 +1,10 @@
 "use client";
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 export default function SignInPage() {
+  const t = useTranslations('auth')
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -62,14 +64,14 @@ export default function SignInPage() {
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold">Sign in</h1>
-          <p className="text-gray-500 mt-2">Enter your credentials to continue.</p>
+          <h1 className="text-2xl font-semibold">{t('signIn')}</h1>
+          <p className="text-gray-500 mt-2">{t('signInSubtitle')}</p>
         </div>
         <form onSubmit={onSubmit} className="space-y-4">
           <input
             type="email"
             className="input input-bordered w-full"
-            placeholder="Email"
+            placeholder={t('emailPlaceholder')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -77,47 +79,47 @@ export default function SignInPage() {
           <input
             type="password"
             className="input input-bordered w-full"
-            placeholder="Password"
+            placeholder={t('passwordPlaceholder')}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button className="w-full btn btn-primary" disabled={loading}>
-            {loading ? 'Signing in…' : 'Sign in'}
+            {loading ? t('signingIn') : t('signIn')}
           </button>
         </form>
         <div className="text-center space-y-2">
           <a href="/auth/reset" className="text-sm text-blue-600 hover:underline">
-            Forgot password?
+            {t('forgotPassword')}
           </a>
           <div>
             <button onClick={() => setShowSupport(!showSupport)} className="text-sm text-blue-600 hover:underline">
-              Need help with sign in?
+              {t('needHelp')}
             </button>
           </div>
           <div>
             <a href="https://hubspot.com" className="text-sm text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
-              Contact Support via HubSpot
+              {t('contactSupport')}
             </a>
           </div>
         </div>
         {showSupport && (
           <div className="border-t pt-4">
-            <h3 className="text-lg font-medium mb-2">Request Support</h3>
+            <h3 className="text-lg font-medium mb-2">{t('requestSupport')}</h3>
             {supportSuccess ? (
-              <p className="text-green-600">Support request sent successfully!</p>
+              <p className="text-green-600">{t('supportSent')}</p>
             ) : (
               <form onSubmit={onSupportSubmit} className="space-y-2">
                 <textarea
                   className="textarea textarea-bordered w-full"
-                  placeholder="Describe your issue..."
+                  placeholder={t('describeProblem')}
                   value={supportMessage}
                   onChange={(e) => setSupportMessage(e.target.value)}
                   required
                 />
                 <button className="btn btn-secondary" disabled={supportLoading}>
-                  {supportLoading ? 'Sending...' : 'Send Request'}
+                  {supportLoading ? t('sending') : t('sendRequest')}
                 </button>
               </form>
             )}

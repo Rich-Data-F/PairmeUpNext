@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { 
   ExclamationTriangleIcon, 
   MagnifyingGlassIcon,
@@ -17,11 +18,11 @@ type Model = { id: string; name: string; slug: string };
 type City = { id: string; name: string; displayName: string; countryCode: string };
 
 const LISTING_TYPES = [
-  { value: 'EARBUD_LEFT', label: 'Left earbud' },
-  { value: 'EARBUD_RIGHT', label: 'Right earbud' },
-  { value: 'EARBUD_PAIR', label: 'Pair of earbuds (L+R)' },
-  { value: 'CHARGING_CASE', label: 'Charging case' },
-  { value: 'FULL_SET', label: 'Full complete kit (Earbuds + Case)' },
+  { value: 'EARBUD_LEFT', labelKey: 'types.EARBUD_LEFT' },
+  { value: 'EARBUD_RIGHT', labelKey: 'types.EARBUD_RIGHT' },
+  { value: 'EARBUD_PAIR', labelKey: 'types.EARBUD_PAIR' },
+  { value: 'CHARGING_CASE', labelKey: 'types.CHARGING_CASE' },
+  { value: 'FULL_SET', labelKey: 'types.FULL_SET' },
 ];
 
 const COUNTRIES = [
@@ -38,6 +39,8 @@ const COUNTRIES = [
 ];
 
 export function LostStolenPage() {
+  const t = useTranslations('lostStolen')
+  const ts = useTranslations('sell')
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<'search' | 'report'>('search');
@@ -260,11 +263,11 @@ export function LostStolenPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b mb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 text-center">
-          <h1 className="text-4xl font-extrabold text-gray-900 mb-2">Lost & Found</h1>
-          <p className="text-lg text-gray-600 font-medium tracking-tight">Search for your missing gear or help others reunite with theirs.</p>
+          <h1 className="text-4xl font-extrabold text-gray-900 mb-2">{t('title')}</h1>
+          <p className="text-lg text-gray-600 font-medium tracking-tight">{t('subtitle')}</p>
           <div className="mt-6">
             <a href="#submission-form" className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 shadow-lg transition-all inline-flex items-center">
-              <PlusIcon className="w-5 h-5 mr-2" /> Post a New Report
+              <PlusIcon className="w-5 h-5 mr-2" /> {t('postReport')}
             </a>
           </div>
         </div>
@@ -274,16 +277,16 @@ export function LostStolenPage() {
         <section className="mb-16">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-              <MagnifyingGlassIcon className="w-6 h-6 mr-2 text-blue-600" /> Discover Reports
+              <MagnifyingGlassIcon className="w-6 h-6 mr-2 text-blue-600" /> {t('discoverReports')}
             </h2>
-            <div className="text-sm text-gray-500">{reports.length} registry entries found</div>
+            <div className="text-sm text-gray-500">{reports.length} {t('registryEntries')}</div>
           </div>
 
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
             <div className="relative">
               <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
               <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search live DB by brand, model, city..."
+                placeholder={t('searchPlaceholder')}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
             </div>
           </div>
@@ -291,7 +294,7 @@ export function LostStolenPage() {
           {isLoading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Syncing registry results...</p>
+              <p className="mt-4 text-gray-600">{t('syncing')}</p>
             </div>
           ) : filteredReports.length > 0 ? (
             <div className="space-y-6 max-h-[700px] overflow-y-auto pr-2 custom-scrollbar">
@@ -304,15 +307,15 @@ export function LostStolenPage() {
                       
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
-                          <span className="font-medium text-gray-700">Brand/Model:</span>
+                          <span className="font-medium text-gray-700">{t('brandModel')}:</span>
                           <p className="text-gray-600">{report.brand?.name} {report.model?.name}</p>
                         </div>
                         <div>
-                          <span className="font-medium text-gray-700">Date Posted:</span>
+                          <span className="font-medium text-gray-700">{t('datePosted')}:</span>
                           <p className="text-gray-600">{new Date(report.createdAt).toLocaleDateString()}</p>
                         </div>
                         <div>
-                          <span className="font-medium text-gray-700">Location:</span>
+                          <span className="font-medium text-gray-700">{t('location')}:</span>
                           <p className="text-gray-600 flex items-center">
                             <MapPinIcon className="w-4 h-4 mr-1" /> {report.city?.displayName}
                           </p>
@@ -322,10 +325,10 @@ export function LostStolenPage() {
 
                     <div className="ml-6 text-center">
                       <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${report.primaryIntent === 'SELLING' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                        {report.primaryIntent === 'SELLING' ? 'FOUND ITEM' : 'LOST ITEM'}
+                        {report.primaryIntent === 'SELLING' ? t('foundItem') : t('lostItem')}
                       </span>
                       <button onClick={() => router.push(`/listings/${report.id}`)} className="mt-3 block w-full px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
-                        View Details
+                        {t('viewDetails')}
                       </button>
                     </div>
                   </div>
@@ -335,8 +338,8 @@ export function LostStolenPage() {
           ) : (
             <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-200">
               <ExclamationTriangleIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900">No matches found</h3>
-              <p className="text-gray-600">Try broadening your search or register a new report below.</p>
+              <h3 className="text-lg font-medium text-gray-900">{t('noMatches')}</h3>
+              <p className="text-gray-600">{t('noMatchesDesc')}</p>
             </div>
           )}
         </section>
@@ -345,7 +348,7 @@ export function LostStolenPage() {
         <section id="submission-form" className="mt-16">
           <div className="flex items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-              <PlusIcon className="w-6 h-6 mr-2 text-green-600" /> New Registry Submission
+              <PlusIcon className="w-6 h-6 mr-2 text-green-600" /> {t('newSubmission')}
             </h2>
           </div>
           
@@ -354,31 +357,31 @@ export function LostStolenPage() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Item Type *</label>
+                  <label className="block text-sm font-medium mb-2">{t('itemType')} *</label>
                   <select value={reportForm.type} onChange={(e) => setReportForm({...reportForm, type: e.target.value})} className="w-full px-3 py-2 border rounded-lg" required>
-                    {LISTING_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                    {LISTING_TYPES.map(lt => <option key={lt.value} value={lt.value}>{ts(lt.labelKey as any)}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Incident Category</label>
+                  <label className="block text-sm font-medium mb-2">{t('incidentCategory')}</label>
                   <select value={reportForm.incidentType} onChange={(e) => setReportForm({...reportForm, incidentType: e.target.value as 'lost'|'stolen'|'found'})} className="w-full px-3 py-2 border rounded-lg">
-                    <option value="lost">Lost / Stolen Item</option>
-                    <option value="found">Found Item</option>
+                    <option value="lost">{t('lostStolenOption')}</option>
+                    <option value="found">{t('foundOption')}</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Title *</label>
+                <label className="block text-sm font-medium mb-2">{t('titleLabel')} *</label>
                 <input type="text" value={reportForm.title} onChange={(e) => setReportForm({...reportForm, title: e.target.value})} className="w-full px-3 py-2 border rounded-lg" required />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Description / Circumstances *</label>
+                <label className="block text-sm font-medium mb-2">{t('descriptionLabel')} *</label>
                 <textarea 
                   value={reportForm.description} 
                   onChange={(e) => setReportForm({...reportForm, description: e.target.value})} 
                   rows={3} 
-                  placeholder={reportForm.incidentType === 'found' ? "Where and how did you find it? Add details to help the owner identify it." : "Describe how and where the item was lost..."}
+                  placeholder={reportForm.incidentType === 'found' ? t('descFoundPlaceholder') : t('descLostPlaceholder')}
                   className="w-full px-3 py-2 border rounded-lg" 
                   required 
                 />
@@ -386,7 +389,7 @@ export function LostStolenPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Brand *</label>
+                  <label className="block text-sm font-medium mb-2">{t('brandLabel')} *</label>
                   <select 
                     value={reportForm.showCustomBrand ? 'custom' : reportForm.brandId} 
                     onChange={(e) => {
@@ -399,14 +402,14 @@ export function LostStolenPage() {
                     className="w-full px-3 py-2 border rounded-lg" 
                     required
                   >
-                    <option value="">Select canonical brand</option>
+                    <option value="">{ts('selectBrand')}</option>
                     {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                    <option value="custom">➕ Other/New Brand</option>
+                    <option value="custom">➕ {ts('otherBrand')}</option>
                   </select>
                   {reportForm.showCustomBrand && (
                     <input
                       className="input input-bordered w-full mt-2"
-                      placeholder="Enter brand name…"
+                      placeholder={ts('enterBrandName')}
                       value={reportForm.customBrand}
                       onChange={(e) => setReportForm({...reportForm, customBrand: e.target.value})}
                       required
@@ -414,7 +417,7 @@ export function LostStolenPage() {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Model *</label>
+                  <label className="block text-sm font-medium mb-2">{t('modelLabel')} *</label>
                   <select 
                     value={reportForm.showCustomModel ? 'custom' : reportForm.modelId} 
                     onChange={(e) => {
@@ -429,16 +432,16 @@ export function LostStolenPage() {
                     required
                   >
                     <option value="">
-                      {reportForm.showCustomBrand ? (reportForm.customBrand.trim() ? "Select model" : "Enter brand first") : 
-                       reportForm.brandId ? "Select canonical model" : "Pick brand first"}
+                      {reportForm.showCustomBrand ? (reportForm.customBrand.trim() ? ts('selectModel') : ts('enterBrandFirst')) : 
+                       reportForm.brandId ? ts('selectModel') : ts('pickBrandFirst')}
                     </option>
                     {models.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-                    <option value="custom">➕ Other/New Model</option>
+                    <option value="custom">➕ {ts('otherModel')}</option>
                   </select>
                   {reportForm.showCustomModel && (
                     <input
                       className="input input-bordered w-full mt-2"
-                      placeholder="Enter model name…"
+                      placeholder={ts('enterModelName')}
                       value={reportForm.customModel}
                       onChange={(e) => setReportForm({...reportForm, customModel: e.target.value})}
                       required
@@ -449,7 +452,7 @@ export function LostStolenPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="col-span-1 md:col-span-1">
-                  <label className="block text-sm font-medium mb-2">{reportForm.incidentType === 'found' ? 'Found in City *' : 'Last Seen City *'}</label>
+                  <label className="block text-sm font-medium mb-2">{reportForm.incidentType === 'found' ? t('foundInCity') : t('lastSeenCity')} *</label>
                   <div className="grid grid-cols-3 gap-2">
                     <select 
                       className="select select-bordered w-full px-2" 
@@ -498,7 +501,7 @@ export function LostStolenPage() {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">{reportForm.incidentType === 'found' ? 'Date & Time Found *' : 'Date & Time Lost *'}</label>
+                  <label className="block text-sm font-medium mb-2">{reportForm.incidentType === 'found' ? t('dateFound') : t('dateLost')} *</label>
                   <input type="datetime-local" value={reportForm.lastSeenDate} onChange={(e) => setReportForm({...reportForm, lastSeenDate: e.target.value})} className="w-full px-3 py-2 border rounded-lg" required />
                 </div>
               </div>
@@ -506,7 +509,7 @@ export function LostStolenPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="col-span-1 md:col-span-2">
                   <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-bold text-gray-700">Specific Location / Neighborhood (Optional)</label>
+                    <label className="text-sm font-bold text-gray-700">{t('specificLocation')}</label>
                     <button 
                       type="button" 
                       onClick={() => {
@@ -517,7 +520,7 @@ export function LostStolenPage() {
                         navigator.geolocation.getCurrentPosition(
                           (pos) => {
                             setReportForm(prev => ({ ...prev, latitude: pos.coords.latitude, longitude: pos.coords.longitude }));
-                            toast.success('GPS coordinates captured!');
+                            toast.success(t('gpsCaptured'));
                           },
                           (err) => {
                             toast.error(`Unable to retrieve location: ${err.message}`);
@@ -526,7 +529,7 @@ export function LostStolenPage() {
                       }}
                       className="text-xs text-blue-600 hover:underline flex items-center font-medium"
                     >
-                      <MapPinIcon className="w-3 h-3 mr-1" /> Use current GPS location
+                      <MapPinIcon className="w-3 h-3 mr-1" /> {t('useGPS')}
                     </button>
                   </div>
                   <div className="relative">
@@ -546,15 +549,15 @@ export function LostStolenPage() {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Contact Context (Optional)</label>
+                  <label className="block text-sm font-medium mb-2">{t('contactContext')}</label>
                   <input type="email" value={reportForm.contactEmail} onChange={(e) => setReportForm({...reportForm, contactEmail: e.target.value})} className="w-full px-3 py-2 border rounded-lg" placeholder="email@example.com" />
-                  <p className="text-[10px] text-gray-500 mt-1">Users can message you through the app regardless.</p>
+                  <p className="text-[10px] text-gray-500 mt-1">{t('contactNote')}</p>
                 </div>
               </div>
 
               {reportForm.incidentType !== 'found' && (
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <label className="block text-sm font-medium mb-2">Reward Amount (Optional)</label>
+                  <label className="block text-sm font-medium mb-2">{t('rewardAmount')}</label>
                   <div className="flex gap-2">
                     <select value={reportForm.currency} onChange={(e) => setReportForm({...reportForm, currency: e.target.value})} className="select select-bordered px-2">
                       <option value="EUR">€</option>
@@ -567,7 +570,7 @@ export function LostStolenPage() {
               )}
 
               <button type="submit" className={`px-6 py-3 w-full text-white rounded-lg font-bold transition-all shadow-md active:scale-[0.98] ${reportForm.incidentType === 'found' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}>
-                {reportForm.incidentType === 'found' ? 'Submit Found Item Report' : 'Submit Lost Report'}
+                {reportForm.incidentType === 'found' ? t('submitFoundReport') : t('submitLostReport')}
               </button>
             </form>
           </div>

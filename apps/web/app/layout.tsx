@@ -29,6 +29,7 @@ import { Toaster } from 'react-hot-toast'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { Providers } from './providers'
+import { getLocale } from 'next-intl/server'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -96,13 +97,14 @@ export const metadata: Metadata = {
   category: 'marketplace',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const locale = await getLocale();
   return (
-    <html lang="en" className="h-full">
+    <html lang={locale} className="h-full">
       <body className={`${inter.className} h-full flex flex-col bg-gray-50`} suppressHydrationWarning={true}>
         <Providers>
           <Navbar />
