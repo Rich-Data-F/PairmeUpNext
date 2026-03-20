@@ -50,18 +50,32 @@ export function HomePage() {
     fetchHomepageData();
   }, []);
 
+  const parseJsonSafely = async (response: Response, fallback: any) => {
+    const contentType = response.headers.get('content-type') || '';
+
+    if (!contentType.includes('application/json')) {
+      return fallback;
+    }
+
+    try {
+      return await response.json();
+    } catch {
+      return fallback;
+    }
+  };
+
   const fetchHomepageData = async () => {
     try {
       setLoading(true);
       const [featuredResponse, suggestionsResponse, statsResponse] = await Promise.all([
-        fetch('/api/proxy/search/featured'),
-        fetch('/api/proxy/search/suggestions'),
+        fetch('/api/search/featured'),
+        fetch('/api/search/suggestions'),
         fetch('/api/proxy/search/stats'),
       ]);
 
-      const featured = await featuredResponse.json();
-      const suggestionsData = await suggestionsResponse.json();
-      const statsData = await statsResponse.json();
+      const featured = await parseJsonSafely(featuredResponse, { listings: [] });
+      const suggestionsData = await parseJsonSafely(suggestionsResponse, { popular: [], trending: [] });
+      const statsData = await parseJsonSafely(statsResponse, { activeListings: 0, totalUsers: 0, totalViews: { _sum: { views: 0 } } });
 
       const featuredArray = Array.isArray(featured)
         ? featured
