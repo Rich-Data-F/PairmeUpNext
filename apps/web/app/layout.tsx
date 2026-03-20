@@ -26,12 +26,7 @@ import './globals.css'
 import 'leaflet/dist/leaflet.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import { Toaster } from 'react-hot-toast'
-import { Navbar } from '@/components/layout/Navbar'
-import { Footer } from '@/components/layout/Footer'
 import { Providers } from './providers'
-import { NextIntlClientProvider } from 'next-intl'
-import { getLocale, getMessages } from 'next-intl/server'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -104,44 +99,10 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const locale = await getLocale();
-  const messages = await getMessages();
   return (
-    <html lang={locale} className="h-full">
+    <html lang="en" className="h-full">
       <body className={`${inter.className} h-full flex flex-col bg-gray-50`} suppressHydrationWarning={true}>
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <Providers>
-            <Navbar />
-            <main className="flex-1">
-              {children}
-            </main>
-            <Footer />
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: '#363636',
-                  color: '#fff',
-                },
-                success: {
-                  duration: 3000,
-                  iconTheme: {
-                    primary: '#10b981',
-                    secondary: '#fff',
-                  },
-                },
-                error: {
-                  duration: 5000,
-                  iconTheme: {
-                    primary: '#ef4444',
-                    secondary: '#fff',
-                  },
-                },
-              }}
-            />
-          </Providers>
-        </NextIntlClientProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   )
