@@ -197,5 +197,14 @@ types/
 # Prisma
 prisma/migrations/dev.db*
 
+# Generated uploads
+apps/api/uploads/images/
+apps/api/uploads/thumbnails/
+
+# Local scratch utilities
+packages/db/prisma/clean_models.ts
+scripts/check-images.js
+scripts/test-prisma-filter.js
+
 Learn
 learn/
