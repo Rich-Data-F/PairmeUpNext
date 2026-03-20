@@ -7,11 +7,14 @@ import { useTranslations } from 'next-intl';
 import { 
   ExclamationTriangleIcon, 
   MagnifyingGlassIcon,
+  ListBulletIcon,
+  MapIcon,
   PlusIcon,
   ShieldCheckIcon,
   ClockIcon,
   MapPinIcon
 } from '@heroicons/react/24/outline';
+import { LostFoundMap } from './LostFoundMap';
 
 type Brand = { id: string; name: string; slug: string };
 type Model = { id: string; name: string; slug: string };
@@ -44,6 +47,7 @@ export function LostStolenPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<'search' | 'report'>('search');
+  const [resultsView, setResultsView] = useState<'list' | 'map'>('list');
   const [authed, setAuthed] = useState<boolean | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [reports, setReports] = useState<any[]>([]);
@@ -139,10 +143,14 @@ export function LostStolenPage() {
   useEffect(() => {
     const tab = searchParams.get('tab');
     const type = searchParams.get('type');
+    const view = searchParams.get('view');
 
     if (tab === 'report') setActiveTab('report');
     if (type === 'lost' || type === 'found' || type === 'stolen') {
       setReportForm(prev => ({ ...prev, incidentType: type as any }));
+    }
+    if (view === 'map' || view === 'list') {
+      setResultsView(view);
     }
   }, [searchParams]);
 
@@ -276,10 +284,30 @@ export function LostStolenPage() {
         {/* SECTION 1: SEARCH & BROWSE */}
         <section className="mb-16">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-              <MagnifyingGlassIcon className="w-6 h-6 mr-2 text-blue-600" /> {t('discoverReports')}
-            </h2>
-            <div className="text-sm text-gray-500">{reports.length} {t('registryEntries')}</div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+                <MagnifyingGlassIcon className="w-6 h-6 mr-2 text-blue-600" /> {t('discoverReports')}
+              </h2>
+              <div className="mt-1 text-sm text-gray-500">{reports.length} {t('registryEntries')}</div>
+            </div>
+            <div className="inline-flex rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
+              <button
+                type="button"
+                onClick={() => setResultsView('list')}
+                className={`inline-flex items-center rounded-lg px-3 py-2 text-sm font-semibold transition ${resultsView === 'list' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+              >
+                <ListBulletIcon className="mr-2 h-4 w-4" />
+                {t('listView')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setResultsView('map')}
+                className={`inline-flex items-center rounded-lg px-3 py-2 text-sm font-semibold transition ${resultsView === 'map' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+              >
+                <MapIcon className="mr-2 h-4 w-4" />
+                {t('mapView')}
+              </button>
+            </div>
           </div>
 
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
@@ -297,6 +325,24 @@ export function LostStolenPage() {
               <p className="mt-4 text-gray-600">{t('syncing')}</p>
             </div>
           ) : filteredReports.length > 0 ? (
+            resultsView === 'map' ? (
+              <LostFoundMap
+                reports={filteredReports}
+                emptyTitle={t('mapNoCoordinates')}
+                emptyDescription={t('mapNoCoordinatesDesc')}
+                viewDetailsLabel={t('viewDetails')}
+                brandModelLabel={t('brandModel')}
+                datePostedLabel={t('datePosted')}
+                locationLabel={t('location')}
+                foundItemLabel={t('foundItem')}
+                lostItemLabel={t('lostItem')}
+                mapLegendLabel={t('mapLegend')}
+                mapLegendLostLabel={t('mapLegendLost')}
+                mapLegendFoundLabel={t('mapLegendFound')}
+                mapLegendTypesLabel={t('mapLegendTypes')}
+                mapAvailableCountLabel={t('mapAvailableCount')}
+              />
+            ) : (
             <div className="space-y-6 max-h-[700px] overflow-y-auto pr-2 custom-scrollbar">
               {filteredReports.map((report) => (
                 <div key={report.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow border-l-4 border-l-blue-600">
@@ -335,6 +381,7 @@ export function LostStolenPage() {
                 </div>
               ))}
             </div>
+            )
           ) : (
             <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-200">
               <ExclamationTriangleIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
