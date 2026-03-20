@@ -12,11 +12,12 @@ export function LanguageSwitcher() {
   const pathname = usePathname();
 
   const switchLocale = (next: string) => {
+    const currentPath = pathname || '/';
     // Strip current locale prefix if present, then add new one
     const localePrefix = routing.locales.find(
-      (l) => l !== routing.defaultLocale && pathname.startsWith(`/${l}`)
+      (l) => l !== routing.defaultLocale && currentPath.startsWith(`/${l}`)
     );
-    const bare = localePrefix ? pathname.slice(`/${localePrefix}`.length) || '/' : pathname;
+    const bare = localePrefix ? currentPath.slice(`/${localePrefix}`.length) || '/' : currentPath;
     const newPath = next === routing.defaultLocale ? bare : `/${next}${bare}`;
     router.push(newPath);
   };
