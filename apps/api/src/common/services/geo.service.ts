@@ -144,7 +144,7 @@ export class GeoService {
    * @param limit Maximum results
    * @returns Promise<GeoDBCity[]>
    */
-  async autocomplete(query: string, limit: number = 10): Promise<GeoDBCity[]> {
+  async autocomplete(query: string, limit: number = 10, countryCode?: string): Promise<GeoDBCity[]> {
     if (!query || query.length < 2) {
       return [];
     }
@@ -152,8 +152,13 @@ export class GeoService {
     // First check local database for cached cities
     const localCities = await this.findLocalCities(query, limit);
     
-    if (localCities.length >= limit) {
-      return localCities.map(city => this.transformPrismaCityToGeoDBCity(city));
+    // If we have enough local results and no country filter is specified, or they match the country filter
+    const filteredLocal = countryCode 
+      ? localCities.filter(c => c.countryCode.toUpperCase() === countryCode.toUpperCase())
+      : localCities;
+
+    if (filteredLocal.length >= limit) {
+      return filteredLocal.map(city => this.transformPrismaCityToGeoDBCity(city));
     }
 
     // If not enough local results, search GeoDB API
@@ -161,6 +166,7 @@ export class GeoService {
       const response = await this.searchCities({
         namePrefix: query,
         limit,
+        countryIds: countryCode ? [countryCode.toUpperCase()] : undefined,
         minPopulation: 10000, // Focus on larger cities
       });
 
@@ -170,7 +176,7 @@ export class GeoService {
       return response.data;
     } catch (error) {
       // Fallback to local results if API fails
-      return localCities.map(city => this.transformPrismaCityToGeoDBCity(city));
+      return filteredLocal.map(city => this.transformPrismaCityToGeoDBCity(city));
     }
   }
 

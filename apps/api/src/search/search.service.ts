@@ -2,16 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { GeoService } from '../common/services/geo.service';
 import { ListingQueryDto } from '../listings/dto/listing.dto';
+import { Condition } from '@prisma/client';
 
-// Define the types locally until Prisma client is properly generated
-type ListingType = 'LISTING' | 'WANTED';
-type Condition = 'NEW' | 'LIKE_NEW' | 'GOOD' | 'FAIR' | 'POOR';
+// ListingType is not exported from Prisma client — define it locally matching the schema enum
+type ListingType = 'EARBUD_LEFT' | 'EARBUD_RIGHT' | 'EARBUD_PAIR' | 'CHARGING_CASE' | 'FULL_SET' | 'ACCESSORIES';
+
 
 export interface SearchFilters {
   query?: string;
   brandId?: string;
   modelId?: string;
   type?: ListingType;
+  primaryIntent?: 'SELLING' | 'BUYING' | 'TRADING';
   condition?: Condition[];
   minPrice?: number;
   maxPrice?: number;
@@ -49,14 +51,14 @@ export class SearchService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly geoService: GeoService,
-  ) {}
+  ) { }
 
   async searchListings(filters: SearchFilters, page: number = 1, limit: number = 20): Promise<SearchResults> {
     const skip = (page - 1) * limit;
-    
+
     // Build base where clause
     const where = await this.buildWhereClause(filters);
-    
+
     // Execute search query with facets
     const [listings, total, facets] = await Promise.all([
       this.getListings(where, skip, limit, filters),
@@ -88,19 +90,31 @@ export class SearchService {
 
     // Text search
     if (filters.query) {
-      const searchTerms = filters.query.split(' ').filter(term => term.length > 2);
-      where.OR = [
+      const searchTerms = filters.query.trim().split(/\s+/).filter(term => term.length > 2);
+      
+      const exactMatchOr = [
         { title: { contains: filters.query, mode: 'insensitive' } },
         { description: { contains: filters.query, mode: 'insensitive' } },
         { brand: { name: { contains: filters.query, mode: 'insensitive' } } },
         { model: { name: { contains: filters.query, mode: 'insensitive' } } },
-        ...searchTerms.map(term => ({
-          OR: [
-            { title: { contains: term, mode: 'insensitive' } },
-            { description: { contains: term, mode: 'insensitive' } },
-          ]
-        }))
       ];
+
+      // If there are multiple words, require ALL words to be found somewhere (AND)
+      if (searchTerms.length > 1) {
+        const allTermsMatchAnd = {
+          AND: searchTerms.map(term => ({
+            OR: [
+              { title: { contains: term, mode: 'insensitive' } },
+              { description: { contains: term, mode: 'insensitive' } },
+              { brand: { name: { contains: term, mode: 'insensitive' } } },
+              { model: { name: { contains: term, mode: 'insensitive' } } },
+            ]
+          }))
+        };
+        where.OR = [...exactMatchOr, allTermsMatchAnd];
+      } else {
+        where.OR = exactMatchOr;
+      }
     }
 
     // Brand filter
@@ -116,6 +130,11 @@ export class SearchService {
     // Type filter
     if (filters.type) {
       where.type = filters.type;
+    }
+
+    // Intent (BUYING vs SELLING) naturally integrating Lost objects
+    if (filters.primaryIntent) {
+      where.primaryIntent = filters.primaryIntent;
     }
 
     // Condition filter
@@ -142,7 +161,12 @@ export class SearchService {
 
     // Images filter
     if (filters.hasImages) {
-      where.NOT = { images: { equals: [] } };
+      where.OR = [
+        { images: { isEmpty: false } }, // Error: Prisma does not support isEmpty for arrays in postgres always 
+        // Actually, for PostgreSQL String[]:
+        { NOT: { images: { equals: [] } } },
+        { files: { some: {} } }
+      ];
     }
 
     // Location filter with radius
@@ -219,7 +243,7 @@ export class SearchService {
     if (filters.verifiedOnly) baseWhere.isVerified = true;
     if (filters.hasImages) baseWhere.NOT = { images: { equals: [] } };
     if (filters.currency) baseWhere.currency = filters.currency;
-    
+
     if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
       baseWhere.price = {};
       if (filters.minPrice !== undefined) baseWhere.price.gte = filters.minPrice;
@@ -275,7 +299,7 @@ export class SearchService {
 
   private async getModelFacets(baseWhere: any, brandId?: string) {
     const modelWhere = brandId ? { ...baseWhere, brandId } : baseWhere;
-    
+
     const modelCounts = await this.prisma.listing.groupBy({
       by: ['modelId'],
       where: modelWhere,
@@ -331,7 +355,7 @@ export class SearchService {
     for (let i = 0; i < 5; i++) {
       const rangeMin = min + (i * bucketSize);
       const rangeMax = i === 4 ? max : min + ((i + 1) * bucketSize);
-      
+
       const count = await this.prisma.listing.count({
         where: {
           ...baseWhere,
@@ -391,7 +415,7 @@ export class SearchService {
     }));
   }
 
-  private async getSearchSuggestions(query: string): Promise<string[]> {
+  async getSearchSuggestions(query: string): Promise<string[]> {
     const suggestions = new Set<string>();
 
     // Brand name suggestions
@@ -440,7 +464,7 @@ export class SearchService {
 
     // Common search terms
     const commonTerms = ['AirPods', 'Galaxy Buds', 'Charging Case', 'Left Earbud', 'Right Earbud'];
-    
+
     return [
       ...popularBrands.map(b => b.name),
       ...commonTerms,
@@ -476,6 +500,60 @@ export class SearchService {
     });
   }
 
+
+  /**
+   * City autocomplete — checks local DB first, then falls back to GeoDB API.
+   * Centralised here so the controller doesn't need to access private properties.
+   */
+  async autocompleteCities(query: string, limit: number = 10, countryCode?: string) {
+    const where: any = { searchText: { contains: query.toLowerCase() } };
+    if (countryCode) {
+      where.countryCode = countryCode.toUpperCase();
+    }
+
+    // 1. Get local cities
+    const localCities = await this.prisma.city.findMany({
+      where,
+      orderBy: [{ population: 'desc' }, { name: 'asc' }],
+      take: limit,
+    });
+
+    const results = localCities.map(city => ({
+      id: city.id,
+      name: city.name,
+      displayName: city.displayName,
+      country: city.country,
+      countryCode: city.countryCode,
+      geoDbId: city.geoDbId,
+    }));
+
+    // 2. If we have few results or the query is specific, check GeoDB
+    if (results.length < limit) {
+      try {
+        const geoCities = await this.geoService.autocomplete(query, limit, countryCode);
+        
+        // Merge and de-duplicate by GeoDB ID
+        for (const geoCity of geoCities) {
+          if (!results.find(r => r.geoDbId === geoCity.id)) {
+            results.push({
+              id: geoCity.id.toString(),
+              name: geoCity.name,
+              displayName: `${geoCity.name}, ${geoCity.country}`,
+              country: geoCity.country,
+              countryCode: geoCity.countryCode,
+              geoDbId: geoCity.id,
+            });
+          }
+          if (results.length >= limit) break;
+        }
+      } catch (err) {
+        console.error('External city autocomplete failed:', err);
+      }
+    }
+
+    return results;
+  }
+
   async getTrendingSearches(): Promise<string[]> {
     // This would typically come from analytics data
     // For now, return mock trending searches
@@ -486,5 +564,102 @@ export class SearchService {
       'Charging case',
       'Left earbud replacement',
     ];
+  }
+
+  /**
+   * Returns all filter options (brands, conditions, types, currencies, popular cities)
+   * used to populate the search filter panel.
+   * Moved here from the controller to avoid private-property access anti-pattern.
+   */
+  async getFilterOptions() {
+    const [brands, popularCities] = await Promise.all([
+      this.prisma.brand.findMany({
+        where: { isActive: true, status: { in: ['APPROVED', 'SYSTEM'] } },
+        orderBy: { name: 'asc' },
+        select: { id: true, name: true, logo: true },
+      }),
+      this.geoService.getPopularCities(20),
+    ]);
+
+    return {
+      brands,
+      conditions: [
+        { value: 'NEW', label: 'New' },
+        { value: 'LIKE_NEW', label: 'Like New' },
+        { value: 'GOOD', label: 'Good' },
+        { value: 'FAIR', label: 'Fair' },
+        { value: 'PARTS_ONLY', label: 'Parts Only' },
+      ],
+      types: [
+        { value: 'EARBUD_LEFT', label: 'Left Earbud' },
+        { value: 'EARBUD_RIGHT', label: 'Right Earbud' },
+        { value: 'EARBUD_PAIR', label: 'Earbud Pair' },
+        { value: 'CHARGING_CASE', label: 'Charging Case' },
+        { value: 'FULL_SET', label: 'Full Set' },
+        { value: 'ACCESSORIES', label: 'Accessories' },
+      ],
+      currencies: [
+        { value: 'USD', label: 'US Dollar' },
+        { value: 'EUR', label: 'Euro' },
+        { value: 'GBP', label: 'British Pound' },
+        { value: 'CAD', label: 'Canadian Dollar' },
+        { value: 'AUD', label: 'Australian Dollar' },
+      ],
+      popularCities: popularCities.map(city => ({
+        id: city.id,
+        name: city.name,
+        displayName: city.displayName,
+        countryCode: city.countryCode,
+      })),
+    };
+  }
+
+  /**
+   * Returns aggregate marketplace statistics.
+   * Moved here from the controller to avoid private-property access anti-pattern.
+   */
+  async getMarketplaceStats() {
+    const [
+      totalListings,
+      activeListings,
+      totalUsers,
+      totalViews,
+      topBrands,
+      recentActivity,
+    ] = await Promise.all([
+      this.prisma.listing.count(),
+      this.prisma.listing.count({ where: { status: 'ACTIVE' } }),
+      this.prisma.user.count(),
+      this.prisma.listing.aggregate({ _sum: { views: true } }),
+      this.prisma.brand.findMany({
+        where: { isActive: true },
+        orderBy: { Listing: { _count: 'desc' } },
+        select: { id: true, name: true, logo: true, _count: { select: { Listing: true } } },
+        take: 5,
+      }),
+      this.prisma.listing.findMany({
+        where: { status: 'ACTIVE' },
+        orderBy: { publishedAt: 'desc' },
+        select: {
+          id: true,
+          title: true,
+          price: true,
+          currency: true,
+          publishedAt: true,
+          brand: { select: { name: true } },
+          city: { select: { name: true, countryCode: true } },
+        },
+        take: 10,
+      }),
+    ]);
+
+    return {
+      totalListings,
+      activeListings,
+      totalUsers,
+      totalViews: totalViews._sum.views || 0,
+      topBrands,
+      recentActivity,
+    };
   }
 }

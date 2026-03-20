@@ -2,8 +2,9 @@ import { NextRequest } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  context: { params: Promise<{  id: string  }> }
 ) {
+  const params = await context.params;
   try {
     const { id } = await params;
     console.log(`🔍 Fetching listing details for ID: ${id}`);

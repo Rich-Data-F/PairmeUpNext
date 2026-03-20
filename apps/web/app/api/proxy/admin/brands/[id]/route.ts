@@ -3,7 +3,8 @@ export const runtime = 'nodejs';
 import { getApiBase } from '@/lib/config';
 import { withAuthHeader } from '@/lib/auth-headers';
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, context: { params: Promise<{  id: string  }> }) {
+  const params = await context.params;
   try {
     const apiBase = getApiBase();
     const body = await request.json();

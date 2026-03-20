@@ -3,8 +3,9 @@ import { getApiBase } from '@/lib/config';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  context: { params: Promise<{  slug: string  }> }
 ) {
+  const params = await context.params;
   try {
     const { slug } = await params;
     const apiBase = getApiBase();

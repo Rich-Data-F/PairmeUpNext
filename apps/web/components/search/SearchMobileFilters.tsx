@@ -115,39 +115,43 @@ export function SearchMobileFilters({
   };
 
   const handleBrandChange = (brandId: string, checked: boolean) => {
+    const currentBrands = tempParams.brands || [];
     const newBrands = checked
-      ? [...tempParams.brands, brandId]
-      : tempParams.brands.filter(id => id !== brandId);
+      ? [...currentBrands, brandId]
+      : currentBrands.filter(id => id !== brandId);
     updateTempParams({ brands: newBrands });
   };
 
   const handleModelChange = (modelId: string, checked: boolean) => {
+    const currentModels = tempParams.models || [];
     const newModels = checked
-      ? [...tempParams.models, modelId]
-      : tempParams.models.filter(id => id !== modelId);
+      ? [...currentModels, modelId]
+      : currentModels.filter(id => id !== modelId);
     updateTempParams({ models: newModels });
   };
 
   const handleConditionChange = (condition: string, checked: boolean) => {
+    const currentConditions = tempParams.conditions || [];
     const newConditions = checked
-      ? [...tempParams.conditions, condition]
-      : tempParams.conditions.filter(c => c !== condition);
+      ? [...currentConditions, condition]
+      : currentConditions.filter(c => c !== condition);
     updateTempParams({ conditions: newConditions });
   };
 
   const handleCityChange = (cityId: string, checked: boolean) => {
+    const currentCities = tempParams.cities || [];
     const newCities = checked
-      ? [...tempParams.cities, cityId]
-      : tempParams.cities.filter(id => id !== cityId);
+      ? [...currentCities, cityId]
+      : currentCities.filter(id => id !== cityId);
     updateTempParams({ cities: newCities });
   };
 
   const getActiveFiltersCount = () => {
     let count = 0;
-    if (tempParams.brands.length > 0) count++;
-    if (tempParams.models.length > 0) count++;
-    if (tempParams.conditions.length > 0) count++;
-    if (tempParams.cities.length > 0) count++;
+    if (tempParams.brands && tempParams.brands.length > 0) count++;
+    if (tempParams.models && tempParams.models.length > 0) count++;
+    if (tempParams.conditions && tempParams.conditions.length > 0) count++;
+    if (tempParams.cities && tempParams.cities.length > 0) count++;
     if (tempParams.minPrice || tempParams.maxPrice) count++;
     if (tempParams.isVerified) count++;
     if (tempParams.hasImages) count++;
@@ -287,7 +291,7 @@ export function SearchMobileFilters({
                                 id={`mobile-brand-${brand.id}`}
                                 label={brand.name}
                                 count={brand.count}
-                                checked={tempParams.brands.includes(brand.id)}
+                                checked={tempParams.brands ? tempParams.brands.includes(brand.id) : false}
                                 onChange={(checked) => handleBrandChange(brand.id, checked)}
                               />
                             ))}
@@ -305,7 +309,7 @@ export function SearchMobileFilters({
                                 id={`mobile-model-${model.id}`}
                                 label={model.name}
                                 count={model.count}
-                                checked={tempParams.models.includes(model.id)}
+                                checked={tempParams.models ? tempParams.models.includes(model.id) : false}
                                 onChange={(checked) => handleModelChange(model.id, checked)}
                               />
                             ))}
@@ -323,7 +327,7 @@ export function SearchMobileFilters({
                                 id={`mobile-condition-${condition.value}`}
                                 label={condition.label}
                                 count={condition.count}
-                                checked={tempParams.conditions.includes(condition.value)}
+                                checked={tempParams.conditions ? tempParams.conditions.includes(condition.value) : false}
                                 onChange={(checked) => handleConditionChange(condition.value, checked)}
                               />
                             ))}
@@ -341,7 +345,7 @@ export function SearchMobileFilters({
                                 id={`mobile-city-${city.id}`}
                                 label={city.name}
                                 count={city.count}
-                                checked={tempParams.cities.includes(city.id)}
+                                checked={tempParams.cities ? tempParams.cities.includes(city.id) : false}
                                 onChange={(checked) => handleCityChange(city.id, checked)}
                               />
                             ))}

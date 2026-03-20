@@ -6,36 +6,36 @@ export interface AdvancedSearchFilters {
   query?: string;
   exactMatch?: boolean;
   searchFields?: ('title' | 'description' | 'brand' | 'model')[];
-  
+
   // Enhanced filtering
   brandIds?: string[];
   modelIds?: string[];
   categories?: string[];
   conditions?: string[];
   ageRange?: { min?: number; max?: number }; // in months
-  
+
   // Price and currency
   priceRange?: { min?: number; max?: number };
   currencies?: string[];
-  
+
   // Location and geographic
   cityIds?: string[];
   countryIds?: string[];
   coordinates?: { lat: number; lng: number; radiusKm: number };
-  
+
   // Quality and verification
   verifiedOnly?: boolean;
   hasImages?: boolean;
   hasVideo?: boolean;
   minRating?: number;
-  
+
   // Temporal filters
   dateRange?: { start?: Date; end?: Date };
   availabilityType?: 'immediate' | 'negotiable' | 'pickup_only';
-  
+
   // Sorting options
   sortBy?: 'relevance' | 'price_asc' | 'price_desc' | 'date_desc' | 'date_asc' | 'distance' | 'popularity';
-  
+
   // Search behavior
   includeInactive?: boolean;
   excludeOwnListings?: string; // userId to exclude
@@ -64,10 +64,12 @@ export interface SavedSearch {
 
 @Injectable()
 export class AdvancedSearchService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
-   * Enhanced search with advanced filtering and analytics
+   * Enhanced search with advanced filtering and analytics.
+   * Delegates to buildAdvancedWhereClause() and buildAdvancedOrderBy() so that
+   * ALL filters (date range, geo, currency, hasImages, etc.) are honoured.
    */
   async advancedSearch(
     filters: AdvancedSearchFilters,
@@ -78,93 +80,12 @@ export class AdvancedSearchService {
     const startTime = Date.now();
 
     try {
-      // Build comprehensive where clause with all filters
-      const where: any = {
-        status: 'ACTIVE',
-        publishedAt: { lte: new Date() },
-      };
+      // Use the comprehensive where-clause builder instead of duplicating logic
+      const where = await this.buildAdvancedWhereClause(filters, userId);
 
-      // Brand filtering
-      if (filters.brandIds && filters.brandIds.length > 0) {
-        where.brandId = { in: filters.brandIds };
-      }
+      // Use the single source-of-truth order-by builder
+      const orderBy = this.buildAdvancedOrderBy(filters);
 
-      // Model filtering
-      if (filters.modelIds && filters.modelIds.length > 0) {
-        where.modelId = { in: filters.modelIds };
-      }
-
-      // Condition filtering
-      if (filters.conditions && filters.conditions.length > 0) {
-        where.condition = { in: filters.conditions };
-      }
-
-      // City filtering
-      if (filters.cityIds && filters.cityIds.length > 0) {
-        where.cityId = { in: filters.cityIds };
-      }
-
-      // Price range filtering
-      if (filters.priceRange) {
-        where.price = {};
-        if (filters.priceRange.min !== undefined) {
-          where.price.gte = filters.priceRange.min.toString();
-        }
-        if (filters.priceRange.max !== undefined) {
-          where.price.lte = filters.priceRange.max.toString();
-        }
-      }
-
-      // Verified only filtering
-      if (filters.verifiedOnly) {
-        where.isVerified = true;
-      }
-
-      // Has images filtering
-      if (filters.hasImages) {
-        where.images = { not: { equals: [] } };
-      }
-
-      // Exclude own listings
-      if (filters.excludeOwnListings) {
-        where.sellerId = { not: filters.excludeOwnListings };
-      }
-
-      // Add text search if query provided
-      if (filters.query) {
-        where.OR = [
-          { title: { contains: filters.query, mode: 'insensitive' } },
-          { description: { contains: filters.query, mode: 'insensitive' } },
-          { brand: { name: { contains: filters.query, mode: 'insensitive' } } },
-          { model: { name: { contains: filters.query, mode: 'insensitive' } } },
-        ];
-      }
-
-      // Dynamic sorting based on filters.sortBy
-      let orderBy: any = { publishedAt: 'desc' }; // default
-      
-      if (filters.sortBy) {
-        switch (filters.sortBy) {
-          case 'price_asc':
-            orderBy = { price: 'asc' };
-            break;
-          case 'price_desc':
-            orderBy = { price: 'desc' };
-            break;
-          case 'date_asc':
-            orderBy = { publishedAt: 'asc' };
-            break;
-          case 'date_desc':
-            orderBy = { publishedAt: 'desc' };
-            break;
-          case 'relevance':
-          default:
-            orderBy = { publishedAt: 'desc' };
-            break;
-        }
-      }
-      
-      // Execute simple queries
       const skip = (page - 1) * limit;
       const [listings, total] = await Promise.all([
         this.prisma.listing.findMany({
@@ -177,6 +98,8 @@ export class AdvancedSearchService {
               select: {
                 id: true,
                 name: true,
+                verificationBadge: true,
+                trustLevel: true,
                 isVerified: true,
               },
             },
@@ -189,17 +112,7 @@ export class AdvancedSearchService {
       ]);
 
       const searchDuration = Date.now() - startTime;
-
-      // Calculate applied filters count
-      let appliedFilters = 0;
-      if (filters.query) appliedFilters++;
-      if (filters.brandIds?.length) appliedFilters++;
-      if (filters.modelIds?.length) appliedFilters++;
-      if (filters.conditions?.length) appliedFilters++;
-      if (filters.cityIds?.length) appliedFilters++;
-      if (filters.priceRange) appliedFilters++;
-      if (filters.verifiedOnly) appliedFilters++;
-      if (filters.hasImages) appliedFilters++;
+      const appliedFilters = this.getAppliedFiltersCount(filters);
 
       return {
         searchId: this.generateSearchId(),
@@ -269,7 +182,7 @@ export class AdvancedSearchService {
 
     const combinedSuggestions = suggestions
       .flat()
-      .filter((item, index, arr) => 
+      .filter((item, index, arr) =>
         arr.findIndex(i => i.text === item.text) === index
       )
       .sort((a, b) => b.score - a.score)
@@ -357,14 +270,14 @@ export class AdvancedSearchService {
       where.currency = { in: filters.currencies };
     }
 
-    // Price range
+    // Price range — keep as numbers; Prisma/PostgreSQL handles Decimal coercion
     if (filters.priceRange) {
       where.price = {};
       if (filters.priceRange.min !== undefined) {
-        where.price.gte = filters.priceRange.min;
+        where.price.gte = filters.priceRange.min; // number, not string
       }
       if (filters.priceRange.max !== undefined) {
-        where.price.lte = filters.priceRange.max;
+        where.price.lte = filters.priceRange.max; // number, not string
       }
     }
 
@@ -381,7 +294,13 @@ export class AdvancedSearchService {
       where.isVerified = true;
     }
     if (filters.hasImages) {
-      where.images = { some: {} };
+      where.AND = where.AND || [];
+      where.AND.push({
+        OR: [
+          { images: { isEmpty: false } }, // Legacy array check
+          { files: { some: {} } }        // New relationship check
+        ]
+      });
     }
     if (filters.minRating) {
       where.seller = {
@@ -438,7 +357,7 @@ export class AdvancedSearchService {
     // Use Prisma raw query for geographic distance calculation
     // This is a simplified version - in production you'd use PostGIS or similar
     const { lat, lng, radiusKm } = coordinates;
-    
+
     return this.prisma.$queryRaw`
       EXISTS (
         SELECT 1 FROM "City" c 
@@ -563,7 +482,7 @@ export class AdvancedSearchService {
 
   private async getAvailableModels(where: any, brandIds?: string[]) {
     const modelWhere = brandIds?.length ? { ...where, brandId: { in: brandIds } } : where;
-    
+
     const modelCounts = await this.prisma.listing.groupBy({
       by: ['modelId'],
       where: modelWhere,

@@ -229,29 +229,35 @@ export function SearchFilters({ facets, filters, onFiltersChange, loading }: Sea
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label htmlFor="min-price" className="block text-xs font-medium text-gray-700 mb-1">
-                    Min Price
+                    Min Price (€)
                   </label>
-                  <input
-                    type="number"
-                    id="min-price"
-                    value={localMinPrice}
-                    onChange={(e) => setLocalMinPrice(e.target.value)}
-                    placeholder="$0"
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-2.5 text-gray-400 text-sm">€</span>
+                    <input
+                      type="number"
+                      id="min-price"
+                      value={localMinPrice}
+                      onChange={(e) => setLocalMinPrice(e.target.value)}
+                      placeholder="0"
+                      className="block w-full pl-7 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label htmlFor="max-price" className="block text-xs font-medium text-gray-700 mb-1">
-                    Max Price
+                    Max Price (€)
                   </label>
-                  <input
-                    type="number"
-                    id="max-price"
-                    value={localMaxPrice}
-                    onChange={(e) => setLocalMaxPrice(e.target.value)}
-                    placeholder="$999"
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-2.5 text-gray-400 text-sm">€</span>
+                    <input
+                      type="number"
+                      id="max-price"
+                      value={localMaxPrice}
+                      onChange={(e) => setLocalMaxPrice(e.target.value)}
+                      placeholder="999"
+                      className="block w-full pl-7 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

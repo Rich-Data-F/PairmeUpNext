@@ -3,7 +3,6 @@ import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { SearchService, SearchFilters } from './search.service';
 import { AdvancedSearchService } from './advanced-search.service';
 import { FacetedSearchService } from './faceted-search.service';
-import { PrismaService } from '../prisma/prisma.service';
 
 @ApiTags('search')
 @Controller('search')
@@ -12,8 +11,7 @@ export class SearchController {
     private readonly searchService: SearchService,
     private readonly advancedSearchService: AdvancedSearchService,
     private readonly facetedSearchService: FacetedSearchService,
-    private readonly prisma: PrismaService,
-  ) {}
+  ) { }
 
   @Get('listings')
   @ApiOperation({ summary: 'Search listings with advanced filters and facets' })
@@ -29,6 +27,7 @@ export class SearchController {
   @ApiQuery({ name: 'currency', required: false, description: 'Currency filter' })
   @ApiQuery({ name: 'verified', required: false, type: Boolean, description: 'Verified listings only' })
   @ApiQuery({ name: 'hasImages', required: false, type: Boolean, description: 'Listings with images only' })
+  @ApiQuery({ name: 'intent', required: false, enum: ['SELLING', 'BUYING', 'TRADING'], description: 'Primary Intent' })
   @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number' })
   @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page' })
   @ApiResponse({ status: 200, description: 'Search results with facets and pagination' })
@@ -46,6 +45,7 @@ export class SearchController {
       currency: query.currency,
       verifiedOnly: query.verified === 'true',
       hasImages: query.hasImages === 'true',
+      primaryIntent: query.intent,
     };
 
     const page = query.page ? parseInt(query.page) : 1;
@@ -60,25 +60,8 @@ export class SearchController {
   @ApiResponse({ status: 200, description: 'Search suggestions' })
   async getSearchSuggestions(@Query('q') query?: string) {
     if (query && query.length >= 2) {
-      // Return suggestions based on query
-      const brands = await this.searchService['prisma'].brand.findMany({
-        where: { name: { contains: query, mode: 'insensitive' } },
-        select: { name: true },
-        take: 5,
-      });
-
-      const models = await this.searchService['prisma'].model.findMany({
-        where: { name: { contains: query, mode: 'insensitive' } },
-        select: { name: true },
-        take: 5,
-      });
-
-      return {
-        suggestions: [
-          ...brands.map(b => b.name),
-          ...models.map(m => m.name),
-        ].slice(0, 8),
-      };
+      const suggestions = await this.searchService.getSearchSuggestions(query);
+      return { suggestions };
     }
 
     // Return popular and trending searches
@@ -87,10 +70,7 @@ export class SearchController {
       this.searchService.getTrendingSearches(),
     ]);
 
-    return {
-      popular,
-      trending,
-    };
+    return { popular, trending };
   }
 
   @Get('featured')
@@ -105,142 +85,31 @@ export class SearchController {
   @Get('autocomplete/cities')
   @ApiOperation({ summary: 'City autocomplete for location search' })
   @ApiQuery({ name: 'q', required: true, description: 'City name query' })
+  @ApiQuery({ name: 'country', required: false, description: 'ISO country code filter' })
   @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Maximum results' })
   @ApiResponse({ status: 200, description: 'City suggestions' })
-  async autocompleteCities(@Query('q') query: string, @Query('limit') limit?: string) {
+  async autocompleteCities(@Query('q') query: string, @Query('country') country?: string, @Query('limit') limit?: string) {
     if (!query || query.length < 2) {
       return { cities: [] };
     }
 
     const cityLimit = limit ? parseInt(limit) : 10;
-
-    // First try to find cities in local database
-    const localCities = await this.prisma.city.findMany({
-      where: {
-        searchText: {
-          contains: query.toLowerCase(),
-        },
-      },
-      orderBy: [
-        { population: 'desc' },
-        { name: 'asc' },
-      ],
-      take: cityLimit,
-    });
-
-    if (localCities.length > 0) {
-      return {
-        cities: localCities.map(city => ({
-          id: city.id, // Use Prisma CUID, not GeoDB ID
-          name: city.name,
-          displayName: city.displayName,
-          country: city.country,
-          countryCode: city.countryCode,
-        })),
-      };
-    }
-
-    // If no local results, use geo service for GeoDB API
-    const geoService = this.searchService['geoService'];
-    const cities = await geoService.autocomplete(query, cityLimit);
-
-    return {
-      cities: cities.map(city => ({
-        id: city.id.toString(), // Convert GeoDB numeric ID to string
-        name: city.name,
-        displayName: `${city.name}, ${city.country}`,
-        country: city.country,
-        countryCode: city.countryCode,
-      })),
-    };
+    const cities = await this.searchService.autocompleteCities(query, cityLimit, country);
+    return { cities };
   }
 
   @Get('filters')
   @ApiOperation({ summary: 'Get available filter options' })
   @ApiResponse({ status: 200, description: 'Filter options for search' })
   async getFilterOptions() {
-    const [brands, popularCities] = await Promise.all([
-      this.searchService['prisma'].brand.findMany({
-        orderBy: { name: 'asc' },
-        select: { id: true, name: true, logo: true },
-      }),
-      this.searchService['geoService'].getPopularCities(20),
-    ]);
-
-    return {
-      brands,
-      conditions: [
-        { value: 'NEW', label: 'New' },
-        { value: 'LIKE_NEW', label: 'Like New' },
-        { value: 'GOOD', label: 'Good' },
-        { value: 'FAIR', label: 'Fair' },
-        { value: 'POOR', label: 'Poor' },
-      ],
-      types: [
-        { value: 'LISTING', label: 'For Sale' },
-        { value: 'WANTED', label: 'Looking For' },
-      ],
-      currencies: [
-        { value: 'USD', label: 'US Dollar' },
-        { value: 'EUR', label: 'Euro' },
-        { value: 'GBP', label: 'British Pound' },
-        { value: 'CAD', label: 'Canadian Dollar' },
-        { value: 'AUD', label: 'Australian Dollar' },
-      ],
-      popularCities: popularCities.map(city => ({
-        id: city.id,
-        name: city.name,
-        displayName: city.displayName,
-        countryCode: city.countryCode,
-      })),
-    };
+    return this.searchService.getFilterOptions();
   }
 
   @Get('stats')
   @ApiOperation({ summary: 'Get marketplace statistics' })
   @ApiResponse({ status: 200, description: 'Marketplace statistics' })
   async getMarketplaceStats() {
-    const [
-      totalListings,
-      activeListings,
-      totalUsers,
-      totalViews,
-      topBrands,
-      recentActivity,
-    ] = await Promise.all([
-      this.searchService['prisma'].listing.count(),
-      this.searchService['prisma'].listing.count({ where: { status: 'ACTIVE' } }),
-      this.searchService['prisma'].user.count(),
-      this.searchService['prisma'].listing.aggregate({ _sum: { views: true } }),
-      this.searchService['prisma'].brand.findMany({
-        orderBy: { Listing: { _count: 'desc' } },
-        select: { id: true, name: true, logo: true, _count: { select: { Listing: true } } },
-        take: 5,
-      }),
-      this.searchService['prisma'].listing.findMany({
-        where: { status: 'ACTIVE' },
-        orderBy: { publishedAt: 'desc' },
-        select: {
-          id: true,
-          title: true,
-          price: true,
-          currency: true,
-          publishedAt: true,
-          brand: { select: { name: true } },
-          city: { select: { name: true, countryCode: true } },
-        },
-        take: 10,
-      }),
-    ]);
-
-    return {
-      totalListings,
-      activeListings,
-      totalUsers,
-      totalViews: totalViews._sum.views || 0,
-      topBrands,
-      recentActivity,
-    };
+    return this.searchService.getMarketplaceStats();
   }
 
   @Get('facets')

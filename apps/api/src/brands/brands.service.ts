@@ -28,12 +28,21 @@ export class BrandsService {
     });
   }
 
+  // New helper to fetch all canonical brands without pagination (used by the create‑listing form)
+  async findAllCanonical() {
+    return this.prisma.brand.findMany({
+      where: { isActive: true, status: { in: ['APPROVED', 'SYSTEM'] } },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true, slug: true },
+    });
+  }
+
   async findBySlug(slug: string) {
     return this.prisma.brand.findUnique({
       where: { slug },
       include: {
         models: {
-          where: { isActive: true, status: { in: ['APPROVED', 'PENDING'] } },
+          where: { isActive: true, status: { in: ['APPROVED', 'PENDING', 'SYSTEM'] } },
           orderBy: { name: 'asc' },
         },
         _count: {

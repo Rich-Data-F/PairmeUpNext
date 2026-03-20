@@ -1,13 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Trigger Vercel Rebuild 2
   typescript: {
-    ignoreBuildErrors: true, // Temporary for development
+    // TypeScript errors are now enforced at build time.
+    // Fix any type errors before deploying.
+    ignoreBuildErrors: false,
   },
   eslint: {
-    ignoreDuringBuilds: true, // Temporary for development
+    // ESLint is now enforced at build time.
+    // Run `npm run lint` to find and fix issues.
+    ignoreDuringBuilds: false,
   },
-  typedRoutes: true,
   images: {
     remotePatterns: [
       {

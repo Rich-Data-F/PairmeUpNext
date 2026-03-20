@@ -196,6 +196,11 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
     });
   };
 
+  const formatDisplay = (str: string) => {
+    if (!str) return '';
+    return str.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  };
+
   const getTrustLevelColor = (trustLevel: string) => {
     switch (trustLevel.toLowerCase()) {
       case 'platinum': return 'text-purple-600 bg-purple-100';
@@ -423,7 +428,7 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
                   {formatPrice(listing.price, listing.currency)}
                 </div>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${getConditionColor(listing.condition)}`}>
-                  {listing.condition.replace('_', ' ')}
+                  {formatDisplay(listing.condition)}
                 </span>
               </div>
 
@@ -466,7 +471,7 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
                     <span className="text-sm text-gray-500 block mb-1">Looking to</span>
                     <div className="flex items-center gap-2">
                       <span className="font-medium px-3 py-1 bg-blue-50 text-blue-700 rounded-full">
-                        {listing.primaryIntent}
+                        {formatDisplay(listing.primaryIntent)}
                       </span>
                       {listing.openToAlternate && (
                         <span className="text-sm text-gray-600">(Open to other options)</span>
@@ -552,11 +557,11 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <span className="text-sm text-gray-500">Type</span>
-                  <p className="font-medium">{listing.type.replace('_', ' ')}</p>
+                  <p className="font-medium">{formatDisplay(listing.type)}</p>
                 </div>
                 <div>
                   <span className="text-sm text-gray-500">Condition</span>
-                  <p className="font-medium">{listing.condition.replace('_', ' ')}</p>
+                  <p className="font-medium">{formatDisplay(listing.condition)}</p>
                 </div>
                 <div>
                   <span className="text-sm text-gray-500">Brand</span>

@@ -62,6 +62,11 @@ function ListingCard({ listing }: { listing: any }) {
     return date.toLocaleDateString();
   };
 
+  const formatDisplay = (str: string) => {
+    if (!str) return '';
+    return str.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  };
+
   const getConditionColor = (condition: string) => {
     switch (condition) {
       case 'NEW': return 'bg-green-100 text-green-800';
@@ -121,7 +126,7 @@ function ListingCard({ listing }: { listing: any }) {
           {/* Condition Badge */}
           <div className="absolute bottom-2 left-2">
             <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getConditionColor(listing.condition)}`}>
-              {listing.condition.replace('_', ' ')}
+              {formatDisplay(listing.condition)}
             </span>
           </div>
         </div>

@@ -38,8 +38,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: 'EarbudHub - Professional Earbud Parts Marketplace',
-    template: '%s | EarbudHub',
+    default: 'PairAgain - Professional Earbud Parts Marketplace',
+    template: '%s | PairAgain',
   },
   description: 'Buy and sell individual earbuds, charging cases, and accessories. Professional marketplace with lost/stolen registry and legal compliance.',
   keywords: [
@@ -53,9 +53,9 @@ export const metadata: Metadata = {
     'charging case',
     'wireless earbuds'
   ],
-  authors: [{ name: 'EarbudHub Team' }],
-  creator: 'EarbudHub',
-  publisher: 'EarbudHub',
+  authors: [{ name: 'PairAgain Team' }],
+  creator: 'PairAgain',
+  publisher: 'PairAgain',
   robots: {
     index: true,
     follow: true,
@@ -70,25 +70,25 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://earbudhub.com',
-    siteName: 'EarbudHub',
-    title: 'EarbudHub - Professional Earbud Parts Marketplace',
+    url: 'https://pairagain.com',
+    siteName: 'PairAgain',
+    title: 'PairAgain - Professional Earbud Parts Marketplace',
     description: 'Buy and sell individual earbuds, charging cases, and accessories. Professional marketplace with lost/stolen registry.',
     images: [
       {
         url: '/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'EarbudHub Marketplace',
+        alt: 'PairAgain Marketplace',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'EarbudHub - Professional Earbud Parts Marketplace',
+    title: 'PairAgain - Professional Earbud Parts Marketplace',
     description: 'Buy and sell individual earbuds, charging cases, and accessories.',
     images: ['/og-image.jpg'],
-    creator: '@earbudhub',
+    creator: '@pairagain',
   },
   verification: {
     google: 'google-site-verification-code',

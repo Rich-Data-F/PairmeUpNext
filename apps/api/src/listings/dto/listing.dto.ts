@@ -1,17 +1,17 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsEnum, IsNumber, IsBoolean, IsOptional, IsArray, Min, Max, Length, IsUUID, IsDecimal, ValidateIf, ValidationArguments } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-import { ListingType, Condition } from '@prisma/client';
+import { ListingType, Condition, ListingStatus } from '@prisma/client';
 
 export class CreateListingDto {
   @ApiProperty({ description: 'Listing title', example: 'Apple AirPods Pro Left Earbud - Like New' })
   @IsString()
-  @Length(10, 100)
+  @Length(3, 100)
   title: string;
 
   @ApiProperty({ description: 'Detailed description of the item' })
   @IsString()
-  @Length(20, 2000)
+  @Length(5, 2000)
   description: string;
 
   @ApiProperty({ enum: ListingType, description: 'Type of listing' })
@@ -24,7 +24,7 @@ export class CreateListingDto {
 
   @ApiProperty({ description: 'Price in specified currency', example: 99.99 })
   @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0.01)
+  @Min(0)
   @Max(9999.99)
   price: number;
 

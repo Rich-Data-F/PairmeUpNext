@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string; action: string } }
+  context: { params: Promise<{  id: string; action: string  }> }
 ) {
+  const params = await context.params;
   try {
     const { id } = params;
     const url = new URL(request.url);

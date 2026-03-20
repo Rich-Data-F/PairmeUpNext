@@ -44,11 +44,13 @@ async function bootstrap() {
   });
 
   // Security middleware
+  // CSP is disabled in development for convenience; re-enabled in production.
+  const isDev = configService.get<string>('NODE_ENV') !== 'production';
   app.use(helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
-    contentSecurityPolicy: false, // Allow for development
+    contentSecurityPolicy: isDev ? false : undefined, // undefined = helmet's secure defaults
   }));
-  
+
   // Compression middleware
   app.use(compression());
 

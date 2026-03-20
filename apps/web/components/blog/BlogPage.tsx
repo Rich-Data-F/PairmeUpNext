@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-hot-toast';
 import { 
   CalendarIcon,
   UserIcon,
@@ -31,94 +33,116 @@ interface BlogPost {
 }
 
 export function BlogPage() {
+  const router = useRouter();
+  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
   const blogPosts: BlogPost[] = [
     {
       id: '1',
-      title: 'The Ultimate Guide to Wireless Earbuds in 2025',
-      slug: 'ultimate-guide-wireless-earbuds-2025',
-      excerpt: 'Everything you need to know about choosing the perfect wireless earbuds, from sound quality to battery life and beyond.',
-      content: '',
+      title: 'AirPods Pro 3 Leaks: Hearing Aid Features and Better ANC Coming in 2025',
+      slug: 'airpods-pro-3-leaks-2025',
+      excerpt: 'Apple is reportedly preparing a massive update for the AirPods Pro line, focusing on health tracking and revolutionary active noise cancellation.',
+      content: `The latest reports from industry insiders suggest that the AirPods Pro 3 will feature a revamped H3 chip, dedicated health sensors for heart rate monitoring, and a new "hearing aid mode" that leverages advanced on-device processing. This move aligns with Apple's broader strategy to position its wearables as essential health devices.
+
+The hearing aid functionality is particularly interesting, as recent FDA deregulations have opened the door for over-the-counter hearing aids. By integrating this into a device millions already own, Apple could disrupt a multibillion-dollar industry. 
+
+Additionally, we expect a 20% improvement in active noise cancellation (ANC) and better battery efficiency, potentially pushing playback time past 7 hours on a single charge. The case will likely retain its USB-C port but may see improvements in Find My accuracy with a newer U-series chip.`,
       author: {
         name: 'Sarah Johnson',
         avatar: '/avatars/sarah.jpg'
       },
-      publishedAt: '2025-09-15T10:00:00Z',
-      readTime: 8,
-      views: 1247,
-      comments: 23,
-      tags: ['Guide', 'Technology', 'Reviews'],
+      publishedAt: '2026-03-18T10:00:00Z',
+      readTime: 6,
+      views: 2450,
+      comments: 42,
+      tags: ['Apple', 'News', 'AirPods'],
       featured: true,
-      coverImage: '/blog/wireless-earbuds-guide.jpg'
+      coverImage: '/blog/airpods-pro-3.jpg'
     },
     {
       id: '2',
-      title: 'How to Keep Your Earbuds Safe and Sound',
-      slug: 'keep-earbuds-safe-sound',
-      excerpt: 'Tips and tricks to prevent losing your precious earbuds and keeping them in perfect condition.',
-      content: '',
-      author: {
-        name: 'Mike Chen',
-        avatar: '/avatars/mike.jpg'
-      },
-      publishedAt: '2025-09-12T14:30:00Z',
-      readTime: 5,
-      views: 892,
-      comments: 15,
-      tags: ['Tips', 'Care', 'Prevention'],
-      featured: false
-    },
-    {
-      id: '3',
-      title: 'Community Success Stories: Reunited with Lost Earbuds',
-      slug: 'community-success-stories-reunited',
-      excerpt: 'Heartwarming stories from our community members who successfully found their lost earbuds through PairAgain.',
-      content: '',
-      author: {
-        name: 'Emma Williams',
-        avatar: '/avatars/emma.jpg'
-      },
-      publishedAt: '2025-09-10T09:15:00Z',
-      readTime: 6,
-      views: 654,
-      comments: 31,
-      tags: ['Community', 'Success Stories', 'Lost & Found'],
-      featured: false
-    },
-    {
-      id: '4',
-      title: 'Top 10 Most Popular Earbud Brands of 2025',
-      slug: 'top-10-earbud-brands-2025',
-      excerpt: 'Discover the most sought-after earbud brands based on our marketplace data and user preferences.',
-      content: '',
+      title: 'The "Single Earbud" Market: Why Replacement Parts are Booming',
+      slug: 'single-earbud-market-boom',
+      excerpt: 'Losing one earbud used to mean buying a whole new set. Not anymore. Discover why the secondary market for parts is changing the industry.',
+      content: `PairAgain data shows a 40% increase in searches for individual left and right buds over the last quarter. Manufacturers like Samsung and Sony are beginning to recognize this "right to repair" movement by making pairing software more accessible, though Apple still maintains a tighter grip on its ecosystem.
+
+For the average consumer, losing a single AirPod Pro used to represent a $100+ loss, often leading to the purchase of a completely new set. However, platforms like PairAgain are enabling a circular economy where users can find an authentic replacement for half the cost.
+
+Industry analysts predict that within the next two years, major brands may even start offering official "single-bud" SKU options at retail, moving away from the all-or-nothing bundles that have dominated the market since 2016.`,
       author: {
         name: 'David Park',
         avatar: '/avatars/david.jpg'
       },
-      publishedAt: '2025-09-08T16:45:00Z',
-      readTime: 7,
-      views: 1103,
-      comments: 18,
-      tags: ['Brands', 'Statistics', 'Market Trends'],
+      publishedAt: '2026-03-15T14:30:00Z',
+      readTime: 5,
+      views: 1892,
+      comments: 28,
+      tags: ['Market Trends', 'Repair', 'Savings'],
+      featured: false
+    },
+    {
+      id: '3',
+      title: 'Samsung Galaxy Buds 3 Pro Review: The Stem Design Controversy',
+      slug: 'samsung-buds-3-pro-review',
+      excerpt: 'Samsung abandoned the "bean" for a "stem." Does the new design actually improve microphone quality and fit?',
+      content: `Critics were divided when Samsung unveiled the Galaxy Buds 3 Pro with a design strikingly similar to the AirPods Pro. However, real-world testing shows that the dual-driver system and improved blade-lights offer a level of audio fidelity that justifies the hardware shift.
+
+The primary benefit of the stem design is microphone placement. By bringing the beam-forming mics closer to the mouth, Samsung has significantly improved call quality in windy conditions. The new "Blade Lights" aren't just for show either; they provide a visual indicator for pairing status and battery life.
+
+In terms of sound, the Buds 3 Pro feature a sophisticated 2-way speaker system with a high-fidelity tweeter and a planar woofer, delivering crisp highs and deep, controlled bass that rivals the Sony XM5 series.`,
+      author: {
+        name: 'Mike Chen',
+        avatar: '/avatars/mike.jpg'
+      },
+      publishedAt: '2026-03-12T09:15:00Z',
+      readTime: 8,
+      views: 3421,
+      comments: 56,
+      tags: ['Samsung', 'Review', 'Hardware'],
+      featured: false
+    },
+    {
+      id: '4',
+      title: 'Sony WF-1000XM6 Rumors: Smaller Case and Faster Loading',
+      slug: 'sony-xm6-rumors',
+      excerpt: 'Everything we know about Sony\'s next flagship noise-cancelling earbuds.',
+      content: `Sony is expected to announce the WF-1000XM6 later this year. Sources indicate a 15% reduction in case size and a new V2 processor that could potentially double the processing power for ANC filters, aiming to take back the crown from Bose.
+
+Internal test models suggest Sony is moving toward a more ergonomic "hybrid" tip design—combining the comfort of silicone with the isolation of memory foam. This has been a point of contention for XM4 and XM5 users who found the stock foam tips prone to degradation.
+
+Connectivity will also get a boost with Bluetooth 5.4 support and optimized LE Audio, allowing for multi-point connection across three devices simultaneously without the occasional dropout seen in previous generations.`,
+      author: {
+        name: 'Emma Williams',
+        avatar: '/avatars/emma.jpg'
+      },
+      publishedAt: '2026-03-10T16:45:00Z',
+      readTime: 4,
+      views: 5103,
+      comments: 112,
+      tags: ['Sony', 'ANC', 'Leaks'],
       featured: false
     },
     {
       id: '5',
-      title: 'Audio Quality vs Price: Finding the Sweet Spot',
-      slug: 'audio-quality-vs-price-sweet-spot',
-      excerpt: 'An in-depth analysis of how audio quality correlates with price points across different earbud categories.',
-      content: '',
+      title: 'Bose QuietComfort Ultra: Still the ANC King in 2026?',
+      slug: 'bose-qc-ultra-2026-review',
+      excerpt: 'Bose\'s "Immersive Audio" has been out for a while. We revisit the QC Ultra to see if it holds up against the newer competition.',
+      content: `While other brands focus on health and connectivity, Bose remains laser-focused on one thing: silence. In 2026, the QuietComfort Ultra remains the benchmark for low-frequency isolation in urban environments.
+
+The "Immersive Audio" mode, which uses head-tracking to simulate a spatial soundstage, remains a highlight of the experience. Unlike Apple's implementation, Bose's spatial audio works with any source, making it a versatile choice for movie lovers and podcast listeners alike.
+
+Battery life remains its Achilles' heel, however. With Immersive Audio turned on, you can only expect about 4 hours of juice. For long-haul flights, users might find themselves reaching for their XM5s or AirPods Max instead if they don't have time for a quick charge.`,
       author: {
         name: 'Lisa Thompson',
         avatar: '/avatars/lisa.jpg'
       },
-      publishedAt: '2025-09-05T11:20:00Z',
-      readTime: 9,
-      views: 876,
-      comments: 27,
-      tags: ['Audio Quality', 'Price Analysis', 'Buying Guide'],
+      publishedAt: '2026-03-05T11:20:00Z',
+      readTime: 7,
+      views: 2876,
+      comments: 34,
+      tags: ['Bose', 'Audio Quality', 'ANC'],
       featured: false
     }
   ];
@@ -146,6 +170,79 @@ export function BlogPage() {
       day: 'numeric'
     });
   };
+
+  // Article Detail View
+  if (selectedPost) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <button 
+            onClick={() => setSelectedPost(null)}
+            className="mb-8 flex items-center text-blue-600 hover:text-blue-800 font-medium"
+          >
+            ← Back to Blog
+          </button>
+          
+          <div className="mb-8">
+            <div className="flex items-center space-x-2 text-sm text-gray-600 mb-4">
+              <CalendarIcon className="w-4 h-4" />
+              <span>{formatDate(selectedPost.publishedAt)}</span>
+              <span className="mx-2">•</span>
+              <ClockIcon className="w-4 h-4" />
+              <span>{selectedPost.readTime} min read</span>
+            </div>
+            <h1 className="text-4xl font-extrabold text-gray-900 mb-6">{selectedPost.title}</h1>
+            
+            <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl mb-8">
+              <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">
+                <UserIcon className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="font-bold text-gray-900">{selectedPost.author.name}</p>
+                <p className="text-sm text-gray-600">Audio Technology Editor</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed space-y-6">
+            {selectedPost.content.split('\n\n').map((paragraph, idx) => (
+              <p key={idx}>{paragraph}</p>
+            ))}
+          </div>
+
+          <div className="mt-12 pt-8 border-t border-gray-100">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Tags</h3>
+            <div className="flex flex-wrap gap-2">
+              {selectedPost.tags.map(tag => (
+                <span key={tag} className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-16 bg-blue-600 rounded-2xl p-8 text-center text-white">
+            <h2 className="text-2xl font-bold mb-4">Help the community grow</h2>
+            <p className="mb-6 opacity-90">Found a single earbud or lost one? Register it on our registry and help others.</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button 
+                onClick={() => { setSelectedPost(null); router.push('/lost-stolen'); }}
+                className="bg-white text-blue-600 px-8 py-3 rounded-xl font-bold hover:bg-gray-100 transition-all flex items-center justify-center"
+              >
+                Go to Lost & Found
+              </button>
+              <button 
+                onClick={() => { setSelectedPost(null); router.push('/marketplace'); }}
+                className="bg-blue-700 text-white border border-blue-400 px-8 py-3 rounded-xl font-bold hover:bg-blue-800 transition-all flex items-center justify-center"
+              >
+                Go to Transaction (Sell or Buy)
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -252,7 +349,10 @@ export function BlogPage() {
                     ))}
                   </div>
                   
-                  <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                  <button 
+                    onClick={() => setSelectedPost(featuredPost)}
+                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
                     Read More
                   </button>
                 </div>
@@ -317,7 +417,10 @@ export function BlogPage() {
                   )}
                 </div>
                 
-                <button className="w-full bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">
+                <button 
+                  onClick={() => setSelectedPost(post)}
+                  className="w-full bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+                >
                   Read Article
                 </button>
               </div>
@@ -348,18 +451,67 @@ export function BlogPage() {
           </div>
         )}
 
-        {/* Newsletter Signup */}
-        <div className="bg-blue-600 rounded-lg p-8 mt-12 text-center">
-          <h3 className="text-2xl font-bold text-white mb-4">Stay Updated</h3>
-          <p className="text-blue-100 mb-6">Get the latest articles and earbud news delivered to your inbox.</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="flex-1 px-4 py-2 rounded-lg border-0 focus:ring-2 focus:ring-blue-300"
-            />
-            <button className="bg-white text-blue-600 px-6 py-2 rounded-lg hover:bg-gray-100 font-medium">
-              Subscribe
+        {/* Newsletter & Propose Article */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+          {/* Newsletter Signup */}
+          <div className="bg-blue-600 rounded-lg p-8 text-center text-white">
+            <h3 className="text-2xl font-bold mb-4">Stay Updated</h3>
+            <p className="text-blue-100 mb-6">Get the latest articles and earbud news delivered to your inbox.</p>
+            <div className="space-y-4">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                className="w-full px-4 py-2 rounded-lg border-0 text-gray-900 focus:ring-2 focus:ring-blue-300"
+              />
+              <button className="w-full bg-white text-blue-600 px-6 py-2 rounded-lg hover:bg-gray-100 font-bold transition-all">
+                Subscribe
+              </button>
+            </div>
+          </div>
+
+          {/* Propose Article Form */}
+          <div className="bg-white rounded-lg p-8 shadow-md border border-gray-100">
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">Propose an Article</h3>
+            <p className="text-gray-600 mb-6">Have a story or expert knowledge to share? We'd love to hear from you!</p>
+            <form onSubmit={(e) => { e.preventDefault(); toast.success('Proposal submitted! We will contact you soon.'); }} className="space-y-4">
+              <input
+                type="text"
+                placeholder="Working Title"
+                required
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <textarea
+                placeholder="Brief summary of your article idea..."
+                required
+                rows={2}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              ></textarea>
+              <button 
+                type="submit"
+                className="w-full bg-gray-900 text-white px-6 py-2 rounded-lg hover:bg-gray-800 font-bold transition-all"
+              >
+                Send Proposal
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {/* Global Community CTA */}
+        <div className="mt-16 bg-gray-900 rounded-2xl p-8 text-center text-white shadow-2xl">
+          <h2 className="text-2xl font-bold mb-4">Help the community grow</h2>
+          <p className="mb-6 opacity-80 max-w-2xl mx-auto">Found a single earbud or lost one? Our community relies on individual reports and transactions to reunite parts.</p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button 
+              onClick={() => router.push('/lost-stolen')}
+              className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-500 transition-all flex items-center justify-center shadow-lg"
+            >
+              Go to Lost & Found
+            </button>
+            <button 
+              onClick={() => router.push('/marketplace')}
+              className="bg-white text-gray-900 px-8 py-3 rounded-xl font-bold hover:bg-gray-100 transition-all flex items-center justify-center shadow-lg"
+            >
+              Go to Transaction (Sell or Buy)
             </button>
           </div>
         </div>

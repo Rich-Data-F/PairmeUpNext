@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ModelsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async findAll(query: any) {
     const { page = 1, limit = 10, search, brandId } = query;
@@ -41,6 +41,22 @@ export class ModelsService {
           select: { listings: true },
         },
       },
+    });
+  }
+
+  // New helper to fetch canonical models, optionally filtered by brand
+  async findAllCanonical(brandId?: string) {
+    const where: any = {
+      isActive: true,
+      status: { in: ['APPROVED', 'SYSTEM'] },
+    };
+    if (brandId) {
+      where.brandId = brandId;
+    }
+    return this.prisma.model.findMany({
+      where,
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true, slug: true, brandId: true },
     });
   }
 }

@@ -5,7 +5,8 @@ export const runtime = 'nodejs';
 
 const API_BASE_URL = getApiBase();
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
   const body = await req.json().catch(() => ({}));
   const url = `${API_BASE_URL}/conversations/${params.id}/offers`;
   const init = await withAuthHeader({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(10000) });

@@ -13,7 +13,7 @@ export class ListingsService {
     private readonly identifierService: IdentifierService,
     private readonly uploadService: UploadService,
     private readonly geoService: GeoService,
-  ) {}
+  ) { }
 
   async create(sellerId: string, createListingDto: CreateListingDto) {
     // Validate that sellerId is provided
@@ -38,37 +38,32 @@ export class ListingsService {
 
     // Handle custom brand
     if (customBrand && !brandId) {
-      // Check if a proposed brand with this name already exists
-      const existingProposedBrand = await this.prisma.proposedBrand.findUnique({
-        where: { name: customBrand },
+      // 1. Check if ANY brand (official or temp) already exists with this name
+      const existingBrand = await this.prisma.brand.findFirst({
+        where: { name: { equals: customBrand, mode: 'insensitive' } }
       });
 
-      let proposedBrand;
-      if (existingProposedBrand) {
-        proposedBrand = existingProposedBrand;
+      if (existingBrand) {
+        finalBrandId = existingBrand.id;
       } else {
-        // Create a proposed brand
-        proposedBrand = await this.prisma.proposedBrand.create({
-          data: {
-            name: customBrand,
-            submittedBy: sellerId,
-            submissionNote: `Proposed brand from listing creation`,
-          },
+        // 2. Check if a proposed brand with this name already exists
+        const existingProposedBrand = await this.prisma.proposedBrand.findFirst({
+          where: { name: { equals: customBrand, mode: 'insensitive' } },
         });
-      }
-      
-      // Check if a temporary brand with this name already exists
-      const existingTempBrand = await this.prisma.brand.findFirst({
-        where: { 
-          name: customBrand,
-          slug: { startsWith: 'temp-' }
-        },
-      });
 
-      if (existingTempBrand) {
-        finalBrandId = existingTempBrand.id;
-      } else {
-        // Create a temporary brand entry for the listing
+        let proposedBrand = existingProposedBrand;
+        if (!proposedBrand) {
+          // Create a proposed brand
+          proposedBrand = await this.prisma.proposedBrand.create({
+            data: {
+              name: customBrand,
+              submittedBy: sellerId,
+              submissionNote: `Proposed brand from listing creation`,
+            },
+          });
+        }
+
+        // 3. Create a temporary brand entry for the listing
         const tempBrand = await this.prisma.brand.create({
           data: {
             name: customBrand,
@@ -83,42 +78,39 @@ export class ListingsService {
 
     // Handle custom model
     if (customModel && !modelId) {
-      // Check if a proposed model with this name and brand already exists
-      const existingProposedModel = await this.prisma.proposedModel.findFirst({
+      // 1. Check if ANY model (official or temp) already exists with this name for this brand
+      const existingModel = await this.prisma.model.findFirst({
         where: { 
-          name: customModel,
-          brandId: finalBrandId 
-        },
+          name: { equals: customModel, mode: 'insensitive' },
+          brandId: finalBrandId
+        }
       });
 
-      let proposedModel;
-      if (existingProposedModel) {
-        proposedModel = existingProposedModel;
+      if (existingModel) {
+        finalModelId = existingModel.id;
       } else {
-        // Create a proposed model
-        proposedModel = await this.prisma.proposedModel.create({
-          data: {
-            name: customModel,
-            brandId: finalBrandId,
-            submittedBy: sellerId,
-            submissionNote: `Proposed model from listing creation`,
+        // 2. Check if a proposed model with this name and brand already exists
+        const existingProposedModel = await this.prisma.proposedModel.findFirst({
+          where: {
+            name: { equals: customModel, mode: 'insensitive' },
+            brandId: finalBrandId
           },
         });
-      }
-      
-      // Check if a temporary model with this name and brand already exists
-      const existingTempModel = await this.prisma.model.findFirst({
-        where: { 
-          name: customModel,
-          brandId: finalBrandId,
-          slug: { startsWith: 'temp-' }
-        },
-      });
 
-      if (existingTempModel) {
-        finalModelId = existingTempModel.id;
-      } else {
-        // Create a temporary model entry for the listing
+        let proposedModel = existingProposedModel;
+        if (!proposedModel) {
+          // Create a proposed model
+          proposedModel = await this.prisma.proposedModel.create({
+            data: {
+              name: customModel,
+              brandId: finalBrandId,
+              submittedBy: sellerId,
+              submissionNote: `Proposed model from listing creation`,
+            },
+          });
+        }
+
+        // 3. Create a temporary model entry for the listing
         const tempModel = await this.prisma.model.create({
           data: {
             name: customModel,
@@ -141,43 +133,108 @@ export class ListingsService {
     }
 
     if (!customModel) {
-      const model = await this.prisma.model.findUnique({ where: { id: finalModelId, brandId: finalBrandId } });
-      if (!model) {
+      const model = await this.prisma.model.findUnique({ where: { id: finalModelId } });
+      if (!model || model.brandId !== finalBrandId) {
         throw new BadRequestException('Model not found or does not belong to the specified brand');
       }
     }
 
-    // Verify city exists
-    const city = await this.prisma.city.findUnique({ where: { id: cityId } });
-    if (!city) {
-      throw new BadRequestException('City not found');
+    // Verify or create city JIT (Just-in-time)
+    let finalCityId = cityId;
+    
+    // Check if the frontend sent a custom city name instead of an ID
+    if (cityId && (cityId.startsWith('name:') || cityId.startsWith('temp:'))) {
+      const cityName = cityId.substring(cityId.indexOf(':') + 1);
+      
+      // Try to find if we already created a manual entry for this name
+      const existingManualCity = await this.prisma.city.findFirst({
+        where: { name: { equals: cityName, mode: 'insensitive' }, geoDbId: { lt: 0 } }
+      });
+      
+      if (existingManualCity) {
+        finalCityId = existingManualCity.id;
+      } else {
+        // Create a manual city entry
+        // We use a negative geoDbId based on a simple hash of the name to satisfy uniqueness
+        const nameHash = cityName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const newCity = await this.prisma.city.create({
+          data: {
+            name: cityName,
+            displayName: `${cityName} (Custom)`,
+            country: 'Unknown',
+            countryCode: 'UN',
+            geoDbId: -(1000000 + nameHash + Math.floor(Math.random() * 10000)),
+            latitude: 0,
+            longitude: 0,
+            searchText: cityName.toLowerCase()
+          }
+        });
+        finalCityId = newCity.id;
+      }
+    } else {
+      const city = await this.prisma.city.findUnique({ where: { id: cityId } });
+      if (!city) {
+        // If not found by ID, might be a GeoDB ID passed directly
+        const isNumeric = /^\d+$/.test(cityId);
+        if (isNumeric) {
+          const geoDbId = parseInt(cityId);
+          let geoCity = await this.prisma.city.findUnique({ where: { geoDbId } });
+          
+          if (!geoCity) {
+            // JIT fetch from GeoDB and cache
+            try {
+              const geoData = await this.geoService.getCityById(geoDbId);
+              if (geoData) {
+                // cacheCities is private, so we recreate the logic or use a helper
+                // For now, let's just do a direct upsert here
+                geoCity = await this.prisma.city.upsert({
+                  where: { geoDbId },
+                  update: {}, // No updates needed, just getting the record
+                  create: {
+                    geoDbId,
+                    name: geoData.name,
+                    country: geoData.country,
+                    countryCode: geoData.countryCode,
+                    region: geoData.region,
+                    regionCode: geoData.regionCode,
+                    latitude: geoData.latitude,
+                    longitude: geoData.longitude,
+                    population: geoData.population,
+                    displayName: `${geoData.name}, ${geoData.country}`,
+                    searchText: geoData.name.toLowerCase()
+                  }
+                });
+              }
+            } catch (err) {
+              console.error('JIT City fetch failed:', err);
+            }
+          }
+          
+          if (geoCity) {
+            finalCityId = geoCity.id;
+          } else {
+            throw new BadRequestException('City not found and could not be fetched from registry');
+          }
+        } else {
+          throw new BadRequestException('City not found');
+        }
+      }
     }
 
     // Encrypt serial number if provided
     let encryptedIdentifier: string | undefined;
     let maskedIdentifier: string | undefined;
-    
+
     if (serialNumber) {
       encryptedIdentifier = this.identifierService.encrypt(serialNumber);
       maskedIdentifier = this.identifierService.mask(serialNumber);
     }
 
-    // Process images - now we receive image URLs directly from the upload
-    let processedImages: string[] = [];
-    let associatedFiles: any[] = [];
+    // Process images - images are URL strings from the upload service
+    const processedImages: string[] = (images && images.length > 0) ? images : [];
 
-    if (images && images.length > 0) {
-      processedImages = images; // Images are now URLs from the upload service
-
-      // Associate uploaded files with the listing (we'll do this after listing creation)
-      // For now, store the URLs as before
-    }
-
-    // Process verification photo
-    let processedVerificationPhoto: string | undefined;
-    if (verificationPhoto) {
-      processedVerificationPhoto = verificationPhoto; // Now it's already a URL
-    }
+    // Process verification photo - already a URL from the upload service
+    const processedVerificationPhoto: string | undefined = verificationPhoto;
 
     // Create listing
     const listing = await this.prisma.listing.create({
@@ -186,7 +243,7 @@ export class ListingsService {
         sellerId: sellerId,
         brandId: finalBrandId,
         modelId: finalModelId,
-        cityId,
+        cityId: finalCityId,
         identifierFull: encryptedIdentifier,
         identifierMasked: maskedIdentifier,
         images: processedImages, // Store URLs as strings
@@ -386,31 +443,14 @@ export class ListingsService {
       }
     }
 
-    // Process images if provided
-    let processedImages;
+    // Process images if provided - keep as URL strings (same format as create)
+    let processedImages: string[] | undefined;
     if (images) {
-      processedImages = await Promise.all(
-        images.map(async (imageKey) => {
-          const { thumbnailUrl, fullUrl } = await this.uploadService.getImageUrls(imageKey);
-          return {
-            originalKey: imageKey,
-            thumbnailUrl,
-            fullUrl,
-          };
-        })
-      );
+      processedImages = images; // images are already URL strings from the upload service
     }
 
-    // Process verification photo if provided
-    let processedVerificationPhoto;
-    if (verificationPhoto) {
-      const { thumbnailUrl, fullUrl } = await this.uploadService.getImageUrls(verificationPhoto);
-      processedVerificationPhoto = {
-        originalKey: verificationPhoto,
-        thumbnailUrl,
-        fullUrl,
-      };
-    }
+    // Process verification photo if provided - keep as URL string
+    const processedVerificationPhoto: string | undefined = verificationPhoto;
 
     const updatedListing = await this.prisma.listing.update({
       where: { id },
@@ -593,7 +633,7 @@ export class ListingsService {
         trustLevel: listing.seller.trustLevel,
         isVerified: listing.seller.isVerified,
       },
-      images: listing.images?.map((img: any) => img.thumbnailUrl) || [],
+      images: listing.images || [],
       views: listing.views,
       createdAt: listing.createdAt,
       publishedAt: listing.publishedAt,
@@ -603,7 +643,7 @@ export class ListingsService {
 
   private formatDetailedListingResponse(listing: any, requestUserId?: string) {
     const baseResponse = this.formatListingResponse(listing);
-    
+
     // Additional details for authorized users (owner or authenticated users)
     const isOwner = requestUserId === listing.sellerId;
     const isAuthenticated = !!requestUserId;
