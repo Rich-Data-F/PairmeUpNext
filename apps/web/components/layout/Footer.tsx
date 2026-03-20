@@ -44,7 +44,7 @@ export async function Footer() {
               <h3 className="font-semibold mb-4">{t('company')}</h3>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li><Link href="/about" className="hover:text-white">{t('aboutUs')}</Link></li>
-                <li><Link href="/blog" className="hover:text-white">{t('blog') ?? 'Blog'}</Link></li>
+                <li><Link href="/blog" className="hover:text-white">Blog</Link></li>
                 <li><Link href="/contact" className="hover:text-white">{t('contact')}</Link></li>
                 <li><Link href="/careers" className="hover:text-white">{t('careers')}</Link></li>
               </ul>
