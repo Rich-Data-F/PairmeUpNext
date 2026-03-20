@@ -91,6 +91,15 @@ export const metadata: Metadata = {
   verification: {
     google: 'google-site-verification-code',
   },
+  icons: {
+    icon: [
+      { url: '/favicon-minimal.svg', media: '(prefers-color-scheme: light)' },
+      { url: '/favicon-techy.svg', media: '(prefers-color-scheme: dark)' },
+      { url: '/favicon.svg' },
+    ],
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
   category: 'marketplace',
 }
 
