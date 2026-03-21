@@ -258,52 +258,58 @@ export class ListingsService {
         finalCityId = newCity.id;
       }
     } else {
-      const city = await this.prisma.city.findUnique({ where: { id: cityId } });
+      const city = await this.prisma.city.findFirst({ 
+        where: { 
+          OR: [
+            { id: cityId },
+            { geoDbId: isNumeric ? parseInt(cityId) : undefined }
+          ]
+        } 
+      });
+
       if (!city) {
-        // If not found by ID, might be a GeoDB ID passed directly
-        const isNumeric = /^\d+$/.test(cityId);
         if (isNumeric) {
           const geoDbId = parseInt(cityId);
-          let geoCity = await this.prisma.city.findUnique({ where: { geoDbId } });
+          let geoCity = null;
           
-          if (!geoCity) {
-            // JIT fetch from GeoDB and cache
-            try {
-              const geoData = await this.geoService.getCityById(geoDbId);
-              if (geoData) {
-                // cacheCities is private, so we recreate the logic or use a helper
-                // For now, let's just do a direct upsert here
-                geoCity = await this.prisma.city.upsert({
-                  where: { geoDbId },
-                  update: {}, // No updates needed, just getting the record
-                  create: {
-                    geoDbId,
-                    name: geoData.name,
-                    country: geoData.country,
-                    countryCode: geoData.countryCode,
-                    region: geoData.region,
-                    regionCode: geoData.regionCode,
-                    latitude: geoData.latitude,
-                    longitude: geoData.longitude,
-                    population: geoData.population,
-                    displayName: `${geoData.name}, ${geoData.country}`,
-                    searchText: geoData.name.toLowerCase()
-                  }
-                });
-              }
-            } catch (err) {
-              console.error('JIT City fetch failed:', err);
+          // JIT fetch from GeoDB and cache
+          try {
+            console.log(`[ListingsService] City ${geoDbId} not found locally, attempting JIT fetch...`);
+            const geoData = await this.geoService.getCityById(geoDbId);
+            if (geoData) {
+              geoCity = await this.prisma.city.upsert({
+                where: { geoDbId },
+                update: {}, // No updates needed
+                create: {
+                  geoDbId,
+                  name: geoData.name,
+                  country: geoData.country,
+                  countryCode: geoData.countryCode,
+                  region: geoData.region,
+                  regionCode: geoData.regionCode,
+                  latitude: geoData.latitude,
+                  longitude: geoData.longitude,
+                  population: geoData.population,
+                  displayName: this.geoService['formatDisplayName'](geoData),
+                  searchText: this.geoService['formatSearchText'](geoData)
+                }
+              });
             }
+          } catch (err) {
+            console.error('[ListingsService] JIT City fetch failed:', err.message);
           }
           
           if (geoCity) {
             finalCityId = geoCity.id;
           } else {
-            throw new BadRequestException('City not found and could not be fetched from registry');
+            throw new BadRequestException(`City with ID ${cityId} not found and could not be fetched from registry`);
           }
         } else {
-          throw new BadRequestException('City not found');
+          // If the cityId is a string (CUID) but not found in the database
+          throw new BadRequestException(`City with ID ${cityId} not found in our database`);
         }
+      } else {
+        finalCityId = city.id;
       }
     }
 
