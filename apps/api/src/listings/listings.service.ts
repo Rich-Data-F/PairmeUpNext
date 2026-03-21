@@ -142,31 +142,117 @@ export class ListingsService {
     // Verify or create city JIT (Just-in-time)
     let finalCityId = cityId;
     
+    const inferCountryCodeFromHint = (hint?: string) => {
+      if (!hint) return undefined;
+      const normalized = hint.trim().toLowerCase();
+
+      if (/^[a-z]{2}$/i.test(normalized)) return normalized.toUpperCase();
+
+      const countryNameToCode: Record<string, string> = {
+        france: 'FR',
+        'united states': 'US',
+        usa: 'US',
+        'united kingdom': 'GB',
+        uk: 'GB',
+        germany: 'DE',
+        canada: 'CA',
+        spain: 'ES',
+        italy: 'IT',
+        netherlands: 'NL',
+        belgium: 'BE',
+        switzerland: 'CH',
+      };
+
+      return countryNameToCode[normalized];
+    };
+
+    const resolveExternalGeoCity = async (cityName: string, countryHint?: string) => {
+      const countryCode = inferCountryCodeFromHint(countryHint);
+      const response = await this.geoService.searchCities({
+        namePrefix: cityName,
+        limit: 5,
+        countryIds: countryCode ? [countryCode] : undefined,
+        minPopulation: 5000,
+        sort: '-population',
+      });
+
+      const exact = response.data.find(
+        (candidate) => candidate.name.toLowerCase() === cityName.toLowerCase()
+      );
+
+      return exact || response.data[0] || null;
+    };
+
+    const upsertGeoCity = async (geoCity: any) => {
+      return this.prisma.city.upsert({
+        where: { geoDbId: geoCity.id },
+        update: {
+          name: geoCity.name,
+          country: geoCity.country,
+          countryCode: geoCity.countryCode,
+          region: geoCity.region,
+          regionCode: geoCity.regionCode,
+          latitude: geoCity.latitude,
+          longitude: geoCity.longitude,
+          population: geoCity.population,
+          displayName: `${geoCity.name}, ${geoCity.country}`,
+          searchText: geoCity.name.toLowerCase(),
+        },
+        create: {
+          geoDbId: geoCity.id,
+          name: geoCity.name,
+          country: geoCity.country,
+          countryCode: geoCity.countryCode,
+          region: geoCity.region,
+          regionCode: geoCity.regionCode,
+          latitude: geoCity.latitude,
+          longitude: geoCity.longitude,
+          population: geoCity.population,
+          displayName: `${geoCity.name}, ${geoCity.country}`,
+          searchText: geoCity.name.toLowerCase(),
+        },
+      });
+    };
+
     // Check if the frontend sent a custom city name instead of an ID
     if (cityId && (cityId.startsWith('name:') || cityId.startsWith('temp:'))) {
-      const cityName = cityId.substring(cityId.indexOf(':') + 1);
+      const rawCityInput = cityId.substring(cityId.indexOf(':') + 1).trim();
+      const cityParts = rawCityInput.split(',').map(part => part.trim()).filter(Boolean);
+      const normalizedCityName = cityParts[0] || rawCityInput;
+      const countryHint = cityParts.length > 1 ? cityParts[cityParts.length - 1] : undefined;
       
       // Try to find if we already created a manual entry for this name
       const existingManualCity = await this.prisma.city.findFirst({
-        where: { name: { equals: cityName, mode: 'insensitive' }, geoDbId: { lt: 0 } }
+        where: { name: { equals: normalizedCityName, mode: 'insensitive' }, geoDbId: { lt: 0 } }
       });
       
-      if (existingManualCity) {
+      let geocodedCity: any = null;
+
+      try {
+        geocodedCity = await resolveExternalGeoCity(normalizedCityName, countryHint);
+      } catch (err) {
+        console.warn('GeoDB external lookup failed for manual city input:', rawCityInput);
+      }
+
+      if (geocodedCity) {
+        const cachedGeoCity = await upsertGeoCity(geocodedCity);
+        finalCityId = cachedGeoCity.id;
+      } else if (existingManualCity) {
         finalCityId = existingManualCity.id;
       } else {
-        // Create a manual city entry
+        // Create a manual city entry only if geocoding failed
         // We use a negative geoDbId based on a simple hash of the name to satisfy uniqueness
-        const nameHash = cityName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const nameHash = normalizedCityName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
         const newCity = await this.prisma.city.create({
           data: {
-            name: cityName,
-            displayName: `${cityName} (Custom)`,
+            name: normalizedCityName,
+            displayName: `${normalizedCityName} (Custom)`,
             country: 'Unknown',
             countryCode: 'UN',
             geoDbId: -(1000000 + nameHash + Math.floor(Math.random() * 10000)),
             latitude: 0,
             longitude: 0,
-            searchText: cityName.toLowerCase()
+            searchText: normalizedCityName.toLowerCase()
           }
         });
         finalCityId = newCity.id;

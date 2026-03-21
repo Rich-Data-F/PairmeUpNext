@@ -7,5 +7,5 @@
     "assets": ["**/*.proto"],
     "tsConfigPath": "tsconfig.json"
   },
-  "entryFile": "src/main"
+  "entryFile": "main"
 }

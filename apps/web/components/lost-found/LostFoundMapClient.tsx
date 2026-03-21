@@ -133,16 +133,36 @@ export function LostFoundMapClient({
   mapLegendTypesLabel,
   mapAvailableCountLabel,
 }: LostFoundMapProps) {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const mappedReports = useMemo(
     () =>
       reports
-        .map((report) => ({ report, coordinates: getCoordinates(report) }))
+        .map((report) => ({
+          report,
+          coordinates: getCoordinates(report),
+        }))
         .filter(
           (entry): entry is { report: LostFoundMapReport; coordinates: [number, number] } =>
             entry.coordinates !== null
         ),
     [reports]
   );
+
+  if (!isClient) {
+    return (
+      <div className="flex h-[560px] w-full items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 shadow-md">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
+          <p className="text-sm font-medium text-gray-500">Loading map...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (mappedReports.length === 0) {
     return (
