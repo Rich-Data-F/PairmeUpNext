@@ -739,6 +739,9 @@ export class ListingsService {
       createdAt: listing.createdAt,
       publishedAt: listing.publishedAt,
       sellerNotes: listing.sellerNotes,
+      latitude: listing.latitude ? parseFloat(listing.latitude) : null,
+      longitude: listing.longitude ? parseFloat(listing.longitude) : null,
+      locationPrecision: listing.locationPrecision,
     };
   }
 
