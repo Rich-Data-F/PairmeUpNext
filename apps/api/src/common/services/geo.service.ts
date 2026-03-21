@@ -109,8 +109,20 @@ export class GeoService {
         `/v1/geo/cities?${queryParams.toString()}`
       );
 
-      return response.data;
+      // GeoDB returns data in the response.data object. Double-check shape.
+      const rawData = response.data;
+      if (rawData && rawData.data) {
+        return rawData;
+      }
+      
+      // If the response itself is the array (some versions/endpoints)
+      if (Array.isArray(rawData)) {
+        return { data: rawData, metadata: { currentOffset: 0, totalCount: rawData.length } };
+      }
+
+      return { data: [], metadata: { currentOffset: 0, totalCount: 0 } };
     } catch (error) {
+      console.error('[GeoService] searchCities error:', error.message);
       throw new HttpException(
         'Failed to search cities',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -145,12 +157,14 @@ export class GeoService {
    * @returns Promise<GeoDBCity[]>
    */
   async autocomplete(query: string, limit: number = 10, countryCode?: string): Promise<GeoDBCity[]> {
+    console.log(`[GeoService] Autocomplete for "${query}" (limit: ${limit}, country: ${countryCode})`);
     if (!query || query.length < 2) {
       return [];
     }
 
     // First check local database for cached cities
     const localCities = await this.findLocalCities(query, limit);
+    console.log(`[GeoService] Found ${localCities.length} local hits for "${query}"`);
     
     // If we have enough local results and no country filter is specified, or they match the country filter
     const filteredLocal = countryCode 
@@ -163,18 +177,21 @@ export class GeoService {
 
     // If not enough local results, search GeoDB API
     try {
+      console.log(`[GeoService] Fetching from external API (minPopulation: 1000)...`);
       const response = await this.searchCities({
         namePrefix: query,
         limit,
         countryIds: countryCode ? [countryCode.toUpperCase()] : undefined,
-        minPopulation: 10000, // Focus on larger cities
+        minPopulation: 1000, 
       });
 
+      console.log(`[GeoService] External API returned ${response.data.length} results`);
       // Cache the results in local database
       await this.cacheCities(response.data);
 
       return response.data;
     } catch (error) {
+      console.error(`[GeoService] External autocomplete failed:`, error.message);
       // Fallback to local results if API fails
       return filteredLocal.map(city => this.transformPrismaCityToGeoDBCity(city));
     }
@@ -374,14 +391,14 @@ export class GeoService {
    */
   private transformPrismaCityToGeoDBCity(city: any): GeoDBCity {
     return {
-      id: city.geoDbId,
-      name: city.name,
-      country: city.country,
-      countryCode: city.countryCode,
+      id: city.geoDbId || 0,
+      name: city.name || 'Unknown',
+      country: city.country || 'Unknown',
+      countryCode: city.countryCode || 'UN',
       region: city.region || '',
       regionCode: city.regionCode || '',
-      latitude: Number(city.latitude),
-      longitude: Number(city.longitude),
+      latitude: Number(city.latitude) || 0,
+      longitude: Number(city.longitude) || 0,
       population: city.population || 0,
       timezone: city.timezone || '',
     };

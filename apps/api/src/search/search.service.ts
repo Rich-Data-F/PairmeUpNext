@@ -506,52 +506,22 @@ export class SearchService {
    * Centralised here so the controller doesn't need to access private properties.
    */
   async autocompleteCities(query: string, limit: number = 10, countryCode?: string) {
-    const where: any = { searchText: { contains: query.toLowerCase() } };
-    if (countryCode) {
-      where.countryCode = countryCode.toUpperCase();
+    try {
+      // 1. Check GeoDBCity using our GeoService (it handles local caching and external search)
+      const geoCities = await this.geoService.autocomplete(query, limit, countryCode);
+      
+      return geoCities.map(city => ({
+        id: city.id.toString(), // Convert to string for UI consistency
+        name: city.name,
+        displayName: `${city.name}, ${city.region ? city.region + ', ' : ''}${city.country}`,
+        country: city.country,
+        countryCode: city.countryCode,
+        geoDbId: city.id,
+      }));
+    } catch (err) {
+      console.error('City autocomplete failed:', err);
+      return [];
     }
-
-    // 1. Get local cities
-    const localCities = await this.prisma.city.findMany({
-      where,
-      orderBy: [{ population: 'desc' }, { name: 'asc' }],
-      take: limit,
-    });
-
-    const results = localCities.map(city => ({
-      id: city.id,
-      name: city.name,
-      displayName: city.displayName,
-      country: city.country,
-      countryCode: city.countryCode,
-      geoDbId: city.geoDbId,
-    }));
-
-    // 2. If we have few results or the query is specific, check GeoDB
-    if (results.length < limit) {
-      try {
-        const geoCities = await this.geoService.autocomplete(query, limit, countryCode);
-        
-        // Merge and de-duplicate by GeoDB ID
-        for (const geoCity of geoCities) {
-          if (!results.find(r => r.geoDbId === geoCity.id)) {
-            results.push({
-              id: geoCity.id.toString(),
-              name: geoCity.name,
-              displayName: `${geoCity.name}, ${geoCity.country}`,
-              country: geoCity.country,
-              countryCode: geoCity.countryCode,
-              geoDbId: geoCity.id,
-            });
-          }
-          if (results.length >= limit) break;
-        }
-      } catch (err) {
-        console.error('External city autocomplete failed:', err);
-      }
-    }
-
-    return results;
   }
 
   async getTrendingSearches(): Promise<string[]> {
