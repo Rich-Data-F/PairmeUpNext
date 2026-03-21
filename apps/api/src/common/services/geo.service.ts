@@ -43,7 +43,7 @@ export class GeoService {
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
   ) {
-    this.baseUrl = this.configService.get<string>('GEODB_BASE_URL');
+    this.baseUrl = this.configService.get<string>('GEODB_BASE_URL')?.replace('http://', 'https://');
     
     this.axiosInstance = axios.create({
       baseURL: this.baseUrl,
@@ -177,12 +177,12 @@ export class GeoService {
 
     // If not enough local results, search GeoDB API
     try {
-      console.log(`[GeoService] Fetching from external API (minPopulation: 1000)...`);
+      console.log(`[GeoService] Fetching from external API (minPopulation: 40000)...`);
       const response = await this.searchCities({
         namePrefix: query,
         limit,
         countryIds: countryCode ? [countryCode.toUpperCase()] : undefined,
-        minPopulation: 1000, 
+        minPopulation: 40000, 
       });
 
       console.log(`[GeoService] External API returned ${response.data.length} results`);

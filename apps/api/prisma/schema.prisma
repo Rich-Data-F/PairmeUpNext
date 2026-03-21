@@ -506,7 +506,9 @@ model Listing {
 
   // Location
   cityId            String
+  address           String?  // Optional specific address or venue name
   hideExactLocation Boolean  @default(true)
+  locationPrecision Int?     @default(500) // Accuracy radius in meters (default 500m)
   latitude          Decimal? @db.Decimal(10, 8)
   longitude         Decimal? @db.Decimal(11, 8)
 
@@ -586,10 +588,12 @@ model LostReport {
 
   // Location
   cityId             String
+  address            String?  // Optional specific address or venue name
   shareExactLocation Boolean  @default(false)
+  locationPrecision  Int?     @default(500) // Accuracy radius in meters (default 500m)
   latitude           Decimal? @db.Decimal(10, 8)
   longitude          Decimal? @db.Decimal(11, 8)
-  searchRadius       Int      @default(50) // km
+  searchRadius       Int      @default(50) // km (legacy radius for matching)
 
   // Reward
   rewardAmount      Decimal? @db.Decimal(10, 2)
@@ -676,9 +680,11 @@ model FoundItem {
   circumstances String? // How/where it was found
 
   // Location
-  cityId    String
-  latitude  Decimal? @db.Decimal(10, 8)
-  longitude Decimal? @db.Decimal(11, 8)
+  cityId            String
+  address           String?  // Exact address where found (kept private)
+  locationPrecision Int?     @default(500) // Accuracy radius in meters (default 500m)
+  latitude          Decimal? @db.Decimal(10, 8)
+  longitude         Decimal? @db.Decimal(11, 8)
 
   // Legal compliance
   jurisdiction       Jurisdiction

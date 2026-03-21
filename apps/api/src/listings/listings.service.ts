@@ -214,6 +214,8 @@ export class ListingsService {
       });
     };
 
+    const isNumeric = /^\d+$/.test(cityId || '');
+
     // Check if the frontend sent a custom city name instead of an ID
     if (cityId && (cityId.startsWith('name:') || cityId.startsWith('temp:'))) {
       const rawCityInput = cityId.substring(cityId.indexOf(':') + 1).trim();

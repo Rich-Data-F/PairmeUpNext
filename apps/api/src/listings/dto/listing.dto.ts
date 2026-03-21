@@ -75,6 +75,16 @@ export class CreateListingDto {
   @IsBoolean()
   hideExactLocation?: boolean = true;
 
+  @ApiPropertyOptional({ description: 'Specific address or venue name' })
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @ApiPropertyOptional({ description: 'Accuracy radius in meters', default: 500 })
+  @IsOptional()
+  @IsNumber()
+  locationPrecision?: number = 500;
+
   @ApiPropertyOptional({ description: 'Precise latitude (requires user consent)' })
   @IsOptional()
   @IsNumber()
