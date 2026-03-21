@@ -68,10 +68,19 @@ export class GeoService {
     this.axiosInstance.interceptors.response.use(
       (response) => response,
       (error) => {
+        const errorDetails = {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message,
+          configUrl: error.config?.url,
+          configBaseUrl: error.config?.baseURL,
+        };
+        console.error('[GeoService] Detailed API Error:', JSON.stringify(errorDetails, null, 2));
+
         if (error.response?.status === 429) {
           throw new HttpException('Rate limit exceeded', HttpStatus.TOO_MANY_REQUESTS);
         }
-        throw new HttpException('GeoDB API error', HttpStatus.BAD_GATEWAY);
+        throw new HttpException(`GeoDB API error: ${error.message}`, HttpStatus.BAD_GATEWAY);
       },
     );
   }
