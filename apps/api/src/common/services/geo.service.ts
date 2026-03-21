@@ -43,7 +43,8 @@ export class GeoService {
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
   ) {
-    this.baseUrl = this.configService.get<string>('GEODB_BASE_URL')?.replace('http://', 'https://');
+    // Force the correct free-tier URL which matches the SSL certificate
+    this.baseUrl = 'https://geodb-free-service.wirefreethought.com';
     
     this.axiosInstance = axios.create({
       baseURL: this.baseUrl,
