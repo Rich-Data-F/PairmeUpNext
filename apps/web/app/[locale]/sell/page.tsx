@@ -305,6 +305,8 @@ export default function SellPage() {
         customBrand: showCustomBrand ? customBrand : undefined,
         customModel: showCustomModel ? customModel : undefined,
         cityId,
+        address: undefined, // future support
+        locationPrecision: 500, // 500m fuzzy matching
         serialNumber: serialNumber || undefined,
         sellerNotes: sellerNotes || undefined,
         hideExactLocation: true,

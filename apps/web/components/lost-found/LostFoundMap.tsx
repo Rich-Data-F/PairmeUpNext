@@ -14,6 +14,7 @@ export interface LostFoundMapReport {
   };
   latitude?: string | number | null;
   longitude?: string | number | null;
+  locationPrecision?: number | string | null;
   city?: {
     displayName?: string;
     latitude?: string | number | null;

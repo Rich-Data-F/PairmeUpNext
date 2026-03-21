@@ -220,8 +220,10 @@ export function LostStolenPage() {
       customBrand: reportForm.showCustomBrand ? reportForm.customBrand : undefined,
       customModel: reportForm.showCustomModel ? reportForm.customModel : undefined,
       cityId: reportForm.cityId,
+      address: reportForm.address,
       latitude: reportForm.latitude,
       longitude: reportForm.longitude,
+      locationPrecision: 500, // Hardcoded 500m fuzzing for all registry items
       hideExactLocation: true,
       
       // The Engine: 

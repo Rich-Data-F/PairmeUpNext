@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import L, { type DivIcon, type LatLngExpression } from 'leaflet';
-import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
+import { Circle, MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import type { LostFoundMapProps, LostFoundMapReport } from './LostFoundMap';
 
 const DEFAULT_CENTER: LatLngExpression = [48.8566, 2.3522];
@@ -205,40 +205,63 @@ export function LostFoundMapClient({
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <FitBounds points={mappedReports.map((entry) => entry.coordinates)} />
-          {mappedReports.map(({ report, coordinates }) => (
-            <Marker key={report.id} position={coordinates} icon={createMarkerIcon(report)}>
-              <Popup>
-                <div className="min-w-[220px] space-y-2">
-                  <div className="text-sm font-semibold text-gray-900">{report.title || 'Untitled report'}</div>
-                  <div className="inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold text-white" style={{ backgroundColor: report.primaryIntent === 'SELLING' ? '#15803d' : '#b91c1c' }}>
-                    {report.primaryIntent === 'SELLING' ? foundItemLabel : lostItemLabel}
-                  </div>
-                  <div className="space-y-1 text-xs text-gray-700">
-                    <div>
-                      <span className="font-semibold">{brandModelLabel}:</span>{' '}
-                      {report.brand?.name || ''} {report.model?.name || ''}
-                    </div>
-                    <div>
-                      <span className="font-semibold">{locationLabel}:</span>{' '}
-                      {report.city?.displayName || `${coordinates[0].toFixed(4)}, ${coordinates[1].toFixed(4)}`}
-                    </div>
-                    {report.createdAt ? (
-                      <div>
-                        <span className="font-semibold">{datePostedLabel}:</span>{' '}
-                        {new Date(report.createdAt).toLocaleDateString()}
+          {mappedReports.map(({ report, coordinates }) => {
+            const precision = toNumber(report.locationPrecision) || 0;
+            const markerColor = report.primaryIntent === 'SELLING' ? '#15803d' : '#b91c1c';
+
+            return (
+              <div key={report.id}>
+                {precision > 0 && (
+                  <Circle
+                    center={coordinates}
+                    radius={precision}
+                    pathOptions={{
+                      color: markerColor,
+                      fillColor: markerColor,
+                      fillOpacity: 0.15,
+                      weight: 1,
+                      dashArray: '5, 5',
+                    }}
+                  />
+                )}
+                <Marker position={coordinates} icon={createMarkerIcon(report)}>
+                  <Popup>
+                    <div className="min-w-[220px] space-y-2">
+                      <div className="text-sm font-semibold text-gray-900">{report.title || 'Untitled report'}</div>
+                      <div
+                        className="inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold text-white"
+                        style={{ backgroundColor: markerColor }}
+                      >
+                        {report.primaryIntent === 'SELLING' ? foundItemLabel : lostItemLabel}
                       </div>
-                    ) : null}
-                  </div>
-                  <Link
-                    href={`/listings/${report.id}`}
-                    className="inline-flex rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700"
-                  >
-                    {viewDetailsLabel}
-                  </Link>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
+                      <div className="space-y-1 text-xs text-gray-700">
+                        <div>
+                          <span className="font-semibold">{brandModelLabel}:</span> {report.brand?.name || ''}{' '}
+                          {report.model?.name || ''}
+                        </div>
+                        <div>
+                          <span className="font-semibold">{locationLabel}:</span>{' '}
+                          {report.city?.displayName || `${coordinates[0].toFixed(4)}, ${coordinates[1].toFixed(4)}`}
+                        </div>
+                        {report.createdAt ? (
+                          <div>
+                            <span className="font-semibold">{datePostedLabel}:</span>{' '}
+                            {new Date(report.createdAt).toLocaleDateString()}
+                          </div>
+                        ) : null}
+                      </div>
+                      <Link
+                        href={`/listings/${report.id}`}
+                        className="inline-flex rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700"
+                      >
+                        {viewDetailsLabel}
+                      </Link>
+                    </div>
+                  </Popup>
+                </Marker>
+              </div>
+            );
+          })}
         </MapContainer>
       </div>
     </div>
