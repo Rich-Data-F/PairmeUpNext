@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import L, { type DivIcon, type LatLngExpression } from 'leaflet';
 import { Circle, MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
-import type { LostFoundMapProps, LostFoundMapReport } from './LostFoundMap';
+import type { LostFoundMapProps, LostFoundMapReport, MapCategory, MapItemType } from './LostFoundMap';
 
 const DEFAULT_CENTER: LatLngExpression = [48.8566, 2.3522];
 const DEFAULT_ZOOM = 4;
@@ -13,6 +13,30 @@ function toNumber(value: string | number | null | undefined) {
   if (value === null || value === undefined || value === '') return null;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function getItemType(report: LostFoundMapReport): MapItemType {
+  // If itemType is explicitly set, use it
+  if (report.itemType) return report.itemType;
+  
+  // Otherwise infer from price: if price is 0, it's a lost/found report; otherwise it's a classified ad
+  const price = toNumber(report.price);
+  return price === 0 ? 'lost-found' : 'classified';
+}
+
+function getCategory(report: LostFoundMapReport): MapCategory {
+  const itemType = getItemType(report);
+  if (itemType === 'lost-found') {
+    return report.primaryIntent === 'SELLING' ? 'found' : 'lost';
+  } else {
+    return report.primaryIntent === 'SELLING' ? 'selling' : 'buying';
+  }
+}
+
+function shouldShowReport(report: LostFoundMapReport, selectedCategory: MapCategory): boolean {
+  if (selectedCategory === 'all') return true;
+  const category = getCategory(report);
+  return category === selectedCategory;
 }
 
 function getCoordinates(report: LostFoundMapReport): [number, number] | null {
@@ -49,28 +73,49 @@ function getMarkerLabel(type?: string) {
   }
 }
 
-function getMarkerPalette(type?: string, primaryIntent?: string) {
+function getMarkerPalette(type?: string, primaryIntent?: string, itemType?: MapItemType) {
+  // For classified ads (non-registry items), use different colors
+  if (itemType === 'classified') {
+    const ring = primaryIntent === 'SELLING' ? '#059669' : '#0891b2';
+    switch (type) {
+      case 'EARBUD_LEFT':
+        return { background: '#1f2937', foreground: '#ffffff', ring, border: 2 };
+      case 'EARBUD_RIGHT':
+        return { background: '#1f2937', foreground: '#ffffff', ring, border: 2 };
+      case 'CHARGING_CASE':
+        return { background: '#1f2937', foreground: '#ffffff', ring, border: 2 };
+      case 'EARBUD_PAIR':
+        return { background: '#1f2937', foreground: '#ffffff', ring, border: 2 };
+      case 'FULL_SET':
+        return { background: '#1f2937', foreground: '#ffffff', ring, border: 2 };
+      default:
+        return { background: '#1f2937', foreground: '#ffffff', ring, border: 2 };
+    }
+  }
+
+  // For lost/found items (registry), keep original colors
   const ring = primaryIntent === 'SELLING' ? '#15803d' : '#b91c1c';
 
   switch (type) {
     case 'EARBUD_LEFT':
-      return { background: '#2563eb', foreground: '#ffffff', ring };
+      return { background: '#2563eb', foreground: '#ffffff', ring, border: 3 };
     case 'EARBUD_RIGHT':
-      return { background: '#7c3aed', foreground: '#ffffff', ring };
+      return { background: '#7c3aed', foreground: '#ffffff', ring, border: 3 };
     case 'CHARGING_CASE':
-      return { background: '#d97706', foreground: '#ffffff', ring };
+      return { background: '#d97706', foreground: '#ffffff', ring, border: 3 };
     case 'EARBUD_PAIR':
-      return { background: '#0f766e', foreground: '#ffffff', ring };
+      return { background: '#0f766e', foreground: '#ffffff', ring, border: 3 };
     case 'FULL_SET':
-      return { background: '#334155', foreground: '#ffffff', ring };
+      return { background: '#334155', foreground: '#ffffff', ring, border: 3 };
     default:
-      return { background: '#475569', foreground: '#ffffff', ring };
+      return { background: '#475569', foreground: '#ffffff', ring, border: 3 };
   }
 }
 
 function createMarkerIcon(report: LostFoundMapReport): DivIcon {
   const label = getMarkerLabel(report.type);
-  const palette = getMarkerPalette(report.type, report.primaryIntent);
+  const itemType = getItemType(report);
+  const palette = getMarkerPalette(report.type, report.primaryIntent, itemType);
 
   return L.divIcon({
     className: 'lost-found-map-marker',
@@ -84,7 +129,7 @@ function createMarkerIcon(report: LostFoundMapReport): DivIcon {
         justify-content: center;
         background: ${palette.background};
         color: ${palette.foreground};
-        border: 3px solid ${palette.ring};
+        border: ${palette.border}px solid ${palette.ring};
         box-shadow: 0 10px 25px rgba(15, 23, 42, 0.25);
         font-weight: 800;
         font-size: 12px;
@@ -132,16 +177,28 @@ export function LostFoundMapClient({
   mapLegendFoundLabel,
   mapLegendTypesLabel,
   mapAvailableCountLabel,
+  onCategoryChange,
+  selectedCategory = 'all',
+  sellingLabel = 'Selling',
+  buyingLabel = 'Buying',
+  allLabel = 'All',
+  classifiedLabel = 'Classified',
 }: LostFoundMapProps) {
   const [isClient, setIsClient] = useState(false);
+  const [localCategory, setLocalCategory] = useState<MapCategory>(selectedCategory);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
+  useEffect(() => {
+    setLocalCategory(selectedCategory);
+  }, [selectedCategory]);
+
   const mappedReports = useMemo(
     () =>
       reports
+        .filter((report) => shouldShowReport(report, localCategory))
         .map((report) => ({
           report,
           coordinates: getCoordinates(report),
@@ -150,8 +207,13 @@ export function LostFoundMapClient({
           (entry): entry is { report: LostFoundMapReport; coordinates: [number, number] } =>
             entry.coordinates !== null
         ),
-    [reports]
+    [reports, localCategory]
   );
+
+  const handleCategoryChange = (category: MapCategory) => {
+    setLocalCategory(category);
+    onCategoryChange?.(category);
+  };
 
   if (!isClient) {
     return (
@@ -175,19 +237,81 @@ export function LostFoundMapClient({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
         <div>
           <div className="text-sm font-semibold text-gray-900">{mapLegendLabel}</div>
-          <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-600">
+          <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-gray-600">
             <span className="inline-flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-red-700" /> {mapLegendLostLabel}
             </span>
             <span className="inline-flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-green-700" /> {mapLegendFoundLabel}
             </span>
+            <span className="inline-flex items-center gap-2">
+              <div className="h-3 w-3 rounded-full bg-gray-700 border-2 border-cyan-500" />
+              {buyingLabel}
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <div className="h-3 w-3 rounded-full bg-gray-700 border-2 border-emerald-500" />
+              {sellingLabel}
+            </span>
             <span className="font-medium text-gray-500">{mapLegendTypesLabel}: L / R / C / LR / SET</span>
           </div>
         </div>
+        
+        <div className="flex flex-wrap gap-2 border-t pt-3">
+          <button
+            onClick={() => handleCategoryChange('all')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${
+              localCategory === 'all'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {allLabel}
+          </button>
+          <button
+            onClick={() => handleCategoryChange('lost')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${
+              localCategory === 'lost'
+                ? 'bg-red-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {mapLegendLostLabel}
+          </button>
+          <button
+            onClick={() => handleCategoryChange('found')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${
+              localCategory === 'found'
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {mapLegendFoundLabel}
+          </button>
+          <button
+            onClick={() => handleCategoryChange('buying')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${
+              localCategory === 'buying'
+                ? 'bg-cyan-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {buyingLabel}
+          </button>
+          <button
+            onClick={() => handleCategoryChange('selling')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${
+              localCategory === 'selling'
+                ? 'bg-emerald-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {sellingLabel}
+          </button>
+        </div>
+        
         <div className="text-sm text-gray-500">
           {mappedReports.length} {mapAvailableCountLabel}
         </div>
@@ -207,7 +331,10 @@ export function LostFoundMapClient({
           <FitBounds points={mappedReports.map((entry) => entry.coordinates)} />
           {mappedReports.map(({ report, coordinates }) => {
             const precision = toNumber(report.locationPrecision) || 0;
-            const markerColor = report.primaryIntent === 'SELLING' ? '#15803d' : '#b91c1c';
+            const itemType = getItemType(report);
+            const markerColor = itemType === 'classified' 
+              ? (report.primaryIntent === 'SELLING' ? '#059669' : '#0891b2')
+              : (report.primaryIntent === 'SELLING' ? '#15803d' : '#b91c1c');
 
             return (
               <div key={report.id}>
@@ -232,8 +359,16 @@ export function LostFoundMapClient({
                         className="inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold text-white"
                         style={{ backgroundColor: markerColor }}
                       >
-                        {report.primaryIntent === 'SELLING' ? foundItemLabel : lostItemLabel}
+                        {itemType === 'classified' 
+                          ? (report.primaryIntent === 'SELLING' ? sellingLabel : buyingLabel)
+                          : (report.primaryIntent === 'SELLING' ? foundItemLabel : lostItemLabel)
+                        }
                       </div>
+                      {itemType === 'classified' && report.price && (
+                        <div className="text-sm font-semibold text-gray-900">
+                          {Number(report.price).toFixed(2)} EUR
+                        </div>
+                      )}
                       <div className="space-y-1 text-xs text-gray-700">
                         <div>
                           <span className="font-semibold">{brandModelLabel}:</span> {report.brand?.name || ''}{' '}

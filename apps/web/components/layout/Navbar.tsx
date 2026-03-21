@@ -53,6 +53,9 @@ export function Navbar() {
               <Link href="/brands" className="text-gray-600 hover:text-blue-600 hover:bg-white px-3 py-1.5 rounded-lg font-semibold text-sm transition-all tracking-tight">
                 {t('brands')}
               </Link>
+              <Link href="/maps" className="text-gray-600 hover:text-blue-600 hover:bg-white px-3 py-1.5 rounded-lg font-semibold text-sm transition-all tracking-tight">
+                {t('maps')}
+              </Link>
             </div>
 
             <div className="h-8 w-px bg-gray-200 mx-2"></div>
@@ -115,6 +118,9 @@ export function Navbar() {
               </Link>
               <Link href="/brands" onClick={() => setIsOpen(false)} className="block px-3 py-3 text-gray-700 hover:text-blue-600 font-bold rounded-xl hover:bg-blue-50">
                 {t('brands')}
+              </Link>
+              <Link href="/maps" onClick={() => setIsOpen(false)} className="block px-3 py-3 text-gray-700 hover:text-blue-600 font-bold rounded-xl hover:bg-blue-50">
+                {t('maps')}
               </Link>
             </div>
 

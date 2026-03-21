@@ -2,6 +2,9 @@
 
 import dynamic from 'next/dynamic';
 
+export type MapItemType = 'lost-found' | 'classified'; // lost-found for registry items, classified for regular listings
+export type MapCategory = 'lost' | 'found' | 'selling' | 'buying' | 'all';
+
 export interface LostFoundMapReport {
   id: string;
   title?: string;
@@ -26,6 +29,10 @@ export interface LostFoundMapReport {
   model?: {
     name?: string;
   };
+  // Item type for distinguishing lost/found vs classified
+  itemType?: MapItemType;
+  // Price to help determine if it's a classified ad (price > 0) or registry item (price = 0)
+  price?: number | string | null;
 }
 
 export interface LostFoundMapProps {
@@ -43,6 +50,13 @@ export interface LostFoundMapProps {
   mapLegendFoundLabel: string;
   mapLegendTypesLabel: string;
   mapAvailableCountLabel: string;
+  // New props for filters
+  onCategoryChange?: (category: MapCategory) => void;
+  selectedCategory?: MapCategory;
+  sellingLabel?: string;
+  buyingLabel?: string;
+  allLabel?: string;
+  classifiedLabel?: string;
 }
 
 const LostFoundMapClient = dynamic<LostFoundMapProps>(
@@ -60,3 +74,4 @@ const LostFoundMapClient = dynamic<LostFoundMapProps>(
 export function LostFoundMap(props: LostFoundMapProps) {
   return <LostFoundMapClient {...props} />;
 }
+

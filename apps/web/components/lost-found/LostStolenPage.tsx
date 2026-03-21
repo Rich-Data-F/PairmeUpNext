@@ -98,20 +98,19 @@ export function LostStolenPage() {
     async function fetchReports() {
       try {
         setIsLoading(true);
-        // We query the search engine. Filtering by intent happens in the DB logic.
-        // For a unified registry, we fetch both BUYING and SELLING items that are indexed for registry. 
-        // Registry items for the unified list (filtering price=0 only)
-        const res = await fetch('/api/proxy/search/advanced?maxPrice=0');
+        // Fetch all listings: both registry items (price=0) and classified ads (price>0)
+        // This unified approach shows everything on the map with different styling
+        const res = await fetch('/api/proxy/listings?limit=1000');
         const data = await res.json();
-        setReports(data.listings || data.data || []);
+        setReports(data.data || []);
       } catch (err) {
-        console.error('Failed to load real reports:', err);
+        console.error('Failed to load reports:', err);
       } finally {
         setIsLoading(false);
       }
     }
     fetchReports();
-  }, [activeTab]); 
+  }, [activeTab]);
 
   // 2. Load canonical Brands
   useEffect(() => {
@@ -343,6 +342,11 @@ export function LostStolenPage() {
                 mapLegendFoundLabel={t('mapLegendFound')}
                 mapLegendTypesLabel={t('mapLegendTypes')}
                 mapAvailableCountLabel={t('mapAvailableCount')}
+                selectedCategory="all"
+                sellingLabel={t('selling', { ns: 'common' })}
+                buyingLabel={t('buying', { ns: 'common' })}
+                allLabel={t('all', { ns: 'common' })}
+                classifiedLabel={t('classified', { ns: 'common' })}
               />
             ) : (
             <div className="space-y-6 max-h-[700px] overflow-y-auto pr-2 custom-scrollbar">

@@ -193,6 +193,26 @@
       "FULL_SET": "Full complete kit (Earbuds + Case)"
     }
   },
+  "maps": {
+    "title": "Interactive Maps",
+    "subtitle": "Browse all listings and reports on an interactive map. See lost/found items and classified ads in your area.",
+    "exploreMap": "Explore Interactive Map",
+    "itemsAvailable": "items available",
+    "searchPlaceholder": "Search by brand, model, location...",
+    "loading": "Loading map data...",
+    "noCoordinates": "No locations available",
+    "noCoordinatesDesc": "No items with location data are currently available to display on the map.",
+    "noResults": "No matches found",
+    "noResultsDesc": "Try adjusting your search filters.",
+    "foundItem": "Found Item",
+    "lostItem": "Lost Item",
+    "mapLegend": "Map legend",
+    "mapLegendLost": "Lost / Stolen",
+    "mapLegendFound": "Found",
+    "mapLegendTypes": "Item types",
+    "mapAvailableCount": "items on map",
+    "classified": "Classified Ad"
+  },
   "common": {
     "loading": "Loading…",
     "error": "An error occurred",
@@ -203,6 +223,13 @@
     "confirm": "Confirm",
     "required": "Required",
     "optional": "Optional",
-    "postedOn": "Posted on {date}"
+    "postedOn": "Posted on {date}",
+    "viewDetails": "View Details",
+    "brandModel": "Brand/Model",
+    "datePosted": "Date Posted",
+    "location": "Location",
+    "selling": "Selling",
+    "buying": "Buying",
+    "all": "All"
   }
 }

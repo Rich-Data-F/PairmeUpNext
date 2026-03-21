@@ -193,6 +193,26 @@
       "FULL_SET": "Kit complet (Écouteurs + Étui)"
     }
   },
+  "maps": {
+    "title": "Cartes interactives",
+    "subtitle": "Parcourez toutes les annonces et les signalements sur une carte interactive. Consultez les articles perdus/trouvés et les annonces classées dans votre région.",
+    "exploreMap": "Découvrir la carte interactive",
+    "itemsAvailable": "articles disponibles",
+    "searchPlaceholder": "Rechercher par marque, modèle, localisation...",
+    "loading": "Chargement des données de la carte...",
+    "noCoordinates": "Aucune localisation disponible",
+    "noCoordinatesDesc": "Aucun article avec données de localisation n'est actuellement disponible pour affichage sur la carte.",
+    "noResults": "Aucun résultat trouvé",
+    "noResultsDesc": "Essayez d'ajuster vos filtres de recherche.",
+    "foundItem": "Objet trouvé",
+    "lostItem": "Objet perdu",
+    "mapLegend": "Légende de la carte",
+    "mapLegendLost": "Perdu / Volé",
+    "mapLegendFound": "Trouvé",
+    "mapLegendTypes": "Types d'articles",
+    "mapAvailableCount": "articles sur la carte",
+    "classified": "Annonce classée"
+  },
   "common": {
     "loading": "Chargement…",
     "error": "Une erreur est survenue",
@@ -203,6 +223,13 @@
     "confirm": "Confirmer",
     "required": "Requis",
     "optional": "Optionnel",
-    "postedOn": "Publié le {date}"
+    "postedOn": "Publié le {date}",
+    "viewDetails": "Voir les détails",
+    "brandModel": "Marque/Modèle",
+    "datePosted": "Date de publication",
+    "location": "Localisation",
+    "selling": "Vend",
+    "buying": "Achète",
+    "all": "Tous"
   }
 }

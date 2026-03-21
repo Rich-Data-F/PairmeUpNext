@@ -193,6 +193,26 @@
       "FULL_SET": "Komplettes Set (Ohrhörer + Case)"
     }
   },
+  "maps": {
+    "title": "Interaktive Karten",
+    "subtitle": "Durchsuchen Sie alle Angebote und Meldungen auf einer interaktiven Karte. Sehen Sie verlorene/gefundene Artikel und Kleinanzeigen in Ihrer Nähe.",
+    "exploreMap": "Interaktive Karte erkunden",
+    "itemsAvailable": "Artikel verfügbar",
+    "searchPlaceholder": "Nach Marke, Modell, Ort suchen...",
+    "loading": "Kartendaten werden geladen...",
+    "noCoordinates": "Keine Standorte verfügbar",
+    "noCoordinatesDesc": "Derzeit sind keine Artikel mit Standortdaten verfügbar, um sie auf der Karte anzuzeigen.",
+    "noResults": "Keine Ergebnisse gefunden",
+    "noResultsDesc": "Versuchen Sie, Ihre Suchfilter anzupassen.",
+    "foundItem": "Gefundener Artikel",
+    "lostItem": "Verlorener Artikel",
+    "mapLegend": "Kartenlegende",
+    "mapLegendLost": "Verloren / Gestohlen",
+    "mapLegendFound": "Gefunden",
+    "mapLegendTypes": "Artikeltypen",
+    "mapAvailableCount": "Artikel auf der Karte",
+    "classified": "Kleinanzeige"
+  },
   "common": {
     "loading": "Laden…",
     "error": "Ein Fehler ist aufgetreten",
@@ -203,6 +223,13 @@
     "confirm": "Bestätigen",
     "required": "Erforderlich",
     "optional": "Optional",
-    "postedOn": "Veröffentlicht am {date}"
+    "postedOn": "Veröffentlicht am {date}",
+    "viewDetails": "Details anzeigen",
+    "brandModel": "Marke/Modell",
+    "datePosted": "Veröffentlichungsdatum",
+    "location": "Standort",
+    "selling": "Verkaufen",
+    "buying": "Kaufen",
+    "all": "Alle"
   }
 }

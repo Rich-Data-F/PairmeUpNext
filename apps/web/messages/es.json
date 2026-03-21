@@ -193,6 +193,26 @@
       "FULL_SET": "Kit completo (auriculares + estuche)"
     }
   },
+  "maps": {
+    "title": "Mapas Interactivos",
+    "subtitle": "Explore todos los anuncios y reportes en un mapa interactivo. Vea artículos perdidos/encontrados y anuncios clasificados en su área.",
+    "exploreMap": "Explorar mapa interactivo",
+    "itemsAvailable": "artículos disponibles",
+    "searchPlaceholder": "Buscar por marca, modelo, ubicación...",
+    "loading": "Cargando datos del mapa...",
+    "noCoordinates": "No hay ubicaciones disponibles",
+    "noCoordinatesDesc": "Actualmente no hay artículos con datos de ubicación disponibles para mostrar en el mapa.",
+    "noResults": "No se encontraron resultados",
+    "noResultsDesc": "Intente ajustar sus filtros de búsqueda.",
+    "foundItem": "Objeto encontrado",
+    "lostItem": "Objeto perdido",
+    "mapLegend": "Leyenda del mapa",
+    "mapLegendLost": "Perdido / Robado",
+    "mapLegendFound": "Encontrado",
+    "mapLegendTypes": "Tipos de artículos",
+    "mapAvailableCount": "artículos en el mapa",
+    "classified": "Anuncio clasificado"
+  },
   "common": {
     "loading": "Cargando…",
     "error": "Ocurrió un error",
@@ -203,6 +223,13 @@
     "confirm": "Confirmar",
     "required": "Obligatorio",
     "optional": "Opcional",
-    "postedOn": "Publicado el {date}"
+    "postedOn": "Publicado el {date}",
+    "viewDetails": "Ver detalles",
+    "brandModel": "Marca/Modelo",
+    "datePosted": "Fecha de publicación",
+    "location": "Ubicación",
+    "selling": "Vendiendo",
+    "buying": "Comprando",
+    "all": "Todos"
   }
 }
