@@ -331,9 +331,16 @@ export class ListingsService {
     const processedVerificationPhoto: string | undefined = verificationPhoto;
 
     // Create listing
+    const city = await this.prisma.city.findUnique({ where: { id: finalCityId } });
+    if (!city) {
+      throw new BadRequestException('Could not resolve city for the listing.');
+    }
+
     const listing = await this.prisma.listing.create({
       data: {
         ...listingData,
+        latitude: city.latitude,
+        longitude: city.longitude,
         sellerId: sellerId,
         brandId: finalBrandId,
         modelId: finalModelId,
