@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 type Brand = { id: string; name: string; slug: string };
 type Model = { id: string; name: string; slug: string };
@@ -21,6 +22,11 @@ type SurveySummary = {
 };
 
 const MUSIC_STYLES = ['Classic', 'Rap/Hip-Hop', 'Folk/Country', 'Drum & Bass', 'Techno/Electronic', 'Pop', 'Rock', 'Other'];
+
+const CURRENCIES = [
+  'USD','EUR','GBP','JPY','CHF','CAD','AUD','CNY','SEK','NOK','DKK','BRL','MXN','INR','KRW','SGD','HKD','ZAR','AED','SAR','TRY','PLN','CZK','HUF','RON','BGN','HRK','RSD','NGN','GHS','KES','MAD','EGP','PKR','BDT','PHP','VND','THB','MYR','IDR','TWD'
+].sort();
+
 const COUNTRIES = [
   { code: 'AF', name: 'Afghanistan' }, { code: 'AL', name: 'Albania' }, { code: 'DZ', name: 'Algeria' },
   { code: 'AD', name: 'Andorra' }, { code: 'AO', name: 'Angola' }, { code: 'AG', name: 'Antigua and Barbuda' },
@@ -35,7 +41,7 @@ const COUNTRIES = [
   { code: 'CM', name: 'Cameroon' }, { code: 'CA', name: 'Canada' }, { code: 'CF', name: 'Central African Republic' },
   { code: 'TD', name: 'Chad' }, { code: 'CL', name: 'Chile' }, { code: 'CN', name: 'China' },
   { code: 'CO', name: 'Colombia' }, { code: 'KM', name: 'Comoros' }, { code: 'CD', name: 'Congo, Democratic Republic of the' },
-  { code: 'CG', name: 'Congo, Republic of the' }, { code: 'CR', name: 'Costa Rica' }, { code: 'CI', name: 'Côte d\'Ivoire' },
+  { code: 'CG', name: 'Congo, Republic of the' }, { code: 'CR', name: 'Costa Rica' }, { code: 'CI', name: "Côte d'Ivoire" },
   { code: 'HR', name: 'Croatia' }, { code: 'CU', name: 'Cuba' }, { code: 'CY', name: 'Cyprus' },
   { code: 'CZ', name: 'Czechia' }, { code: 'DK', name: 'Denmark' }, { code: 'DJ', name: 'Djibouti' },
   { code: 'DM', name: 'Dominica' }, { code: 'DO', name: 'Dominican Republic' }, { code: 'EC', name: 'Ecuador' },
@@ -89,17 +95,26 @@ const COUNTRIES = [
   { code: 'YE', name: 'Yemen' }, { code: 'ZM', name: 'Zambia' }, { code: 'ZW', name: 'Zimbabwe' },
 ];
 
+function SectionBadge({ num }: { num: number }) {
+  return (
+    <span className="bg-blue-600 text-white w-8 h-8 flex items-center justify-center rounded-xl text-xs font-black shadow-lg shadow-blue-200">
+      {num}
+    </span>
+  );
+}
+
 export default function SurveyPage() {
   const router = useRouter();
+  const t = useTranslations('survey');
+
   const [authed, setAuthed] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // Stats
   const [summary, setSummary] = useState<SurveySummary | null>(null);
 
-  // Identity
+  // ── Identity ─────────────────────────────────────────────────────────────────
   const [brandId, setBrandId] = useState('');
   const [modelId, setModelId] = useState('');
   const [customBrand, setCustomBrand] = useState('');
@@ -107,13 +122,14 @@ export default function SurveyPage() {
   const [showCustomBrand, setShowCustomBrand] = useState(false);
   const [showCustomModel, setShowCustomModel] = useState(false);
   const [referenceString, setReferenceString] = useState('');
-
-  // Dropdown states
   const [brands, setBrands] = useState<Brand[]>([]);
   const [models, setModels] = useState<Model[]>([]);
 
-  // Ratings
+  // ── Battery ───────────────────────────────────────────────────────────────────
   const [batteryAutonomyRate, setBatteryAutonomyRate] = useState<number | ''>('');
+  const [batteryAutonomyMinutes, setBatteryAutonomyMinutes] = useState<number>(90);
+
+  // ── Performance ratings ───────────────────────────────────────────────────────
   const [delaySyncRate, setDelaySyncRate] = useState<number | ''>('');
   const [robustnessRate, setRobustnessRate] = useState<number | ''>('');
   const [soundQualityVideo, setSoundQualityVideo] = useState<number | ''>('');
@@ -121,41 +137,56 @@ export default function SurveyPage() {
   const [soundQualityPodcasts, setSoundQualityPodcasts] = useState<number | ''>('');
   const [noiseReductionRate, setNoiseReductionRate] = useState<number | ''>('');
 
-  // Styles
+  // ── Style & comfort ───────────────────────────────────────────────────────────
+  const [styleRate, setStyleRate] = useState<number | ''>('');
+  const [comfortRate, setComfortRate] = useState<number | ''>('');
+  const [phoneQualityMyselfRate, setPhoneQualityMyselfRate] = useState<number | ''>('');
+  const [phoneQualityOtherRate, setPhoneQualityOtherRate] = useState<number | ''>('');
+  const [sportStayRate, setSportStayRate] = useState<number | ''>('');
+  const [overallResistanceRate, setOverallResistanceRate] = useState<number | ''>('');
+
+  // ── Music styles ──────────────────────────────────────────────────────────────
   const [musicStyleMostListened, setMusicStyleMostListened] = useState('');
   const [musicStyleMostSuitable, setMusicStyleMostSuitable] = useState('');
 
-  // Localization
+  // ── Localization ──────────────────────────────────────────────────────────────
   const [hasEarbudLocalization, setHasEarbudLocalization] = useState(false);
   const [earbudLocRate, setEarbudLocRate] = useState<number | ''>('');
+  const [earbudLocType, setEarbudLocType] = useState('');
+
   const [hasCaseLocalization, setHasCaseLocalization] = useState(false);
   const [caseLocRate, setCaseLocRate] = useState<number | ''>('');
-  const [localizationType, setLocalizationType] = useState(''); // SOUND, MAP, BOTH
-  const [localizationSavedLife, setLocalizationSavedLife] = useState(false);
+  const [caseLocType, setCaseLocType] = useState('');
 
-  // Ownership Details
+  const [localizationSavedLife, setLocalizationSavedLife] = useState(false);
+  const [localizationUseful, setLocalizationUseful] = useState<boolean | null>(null);
+
+  // ── Ownership ─────────────────────────────────────────────────────────────────
   const [dateOfPurchase, setDateOfPurchase] = useState('');
   const [usageDurationMonths, setUsageDurationMonths] = useState<number | ''>('');
   const [pricePaid, setPricePaid] = useState<number | ''>('');
+  const [currency, setCurrency] = useState('EUR');
   const [locationPurchase, setLocationPurchase] = useState('');
   const [countryOfPurchase, setCountryOfPurchase] = useState('');
   const [countryOfUsage, setCountryOfUsage] = useState('');
 
-  // Loss & Replacement
+  // ── Loss & Replacement ────────────────────────────────────────────────────────
   const [lossExperienceDetails, setLossExperienceDetails] = useState('');
   const [purchasedNewKit, setPurchasedNewKit] = useState(false);
   const [boughtSpareItem, setBoughtSpareItem] = useState(false);
-  const [spareCondition, setSpareCondition] = useState(''); // NEW, USED
+  const [spareCondition, setSpareCondition] = useState('');
   const [sparePurchaseLocation, setSparePurchaseLocation] = useState('');
+  const [spareCountry, setSpareCountry] = useState('');
+  const [sparePrice, setSparePrice] = useState<number | ''>('');
+  const [spareCurrency, setSpareCurrency] = useState('EUR');
 
-  // Auth check
+  // ── Effects ───────────────────────────────────────────────────────────────────
   useEffect(() => {
     fetch('/api/proxy/auth/profile')
       .then(r => setAuthed(r.ok))
       .catch(() => setAuthed(false));
   }, []);
 
-  // Fetch Brands
   useEffect(() => {
     fetch('/api/proxy/brands/canonical')
       .then(r => r.json())
@@ -163,7 +194,6 @@ export default function SurveyPage() {
       .catch(console.error);
   }, []);
 
-  // Fetch Summary
   useEffect(() => {
     fetch('/api/proxy/survey/summary')
       .then(r => r.json())
@@ -171,25 +201,23 @@ export default function SurveyPage() {
       .catch(console.error);
   }, []);
 
-  // Fetch Models
   useEffect(() => {
-    if (!brandId || brandId === 'custom') {
-      setModels([]);
-      return;
-    }
+    if (!brandId || brandId === 'custom') { setModels([]); return; }
     const brand = brands.find(b => b.id === brandId);
     if (!brand) return;
-    
     fetch(`/api/proxy/brands/${brand.slug}`)
       .then(r => r.json())
       .then(data => setModels(data?.models || []))
       .catch(console.error);
   }, [brandId, brands]);
 
+  // ── Submit ────────────────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    const hasLoc = hasEarbudLocalization || hasCaseLocalization;
 
     const payload: any = {
       brandId: showCustomBrand ? undefined : brandId,
@@ -197,48 +225,62 @@ export default function SurveyPage() {
       customBrand: showCustomBrand ? customBrand : undefined,
       customModel: showCustomModel ? customModel : undefined,
       referenceString,
+      // battery
       batteryAutonomyRate: batteryAutonomyRate ? Number(batteryAutonomyRate) : undefined,
+      batteryAutonomyMinutes: batteryAutonomyMinutes,
+      // performance
       delaySyncRate: delaySyncRate ? Number(delaySyncRate) : undefined,
       robustnessRate: robustnessRate ? Number(robustnessRate) : undefined,
       soundQualityVideo: soundQualityVideo ? Number(soundQualityVideo) : undefined,
       soundQualityMusic: soundQualityMusic ? Number(soundQualityMusic) : undefined,
       soundQualityPodcasts: soundQualityPodcasts ? Number(soundQualityPodcasts) : undefined,
       noiseReductionRate: noiseReductionRate ? Number(noiseReductionRate) : undefined,
+      // style & comfort
+      styleRate: styleRate ? Number(styleRate) : undefined,
+      comfortRate: comfortRate ? Number(comfortRate) : undefined,
+      phoneQualityMyselfRate: phoneQualityMyselfRate ? Number(phoneQualityMyselfRate) : undefined,
+      phoneQualityOtherRate: phoneQualityOtherRate ? Number(phoneQualityOtherRate) : undefined,
+      sportStayRate: sportStayRate ? Number(sportStayRate) : undefined,
+      overallResistanceRate: overallResistanceRate ? Number(overallResistanceRate) : undefined,
+      // music
       musicStyleMostListened,
       musicStyleMostSuitable,
+      // localization
       hasEarbudLocalization,
       earbudLocRate: hasEarbudLocalization && earbudLocRate ? Number(earbudLocRate) : undefined,
+      earbudLocType: hasEarbudLocalization ? earbudLocType : undefined,
       hasCaseLocalization,
       caseLocRate: hasCaseLocalization && caseLocRate ? Number(caseLocRate) : undefined,
-      localizationType: (hasEarbudLocalization || hasCaseLocalization) ? localizationType : undefined,
-      localizationSavedLife: (hasEarbudLocalization || hasCaseLocalization) ? localizationSavedLife : undefined,
+      caseLocType: hasCaseLocalization ? caseLocType : undefined,
+      localizationSavedLife: hasLoc ? localizationSavedLife : undefined,
+      localizationUseful: hasLoc ? localizationUseful : undefined,
+      // ownership
       dateOfPurchase: dateOfPurchase ? new Date(dateOfPurchase) : undefined,
       usageDurationMonths: usageDurationMonths ? Number(usageDurationMonths) : undefined,
       pricePaid: pricePaid ? Number(pricePaid) : undefined,
+      currency: pricePaid ? currency : undefined,
       locationPurchase,
       countryOfPurchase,
       countryOfUsage,
+      // loss
       lossExperienceDetails,
       purchasedNewKit,
       boughtSpareItem,
       spareCondition: boughtSpareItem ? spareCondition : undefined,
       sparePurchaseLocation: boughtSpareItem ? sparePurchaseLocation : undefined,
+      spareCountry: boughtSpareItem ? spareCountry : undefined,
+      sparePrice: boughtSpareItem && sparePrice ? Number(sparePrice) : undefined,
+      spareCurrency: boughtSpareItem && sparePrice ? spareCurrency : undefined,
     };
 
     try {
       const resp = await fetch('/api/proxy/survey', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
-
       const data = await resp.json();
-      if (!resp.ok) {
-        throw new Error(data.error || 'Failed to submit survey');
-      }
-      
+      if (!resp.ok) throw new Error(data.error || 'Failed to submit survey');
       setSuccess(true);
     } catch (err: any) {
       setError(err.message);
@@ -247,7 +289,8 @@ export default function SurveyPage() {
     }
   };
 
-  if (authed === null) return <div className="p-8 text-center text-gray-500">Loading...</div>;
+  // ── Guards ────────────────────────────────────────────────────────────────────
+  if (authed === null) return <div className="p-8 text-center text-gray-500">{t('loading')}</div>;
   if (authed === false) {
     if (typeof window !== 'undefined') router.push('/auth/signin?next=/survey');
     return null;
@@ -257,13 +300,14 @@ export default function SurveyPage() {
     return (
       <div className="max-w-2xl mx-auto p-8 my-10 bg-white rounded-xl shadow-lg border border-gray-100 text-center">
         <div className="text-5xl mb-4">🎉</div>
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">Thank you!</h1>
-        <p className="text-gray-600 mb-8">Your honest feedback heavily impacts our community&apos;s recommendations and helps others make informed purchases.</p>
-        <button onClick={() => router.push('/')} className="btn btn-primary">Return to Home</button>
+        <h1 className="text-3xl font-bold text-gray-800 mb-4">{t('successTitle')}</h1>
+        <p className="text-gray-600 mb-8">{t('successMessage')}</p>
+        <button onClick={() => router.push('/')} className="btn btn-primary">{t('returnHome')}</button>
       </div>
     );
   }
 
+  // ── Helpers ───────────────────────────────────────────────────────────────────
   const renderRatingGroup = (label: string, value: number | '', setValue: (val: number) => void) => (
     <div className="flex flex-col mb-4">
       <label className="text-sm font-medium text-gray-700 mb-2">{label}</label>
@@ -273,13 +317,26 @@ export default function SurveyPage() {
             type="button"
             key={num}
             onClick={() => setValue(num)}
-            className={`w-10 h-10 rounded-full font-bold transition-all ${value === num ? 'bg-primary text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+            className={`w-10 h-10 rounded-full font-bold transition-all ${value === num ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
           >
             {num}
           </button>
         ))}
       </div>
-      <span className="text-xs text-gray-400 mt-1 flex justify-between w-56"><span>Poor</span> <span>Excellent</span></span>
+      <span className="text-xs text-gray-400 mt-1 flex justify-between w-56">
+        <span>{t('ratingPoor')}</span><span>{t('ratingExcellent')}</span>
+      </span>
+    </div>
+  );
+
+  const renderLocTypeRadio = (val: string, setVal: (v: string) => void) => (
+    <div className="flex flex-wrap gap-3 mt-3">
+      {['SOUND', 'MAP', 'BOTH'].map(opt => (
+        <label key={opt} className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-orange-100 cursor-pointer text-sm font-bold text-gray-700">
+          <input type="radio" className="radio radio-primary radio-sm" checked={val === opt} onChange={() => setVal(opt)} />
+          {opt === 'SOUND' ? t('locSound') : opt === 'MAP' ? t('locMap') : t('locBoth')}
+        </label>
+      ))}
     </div>
   );
 
@@ -290,9 +347,9 @@ export default function SurveyPage() {
         <div className="relative w-16 h-16 flex items-center justify-center">
           <svg className="w-full h-full transform -rotate-90">
             <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="6" fill="transparent" className="text-gray-100" />
-            <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="6" fill="transparent" 
+            <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="6" fill="transparent"
               strokeDasharray={175.9} strokeDashoffset={175.9 - (175.9 * Number(val) / 5)}
-              className="text-primary transition-all duration-1000" />
+              className="text-blue-600 transition-all duration-1000" />
           </svg>
           <span className="absolute text-sm font-bold">{val}</span>
         </div>
@@ -301,55 +358,55 @@ export default function SurveyPage() {
     );
   };
 
+  // ── Render ────────────────────────────────────────────────────────────────────
   return (
     <div className="max-w-4xl mx-auto p-4 lg:p-10 my-8 space-y-10">
-      
+
       {/* Community Insights Dashboard */}
       {summary && summary.total > 0 && (
         <div className="bg-white p-6 lg:p-8 rounded-3xl shadow-2xl border border-blue-50 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-          
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/5 rounded-full -mr-32 -mt-32 blur-3xl" />
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
-              <h2 className="text-2xl font-black text-gray-900 leading-tight">Community Insights</h2>
-              <p className="text-sm text-gray-400 font-medium italic">Aggregated from {summary.total} global earbud owners</p>
+              <h2 className="text-2xl font-black text-gray-900 leading-tight">{t('communityTitle')}</h2>
+              <p className="text-sm text-gray-400 font-medium italic">{t('communitySubtitle', { count: summary.total })}</p>
             </div>
-            <div className="bg-primary/10 px-4 py-2 rounded-2xl flex items-center gap-2">
-              <span className="text-primary text-xl font-black">{summary.total}</span>
-              <span className="text-primary/70 text-xs font-bold uppercase tracking-widest">Responses</span>
+            <div className="bg-blue-600/10 px-4 py-2 rounded-2xl flex items-center gap-2">
+              <span className="text-blue-600 text-xl font-black">{summary.total}</span>
+              <span className="text-blue-600/70 text-xs font-bold uppercase tracking-widest">{t('responses')}</span>
             </div>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 border-b pb-8 mb-8">
-            {renderMiniChart(summary.averages.battery, 'Battery')}
-            {renderMiniChart(summary.averages.music, 'Music Q.')}
-            {renderMiniChart(summary.averages.noiseReduction, 'ANC')}
-            {renderMiniChart(summary.averages.delay, 'Sync')}
-            {renderMiniChart(summary.averages.robustness, 'Build')}
+            {renderMiniChart(summary.averages.battery, t('chartBattery'))}
+            {renderMiniChart(summary.averages.music, t('chartMusic'))}
+            {renderMiniChart(summary.averages.noiseReduction, t('chartAnc'))}
+            {renderMiniChart(summary.averages.delay, t('chartSync'))}
+            {renderMiniChart(summary.averages.robustness, t('chartBuild'))}
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-4">
-              <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">Localization Stats</h3>
+              <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">{t('locStatsTitle')}</h3>
               <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100">
                 <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600 text-xl font-black">
                   {Math.round((summary.localization.supportCount / summary.total) * 100)}%
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-gray-700">Market Adoption</div>
-                  <p className="text-xs text-gray-400">Devices equipped with localization features</p>
+                  <div className="text-sm font-bold text-gray-700">{t('marketAdoption')}</div>
+                  <p className="text-xs text-gray-400">{t('marketAdoptionDesc')}</p>
                 </div>
               </div>
             </div>
             <div className="space-y-4">
-              <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">Utility Impact</h3>
+              <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">{t('utilityTitle')}</h3>
               <div className="flex items-center gap-4 bg-orange-50 p-4 rounded-2xl border border-orange-100">
                 <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center text-orange-600 text-xl font-black">
                   {summary.localization.savedLifeCount}
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-gray-700">Wallet Saved</div>
-                  <p className="text-xs text-gray-400">Users who avoided repurchasing thanks to tracking</p>
+                  <div className="text-sm font-bold text-gray-700">{t('walletSaved')}</div>
+                  <p className="text-xs text-gray-400">{t('walletSavedDesc')}</p>
                 </div>
               </div>
             </div>
@@ -359,25 +416,25 @@ export default function SurveyPage() {
             <table className="w-full text-left text-sm">
               <thead className="bg-gray-50 text-gray-400 uppercase text-[10px] font-black tracking-widest">
                 <tr>
-                  <th className="px-4 py-3">Metric category</th>
-                  <th className="px-4 py-3 text-right">Avg Rating</th>
-                  <th className="px-4 py-3 text-right">Confidence</th>
+                  <th className="px-4 py-3">{t('tableMetric')}</th>
+                  <th className="px-4 py-3 text-right">{t('tableAvg')}</th>
+                  <th className="px-4 py-3 text-right">{t('tableConfidence')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
                 <tr>
-                  <td className="px-4 py-3 font-semibold text-gray-700">Soundstage for Music</td>
-                  <td className="px-4 py-3 text-right font-black text-primary">{summary.averages.music}/5</td>
+                  <td className="px-4 py-3 font-semibold text-gray-700">{t('tableMusicQ')}</td>
+                  <td className="px-4 py-3 text-right font-black text-blue-600">{summary.averages.music}/5</td>
                   <td className="px-4 py-3 text-right"><span className="badge badge-success badge-xs">High</span></td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-3 font-semibold text-gray-700">Daily Life Battery</td>
-                  <td className="px-4 py-3 text-right font-black text-primary">{summary.averages.battery}/5</td>
+                  <td className="px-4 py-3 font-semibold text-gray-700">{t('tableBattery')}</td>
+                  <td className="px-4 py-3 text-right font-black text-blue-600">{summary.averages.battery}/5</td>
                   <td className="px-4 py-3 text-right"><span className="badge badge-success badge-xs">High</span></td>
                 </tr>
-                 <tr>
-                  <td className="px-4 py-3 font-semibold text-gray-700">Gaming & Video Latency</td>
-                  <td className="px-4 py-3 text-right font-black text-primary">{summary.averages.delay}/5</td>
+                <tr>
+                  <td className="px-4 py-3 font-semibold text-gray-700">{t('tableDelay')}</td>
+                  <td className="px-4 py-3 text-right font-black text-blue-600">{summary.averages.delay}/5</td>
                   <td className="px-4 py-3 text-right"><span className="badge badge-warning badge-xs">Medium</span></td>
                 </tr>
               </tbody>
@@ -386,24 +443,23 @@ export default function SurveyPage() {
         </div>
       )}
 
-      {/* Main Survey Form */}
+      {/* ── Main Survey Form ──────────────────────────────────────────────────── */}
       <div className="bg-white shadow-xl rounded-2xl p-6 lg:p-10 border border-gray-100">
         <div className="mb-8 border-b pb-6">
-          <h1 className="text-3xl font-black tracking-tighter text-gray-900 mb-2">Device Satisfaction Survey</h1>
-          <p className="text-gray-500 font-medium leading-relaxed">Your data powers the transparency for future buyers. Help us map the real performance of earbud models.</p>
+          <h1 className="text-3xl font-black tracking-tighter text-gray-900 mb-2">{t('formTitle')}</h1>
+          <p className="text-gray-500 font-medium leading-relaxed">{t('formSubtitle')}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-10">
-          
-          {/* Device Selection */}
+
+          {/* ── Section 1: Device Identity ─────────────────────────────────────── */}
           <section>
             <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
-              <span className="bg-blue-600 text-white w-8 h-8 flex items-center justify-center rounded-xl text-xs font-black shadow-lg shadow-blue-200">1</span> 
-              Identify Your Device
+              <SectionBadge num={1} /> {t('s1Title')}
             </h2>
             <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100 grid md:grid-cols-2 gap-4">
               <div>
-                <label className="label"><span className="label-text font-bold text-gray-600">Brand</span></label>
+                <label className="label"><span className="label-text font-bold text-gray-600">{t('brand')}</span></label>
                 <select
                   className="select select-bordered w-full bg-white font-medium"
                   value={showCustomBrand ? 'custom' : brandId}
@@ -413,15 +469,15 @@ export default function SurveyPage() {
                   }}
                   required
                 >
-                  <option value="" disabled>Select brand</option>
+                  <option value="" disabled>{t('selectBrand')}</option>
                   {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                  <option value="custom">➕ Other Brand</option>
+                  <option value="custom">➕ {t('otherBrand')}</option>
                 </select>
-                {showCustomBrand && <input className="input input-bordered w-full mt-2" placeholder="Describe Brand" value={customBrand} onChange={e => setCustomBrand(e.target.value)} required />}
+                {showCustomBrand && <input className="input input-bordered w-full mt-2" placeholder={t('typeBrand')} value={customBrand} onChange={e => setCustomBrand(e.target.value)} required />}
               </div>
 
               <div>
-                <label className="label"><span className="label-text font-bold text-gray-600">Model</span></label>
+                <label className="label"><span className="label-text font-bold text-gray-600">{t('model')}</span></label>
                 <select
                   className="select select-bordered w-full bg-white font-medium"
                   value={showCustomModel ? 'custom' : modelId}
@@ -432,167 +488,225 @@ export default function SurveyPage() {
                   required
                   disabled={showCustomBrand && !customBrand}
                 >
-                  <option value="" disabled>Select model</option>
+                  <option value="" disabled>{t('selectModel')}</option>
                   {models.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-                  <option value="custom">➕ Other Model</option>
+                  <option value="custom">➕ {t('otherModel')}</option>
                 </select>
-                {showCustomModel && <input className="input input-bordered w-full mt-2" placeholder="Describe Model" value={customModel} onChange={e => setCustomModel(e.target.value)} required />}
+                {showCustomModel && <input className="input input-bordered w-full mt-2" placeholder={t('typeModel')} value={customModel} onChange={e => setCustomModel(e.target.value)} required />}
               </div>
-              
+
               <div className="md:col-span-2 mt-2">
-                <label className="label"><span className="label-text text-gray-400 font-bold text-xs uppercase tracking-widest">Reference (Optional Model/Gen suffix)</span></label>
-                <input type="text" className="input input-sm input-bordered w-full bg-white" placeholder="e.g. 2nd Gen, ANC Edition" value={referenceString} onChange={e => setReferenceString(e.target.value)} />
+                <label className="label"><span className="label-text text-gray-400 font-bold text-xs uppercase tracking-widest">{t('reference')}</span></label>
+                <input type="text" className="input input-sm input-bordered w-full bg-white" placeholder={t('referencePlaceholder')} value={referenceString} onChange={e => setReferenceString(e.target.value)} />
               </div>
             </div>
           </section>
 
-          {/* Audio & Performance Ratings */}
+          {/* ── Section 2: Battery ─────────────────────────────────────────────── */}
           <section>
             <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
-              <span className="bg-blue-600 text-white w-8 h-8 flex items-center justify-center rounded-xl text-xs font-black shadow-lg shadow-blue-200">2</span> 
-              Performance Ratings
+              <SectionBadge num={2} /> {t('s2Title')}
+            </h2>
+            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+              {renderRatingGroup(t('batteryAutonomyRate'), batteryAutonomyRate, setBatteryAutonomyRate)}
+
+              {/* Battery slider */}
+              <div className="flex flex-col">
+                <label className="text-sm font-medium text-gray-700 mb-2">
+                  {t('batteryMinutesLabel')}
+                  <span className="ml-2 bg-blue-600 text-white text-xs font-black px-2 py-0.5 rounded-full">{batteryAutonomyMinutes} min</span>
+                </label>
+                <input
+                  type="range"
+                  min={0}
+                  max={600}
+                  step={5}
+                  value={batteryAutonomyMinutes}
+                  onChange={e => setBatteryAutonomyMinutes(Number(e.target.value))}
+                  className="range range-primary range-sm"
+                />
+                <div className="flex justify-between text-xs text-gray-400 mt-1 px-1">
+                  <span>0</span><span>1h</span><span>2h</span><span>3h</span><span>4h</span><span>5h</span><span>6h+</span>
+                </div>
+                <p className="text-xs text-gray-400 mt-2 italic">{t('batteryMinutesHint')}</p>
+              </div>
+            </div>
+          </section>
+
+          {/* ── Section 3: Performance & Sound ────────────────────────────────── */}
+          <section>
+            <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
+              <SectionBadge num={3} /> {t('s3Title')}
             </h2>
             <div className="grid md:grid-cols-2 gap-x-12 gap-y-6 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-              {renderRatingGroup('Battery Autonomy', batteryAutonomyRate, setBatteryAutonomyRate)}
-              {renderRatingGroup('Delay / Sync (Video & Gaming)', delaySyncRate, setDelaySyncRate)}
-              {renderRatingGroup('Durability / Robustness', robustnessRate, setRobustnessRate)}
-              {renderRatingGroup('Noise Reduction Quality', noiseReductionRate, setNoiseReductionRate)}
-              {renderRatingGroup('Sound Quality (Music)', soundQualityMusic, setSoundQualityMusic)}
-              {renderRatingGroup('Sound Quality (Video/Movies)', soundQualityVideo, setSoundQualityVideo)}
-              {renderRatingGroup('Sound Quality (Podcasts/Interviews)', soundQualityPodcasts, setSoundQualityPodcasts)}
+              {renderRatingGroup(t('delaySyncRate'), delaySyncRate, setDelaySyncRate)}
+              {renderRatingGroup(t('noiseReductionRate'), noiseReductionRate, setNoiseReductionRate)}
+              {renderRatingGroup(t('soundQualityMusic'), soundQualityMusic, setSoundQualityMusic)}
+              {renderRatingGroup(t('soundQualityVideo'), soundQualityVideo, setSoundQualityVideo)}
+              {renderRatingGroup(t('soundQualityPodcasts'), soundQualityPodcasts, setSoundQualityPodcasts)}
             </div>
           </section>
 
-          {/* Use Cases */}
+          {/* ── Section 4: Style, Comfort & Resistance ────────────────────────── */}
           <section>
             <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
-              <span className="bg-blue-600 text-white w-8 h-8 flex items-center justify-center rounded-xl text-xs font-black shadow-lg shadow-blue-200">3</span> 
-              Music Styles & Context
+              <SectionBadge num={4} /> {t('s4Title')}
+            </h2>
+            <div className="grid md:grid-cols-2 gap-x-12 gap-y-6 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+              {renderRatingGroup(t('styleRate'), styleRate, setStyleRate)}
+              {renderRatingGroup(t('comfortRate'), comfortRate, setComfortRate)}
+              {renderRatingGroup(t('phoneQualityMyselfRate'), phoneQualityMyselfRate, setPhoneQualityMyselfRate)}
+              {renderRatingGroup(t('phoneQualityOtherRate'), phoneQualityOtherRate, setPhoneQualityOtherRate)}
+              {renderRatingGroup(t('sportStayRate'), sportStayRate, setSportStayRate)}
+              {renderRatingGroup(t('overallResistanceRate'), overallResistanceRate, setOverallResistanceRate)}
+            </div>
+          </section>
+
+          {/* ── Section 5: Music Styles ───────────────────────────────────────── */}
+          <section>
+            <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
+              <SectionBadge num={5} /> {t('s5Title')}
             </h2>
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="label"><span className="label-text font-bold text-gray-600">Style you listen to the MOST</span></label>
+                <label className="label"><span className="label-text font-bold text-gray-600">{t('musicMostListened')}</span></label>
                 <select className="select select-bordered w-full bg-white font-medium" value={musicStyleMostListened} onChange={e => setMusicStyleMostListened(e.target.value)}>
-                  <option value="">Select style</option>
+                  <option value="">{t('selectStyle')}</option>
                   {MUSIC_STYLES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
               <div>
-                <label className="label"><span className="label-text font-bold text-gray-600">Style the earbuds are BEST SUITABLE for</span></label>
+                <label className="label"><span className="label-text font-bold text-gray-600">{t('musicBestSuitable')}</span></label>
                 <select className="select select-bordered w-full bg-white font-medium" value={musicStyleMostSuitable} onChange={e => setMusicStyleMostSuitable(e.target.value)}>
-                  <option value="">Select style</option>
+                  <option value="">{t('selectStyle')}</option>
                   {MUSIC_STYLES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
             </div>
           </section>
 
-          {/* Localization Anti-Loss Features */}
+          {/* ── Section 6: Localization ───────────────────────────────────────── */}
           <section>
             <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
-              <span className="bg-blue-600 text-white w-8 h-8 flex items-center justify-center rounded-xl text-xs font-black shadow-lg shadow-blue-200">4</span> 
-              Localization (Anti-Loss)
+              <SectionBadge num={6} /> {t('s6Title')}
             </h2>
             <div className="bg-orange-50 p-6 rounded-3xl border border-orange-100 space-y-4">
-              
-              <div className="flex flex-col sm:flex-row sm:items-center gap-6 p-4 bg-white rounded-2xl border border-orange-200/50">
+
+              {/* Earbud localization */}
+              <div className="p-4 bg-white rounded-2xl border border-orange-200/50 space-y-3">
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input type="checkbox" className="checkbox checkbox-primary" checked={hasEarbudLocalization} onChange={e => setHasEarbudLocalization(e.target.checked)} />
-                  <span className="font-bold text-gray-800">Has Earbud Localization</span>
+                  <span className="font-bold text-gray-800">{t('hasEarbudLoc')}</span>
                 </label>
                 {hasEarbudLocalization && (
-                  <div className="flex items-center gap-2 border-l pl-4">
-                    <span className="text-sm font-bold text-gray-500">Rating:</span>
-                    <select className="select select-sm select-bordered w-24" value={earbudLocRate} onChange={e => setEarbudLocRate(Number(e.target.value))}>
-                      <option value="">N/A</option>
-                      {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}/5</option>)}
-                    </select>
-                  </div>
+                  <>
+                    <div className="flex items-center gap-2 pl-2">
+                      <span className="text-sm font-bold text-gray-500">{t('rating')}:</span>
+                      <select className="select select-sm select-bordered w-24" value={earbudLocRate} onChange={e => setEarbudLocRate(Number(e.target.value))}>
+                        <option value="">{t('na')}</option>
+                        {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}/5</option>)}
+                      </select>
+                    </div>
+                    <div className="pl-2">
+                      <span className="text-xs font-black uppercase tracking-widest text-gray-400">{t('locTypeLabel')}</span>
+                      {renderLocTypeRadio(earbudLocType, setEarbudLocType)}
+                    </div>
+                  </>
                 )}
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:items-center gap-6 p-4 bg-white rounded-2xl border border-orange-200/50">
+              {/* Case localization */}
+              <div className="p-4 bg-white rounded-2xl border border-orange-200/50 space-y-3">
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input type="checkbox" className="checkbox checkbox-primary" checked={hasCaseLocalization} onChange={e => setHasCaseLocalization(e.target.checked)} />
-                  <span className="font-bold text-gray-800">Has Case Localization</span>
+                  <span className="font-bold text-gray-800">{t('hasCaseLoc')}</span>
                 </label>
                 {hasCaseLocalization && (
-                  <div className="flex items-center gap-2 border-l pl-4">
-                    <span className="text-sm font-bold text-gray-500">Rating:</span>
-                    <select className="select select-sm select-bordered w-24" value={caseLocRate} onChange={e => setCaseLocRate(Number(e.target.value))}>
-                      <option value="">N/A</option>
-                      {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}/5</option>)}
-                    </select>
-                  </div>
+                  <>
+                    <div className="flex items-center gap-2 pl-2">
+                      <span className="text-sm font-bold text-gray-500">{t('rating')}:</span>
+                      <select className="select select-sm select-bordered w-24" value={caseLocRate} onChange={e => setCaseLocRate(Number(e.target.value))}>
+                        <option value="">{t('na')}</option>
+                        {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}/5</option>)}
+                      </select>
+                    </div>
+                    <div className="pl-2">
+                      <span className="text-xs font-black uppercase tracking-widest text-gray-400">{t('locTypeLabel')}</span>
+                      {renderLocTypeRadio(caseLocType, setCaseLocType)}
+                    </div>
+                  </>
                 )}
               </div>
 
+              {/* Shared localization questions */}
               {(hasEarbudLocalization || hasCaseLocalization) && (
-                <div className="p-6 bg-orange-100/30 rounded-3xl mt-4 space-y-6 border border-orange-200">
+                <div className="p-6 bg-orange-100/30 rounded-3xl space-y-4 border border-orange-200">
+                  <label className="flex items-center gap-3 cursor-pointer bg-white/50 p-3 rounded-xl">
+                    <input type="checkbox" className="checkbox checkbox-success" checked={localizationSavedLife} onChange={e => setLocalizationSavedLife(e.target.checked)} />
+                    <span className="font-bold text-orange-900 text-sm italic">{t('locSavedLife')}</span>
+                  </label>
                   <div>
-                    <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-3">Feature capabilities</label>
-                    <div className="flex flex-wrap gap-4">
-                      <label className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-orange-100 cursor-pointer text-sm font-bold text-gray-700">
-                        <input type="radio" className="radio radio-primary radio-sm" checked={localizationType === 'MAP'} onChange={() => setLocalizationType('MAP')} /> Map based
+                    <p className="text-sm font-bold text-gray-700 mb-2">{t('locUsefulQuestion')}</p>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border cursor-pointer text-sm font-bold text-gray-700">
+                        <input type="radio" className="radio radio-primary radio-sm" checked={localizationUseful === true} onChange={() => setLocalizationUseful(true)} />
+                        {t('yes')}
                       </label>
-                      <label className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-orange-100 cursor-pointer text-sm font-bold text-gray-700">
-                        <input type="radio" className="radio radio-primary radio-sm" checked={localizationType === 'SOUND'} onChange={() => setLocalizationType('SOUND')} /> Sound Emitting
-                      </label>
-                      <label className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-orange-100 cursor-pointer text-sm font-bold text-gray-700">
-                        <input type="radio" className="radio radio-primary radio-sm" checked={localizationType === 'BOTH'} onChange={() => setLocalizationType('BOTH')} /> Both
+                      <label className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border cursor-pointer text-sm font-bold text-gray-700">
+                        <input type="radio" className="radio radio-primary radio-sm" checked={localizationUseful === false} onChange={() => setLocalizationUseful(false)} />
+                        {t('no')}
                       </label>
                     </div>
                   </div>
-                  <div className="pt-2">
-                    <label className="flex items-center gap-3 cursor-pointer bg-white/50 p-3 rounded-xl">
-                      <input type="checkbox" className="checkbox checkbox-success" checked={localizationSavedLife} onChange={e => setLocalizationSavedLife(e.target.checked)} />
-                      <span className="font-bold text-orange-900 text-sm italic">Did this tracking feature save you from having to buy a new one?</span>
-                    </label>
-                  </div>
                 </div>
               )}
-              
             </div>
           </section>
 
-          {/* Details & Ownership */}
+          {/* ── Section 7: Ownership & Purchase ──────────────────────────────── */}
           <section>
             <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
-              <span className="bg-blue-600 text-white w-8 h-8 flex items-center justify-center rounded-xl text-xs font-black shadow-lg shadow-blue-200">5</span> 
-              Ownership & Purchase
+              <SectionBadge num={7} /> {t('s7Title')}
             </h2>
             <div className="grid md:grid-cols-3 gap-6">
-               <div>
-                <label className="label"><span className="label-text font-bold text-gray-600">Purchase Date</span></label>
+              <div>
+                <label className="label"><span className="label-text font-bold text-gray-600">{t('purchaseDate')}</span></label>
                 <input type="date" className="input input-bordered w-full bg-white font-medium" value={dateOfPurchase} onChange={e => setDateOfPurchase(e.target.value)} />
               </div>
               <div>
-                <label className="label"><span className="label-text font-bold text-gray-600">Months Used</span></label>
+                <label className="label"><span className="label-text font-bold text-gray-600">{t('monthsUsed')}</span></label>
                 <input type="number" className="input input-bordered w-full bg-white font-medium" min={1} placeholder="e.g. 12" value={usageDurationMonths} onChange={e => setUsageDurationMonths(Number(e.target.value))} />
               </div>
-              <div>
-                <label className="label"><span className="label-text font-bold text-gray-600">Price Paid</span></label>
-                <input type="number" step="0.01" className="input input-bordered w-full bg-white font-medium" placeholder="Currency ($/€)" value={pricePaid} onChange={e => setPricePaid(Number(e.target.value))} />
+
+              {/* Price split into currency + amount */}
+              <div className="md:col-span-1">
+                <label className="label"><span className="label-text font-bold text-gray-600">{t('pricePaid')}</span></label>
+                <div className="flex gap-2">
+                  <select className="select select-bordered bg-white font-bold w-28" value={currency} onChange={e => setCurrency(e.target.value)}>
+                    {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                  <input type="number" step="0.01" className="input input-bordered w-full bg-white font-medium" placeholder="0.00" value={pricePaid} onChange={e => setPricePaid(Number(e.target.value))} />
+                </div>
               </div>
-              
+
               <div className="mt-4 col-span-3 border-t pt-6">
-                <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">Localization Geography</h3>
+                <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">{t('purchaseGeo')}</h3>
                 <div className="grid md:grid-cols-3 gap-4">
                   <div>
-                    <label className="label"><span className="label-text font-bold text-gray-600 text-xs">Store / Web Name</span></label>
+                    <label className="label"><span className="label-text font-bold text-gray-600 text-xs">{t('storeOrWebsite')}</span></label>
                     <input type="text" className="input input-bordered w-full bg-white" placeholder="e.g. Amazon, BestBuy" value={locationPurchase} onChange={e => setLocationPurchase(e.target.value)} />
                   </div>
                   <div>
-                    <label className="label"><span className="label-text font-bold text-gray-600 text-xs">Country of Purchase</span></label>
+                    <label className="label"><span className="label-text font-bold text-gray-600 text-xs">{t('countryOfPurchase')}</span></label>
                     <select className="select select-bordered w-full bg-white" value={countryOfPurchase} onChange={e => setCountryOfPurchase(e.target.value)}>
-                      <option value="">Select country</option>
+                      <option value="">{t('selectCountry')}</option>
                       {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="label"><span className="label-text font-bold text-gray-600 text-xs">Country of Usage</span></label>
+                    <label className="label"><span className="label-text font-bold text-gray-600 text-xs">{t('countryOfUsage')}</span></label>
                     <select className="select select-bordered w-full bg-white" value={countryOfUsage} onChange={e => setCountryOfUsage(e.target.value)}>
-                      <option value="">Select country</option>
+                      <option value="">{t('selectCountry')}</option>
                       {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
                     </select>
                   </div>
@@ -601,49 +715,72 @@ export default function SurveyPage() {
             </div>
           </section>
 
-          {/* Loss Scenario */}
+          {/* ── Section 8: Loss & Replacement ────────────────────────────────── */}
           <section>
             <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
-              <span className="bg-blue-600 text-white w-8 h-8 flex items-center justify-center rounded-xl text-xs font-black shadow-lg shadow-blue-200">6</span> 
-              Loss Experience
+              <SectionBadge num={8} /> {t('s8Title')}
             </h2>
             <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100 space-y-6">
-              
+
               <div>
-                <label className="label"><span className="label-text font-bold text-gray-600">Share your experience with losing earbud parts</span></label>
-                <textarea 
-                  className="textarea textarea-bordered w-full h-32 bg-white" 
-                  placeholder="Did they fall out often? How was the replacement process?" 
-                  value={lossExperienceDetails} 
-                  onChange={e => setLossExperienceDetails(e.target.value)} 
+                <label className="label"><span className="label-text font-bold text-gray-600">{t('lossDetails')}</span></label>
+                <textarea
+                  className="textarea textarea-bordered w-full h-32 bg-white"
+                  placeholder={t('lossPlaceholder')}
+                  value={lossExperienceDetails}
+                  onChange={e => setLossExperienceDetails(e.target.value)}
                 />
               </div>
 
               <div className="flex flex-col sm:flex-row gap-6 bg-white p-4 rounded-2xl border border-gray-100">
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input type="checkbox" className="checkbox checkbox-primary" checked={purchasedNewKit} onChange={e => setPurchasedNewKit(e.target.checked)} />
-                  <span className="font-bold text-gray-700 text-sm leading-tight">I eventually purchased a completely new kit</span>
+                  <span className="font-bold text-gray-700 text-sm leading-tight">{t('purchasedNewKit')}</span>
                 </label>
-
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input type="checkbox" className="checkbox checkbox-primary" checked={boughtSpareItem} onChange={e => setBoughtSpareItem(e.target.checked)} />
-                  <span className="font-bold text-gray-700 text-sm leading-tight">I managed to buy a spare replacement part</span>
+                  <span className="font-bold text-gray-700 text-sm leading-tight">{t('boughtSpare')}</span>
                 </label>
               </div>
 
               {boughtSpareItem && (
-                <div className="grid md:grid-cols-2 gap-6 mt-4 p-6 bg-white rounded-3xl border border-primary/10 shadow-sm">
+                <div className="p-6 bg-white rounded-3xl border border-blue-100 shadow-sm space-y-4">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">{t('spareDetails')}</h3>
+
+                  {/* Condition */}
                   <div>
-                    <label className="label"><span className="label-text text-xs font-black uppercase text-gray-400">Spare condition</span></label>
+                    <label className="label"><span className="label-text text-xs font-black uppercase text-gray-400">{t('spareCondition')}</span></label>
                     <select className="select select-bordered w-full font-bold" value={spareCondition} onChange={e => setSpareCondition(e.target.value)}>
-                      <option value="">Select condition...</option>
-                      <option value="NEW">Brand New</option>
-                      <option value="USED">Used / Refurbished</option>
+                      <option value="">{t('selectCondition')}</option>
+                      <option value="NEW">{t('conditionNew')}</option>
+                      <option value="USED">{t('conditionUsed')}</option>
                     </select>
                   </div>
+
+                  {/* Price */}
                   <div>
-                    <label className="label"><span className="label-text text-xs font-black uppercase text-gray-400">Where was the spare sourced?</span></label>
-                    <input type="text" className="input input-bordered w-full font-bold" placeholder="e.g. Marketplace, Friend, Maker" value={sparePurchaseLocation} onChange={e => setSparePurchaseLocation(e.target.value)} />
+                    <label className="label"><span className="label-text text-xs font-black uppercase text-gray-400">{t('sparePrice')}</span></label>
+                    <div className="flex gap-2">
+                      <select className="select select-bordered bg-white font-bold w-28" value={spareCurrency} onChange={e => setSpareCurrency(e.target.value)}>
+                        {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                      <input type="number" step="0.01" className="input input-bordered w-full font-bold" placeholder="0.00" value={sparePrice} onChange={e => setSparePrice(Number(e.target.value))} />
+                    </div>
+                  </div>
+
+                  {/* Store/Website */}
+                  <div>
+                    <label className="label"><span className="label-text text-xs font-black uppercase text-gray-400">{t('spareStore')}</span></label>
+                    <input type="text" className="input input-bordered w-full font-bold" placeholder={t('sparePlaceholder')} value={sparePurchaseLocation} onChange={e => setSparePurchaseLocation(e.target.value)} />
+                  </div>
+
+                  {/* Country */}
+                  <div>
+                    <label className="label"><span className="label-text text-xs font-black uppercase text-gray-400">{t('spareCountry')}</span></label>
+                    <select className="select select-bordered w-full font-bold" value={spareCountry} onChange={e => setSpareCountry(e.target.value)}>
+                      <option value="">{t('selectCountry')}</option>
+                      {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+                    </select>
                   </div>
                 </div>
               )}
@@ -653,15 +790,17 @@ export default function SurveyPage() {
 
           {error && (
             <div className="alert alert-error shadow-xl rounded-2xl border-none text-white italic font-bold">
-              <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
               <span>{error}</span>
             </div>
           )}
 
-          <div className="pt-10 border-t flex justify-between items-center">
-            <p className="text-xs text-gray-400 max-w-sm">By submitting, you agree that your anonymized data will be used to generate community statistics.</p>
-            <button type="submit" className="btn btn-primary btn-lg rounded-2xl px-12 shadow-2xl shadow-primary/30 transform transition-all hover:scale-105 active:scale-95" disabled={loading}>
-              {loading ? <span className="loading loading-spinner"></span> : 'Submit Insights'}
+          <div className="pt-10 border-t flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p className="text-xs text-gray-400 max-w-sm">{t('disclaimer')}</p>
+            <button type="submit" className="btn btn-primary btn-lg rounded-2xl px-12 shadow-2xl shadow-blue-600/30 transform transition-all hover:scale-105 active:scale-95" disabled={loading}>
+              {loading ? <span className="loading loading-spinner" /> : t('submit')}
             </button>
           </div>
 

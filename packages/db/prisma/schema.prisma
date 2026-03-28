@@ -1289,15 +1289,15 @@ model AuditLog {
 model SurveyResponse {
   id                    String   @id @default(cuid())
   userId                String?
-  
+
   // Item Identity
   brandId               String?
   modelId               String?
   customBrand           String?
   customModel           String?
   referenceString       String?
-  
-  // Ratings (1-5 or 1-10 scale)
+
+  // Core performance ratings (1-5)
   batteryAutonomyRate   Int?
   delaySyncRate         Int?
   robustnessRate        Int?
@@ -1305,35 +1305,61 @@ model SurveyResponse {
   soundQualityMusic     Int?
   soundQualityPodcasts  Int?
   noiseReductionRate    Int?
-  
-  // Specific Use Cases
-  musicStyleMostListened String?  // e.g., classic, rap, folk, drum_n_bass, techno
-  musicStyleMostSuitable String?  
-  
-  // Localization features
+
+  // Battery autonomy in minutes (single earbud, one charge without case)
+  batteryAutonomyMinutes Int?
+
+  // Style & comfort ratings (1-5)
+  styleRate             Int?  // visual design / aesthetics
+  comfortRate           Int?  // comfort to wear
+  phoneQualityMyselfRate Int? // call quality heard by me
+  phoneQualityOtherRate  Int? // call quality heard by interlocutor
+  sportStayRate         Int?  // stay in ears during sport
+  overallResistanceRate Int?  // overall physical resistance / durability
+
+  // Music styles
+  musicStyleMostListened String?
+  musicStyleMostSuitable String?
+
+  // Localization – earbud
   hasEarbudLocalization Boolean  @default(false)
   earbudLocRate         Int?
+  earbudLocType         String?  // SOUND, MAP, BOTH
+
+  // Localization – case
   hasCaseLocalization   Boolean  @default(false)
   caseLocRate           Int?
-  localizationType      String?  // SOUND, MAP, BOTH
+  caseLocType           String?  // SOUND, MAP, BOTH
+
+  // Localization – shared
+  localizationType      String?  // legacy / combined; kept for backwards compat
   localizationSavedLife Boolean  @default(false)
-  
+  localizationUseful    Boolean? // user considers the feature useful
+
   // Ownership details
   dateOfPurchase        DateTime?
   usageDurationMonths   Int?
+
+  // Original purchase price (split currency + amount)
   pricePaid             Decimal? @db.Decimal(10, 2)
-  
-  // Locations
-  locationPurchase      String? 
+  currency              String?  // ISO 4217 e.g. USD, EUR
+
+  // Original purchase location
+  locationPurchase      String? // store or website name
   countryOfPurchase     String?
-  countryOfUsage        String? 
-  
-  // Loss & Replacement 
+  countryOfUsage        String?
+
+  // Loss & Replacement
   lossExperienceDetails String?
   purchasedNewKit       Boolean  @default(false)
   boughtSpareItem       Boolean  @default(false)
+
+  // Spare part details
   spareCondition        String?  // NEW, USED
-  sparePurchaseLocation String?
+  sparePurchaseLocation String?  // store or website name
+  spareCountry          String?  // country where spare was bought
+  sparePrice            Decimal? @db.Decimal(10, 2)
+  spareCurrency         String?  // ISO 4217
 
   createdAt             DateTime @default(now())
 
@@ -1341,7 +1367,7 @@ model SurveyResponse {
   user  User?  @relation(fields: [userId], references: [id])
   brand Brand? @relation(fields: [brandId], references: [id])
   model Model? @relation(fields: [modelId], references: [id])
-  
+
   @@map("survey_responses")
 }
 
