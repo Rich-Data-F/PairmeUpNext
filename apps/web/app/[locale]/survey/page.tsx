@@ -5,6 +5,21 @@ import { useEffect, useState } from 'react';
 type Brand = { id: string; name: string; slug: string };
 type Model = { id: string; name: string; slug: string };
 
+type SurveySummary = {
+  total: number;
+  averages: {
+    battery: string;
+    delay: string;
+    robustness: string;
+    music: string;
+    noiseReduction: string;
+  };
+  localization: {
+    supportCount: number;
+    savedLifeCount: number;
+  };
+};
+
 const MUSIC_STYLES = ['Classic', 'Rap/Hip-Hop', 'Folk/Country', 'Drum & Bass', 'Techno/Electronic', 'Pop', 'Rock', 'Other'];
 const COUNTRIES = [
   { code: 'AF', name: 'Afghanistan' }, { code: 'AL', name: 'Albania' }, { code: 'DZ', name: 'Algeria' },
@@ -81,6 +96,9 @@ export default function SurveyPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  // Stats
+  const [summary, setSummary] = useState<SurveySummary | null>(null);
+
   // Identity
   const [brandId, setBrandId] = useState('');
   const [modelId, setModelId] = useState('');
@@ -142,6 +160,14 @@ export default function SurveyPage() {
     fetch('/api/proxy/brands/canonical')
       .then(r => r.json())
       .then(data => setBrands(data || []))
+      .catch(console.error);
+  }, []);
+
+  // Fetch Summary
+  useEffect(() => {
+    fetch('/api/proxy/survey/summary')
+      .then(r => r.json())
+      .then(data => setSummary(data))
       .catch(console.error);
   }, []);
 
@@ -257,277 +283,390 @@ export default function SurveyPage() {
     </div>
   );
 
-  return (
-    <div className="max-w-3xl mx-auto p-6 lg:p-10 my-8 bg-white shadow-xl rounded-2xl">
-      <div className="mb-8 border-b pb-6">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900 mb-2">Device Satisfaction Survey</h1>
-        <p className="text-gray-500">Help the community by rating your previous or current earbud experiences.</p>
+  const renderMiniChart = (val: string, label: string) => {
+    const percentage = (parseFloat(val) / 5) * 100;
+    return (
+      <div className="flex flex-col items-center">
+        <div className="relative w-16 h-16 flex items-center justify-center">
+          <svg className="w-full h-full transform -rotate-90">
+            <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="6" fill="transparent" className="text-gray-100" />
+            <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="6" fill="transparent" 
+              strokeDasharray={175.9} strokeDashoffset={175.9 - (175.9 * Number(val) / 5)}
+              className="text-primary transition-all duration-1000" />
+          </svg>
+          <span className="absolute text-sm font-bold">{val}</span>
+        </div>
+        <span className="text-[10px] uppercase font-bold text-gray-400 mt-2 text-center leading-tight h-6 flex items-center">{label}</span>
       </div>
+    );
+  };
 
-      <form onSubmit={handleSubmit} className="space-y-10">
-        
-        {/* Device Selection */}
-        <section>
-          <h2 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
-            <span className="bg-blue-100 text-blue-700 w-8 h-8 flex items-center justify-center rounded-full text-sm">1</span> 
-            Identify Your Device
-          </h2>
-          <div className="bg-gray-50 p-5 rounded-lg border border-gray-100 grid md:grid-cols-2 gap-4">
+  return (
+    <div className="max-w-4xl mx-auto p-4 lg:p-10 my-8 space-y-10">
+      
+      {/* Community Insights Dashboard */}
+      {summary && summary.total > 0 && (
+        <div className="bg-white p-6 lg:p-8 rounded-3xl shadow-2xl border border-blue-50 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+          
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
-              <label className="label"><span className="label-text font-medium">Brand</span></label>
-              <select
-                className="select select-bordered w-full bg-white"
-                value={showCustomBrand ? 'custom' : brandId}
-                onChange={(e) => {
-                  if (e.target.value === 'custom') { setShowCustomBrand(true); setBrandId(''); setModelId(''); setShowCustomModel(false); setCustomModel(''); }
-                  else { setShowCustomBrand(false); setBrandId(e.target.value); setCustomBrand(''); }
-                }}
-                required
-              >
-                <option value="" disabled>Select brand</option>
-                {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                <option value="custom">➕ Other Brand</option>
-              </select>
-              {showCustomBrand && <input className="input input-bordered w-full mt-2" placeholder="Describe Brand" value={customBrand} onChange={e => setCustomBrand(e.target.value)} required />}
+              <h2 className="text-2xl font-black text-gray-900 leading-tight">Community Insights</h2>
+              <p className="text-sm text-gray-400 font-medium italic">Aggregated from {summary.total} global earbud owners</p>
             </div>
-
-            <div>
-              <label className="label"><span className="label-text font-medium">Model</span></label>
-              <select
-                className="select select-bordered w-full bg-white"
-                value={showCustomModel ? 'custom' : modelId}
-                onChange={(e) => {
-                  if (e.target.value === 'custom') { setShowCustomModel(true); setModelId(''); setCustomModel(''); }
-                  else { setShowCustomModel(false); setModelId(e.target.value); setCustomModel(''); }
-                }}
-                required
-                disabled={showCustomBrand && !customBrand}
-              >
-                <option value="" disabled>Select model</option>
-                {models.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-                <option value="custom">➕ Other Model</option>
-              </select>
-              {showCustomModel && <input className="input input-bordered w-full mt-2" placeholder="Describe Model" value={customModel} onChange={e => setCustomModel(e.target.value)} required />}
-            </div>
-            
-            <div className="md:col-span-2 mt-2">
-              <label className="label"><span className="label-text">Reference (Optional Model/Gen suffix)</span></label>
-              <input type="text" className="input input-sm input-bordered w-full bg-white" placeholder="e.g. 2nd Gen, ANC Edition" value={referenceString} onChange={e => setReferenceString(e.target.value)} />
+            <div className="bg-primary/10 px-4 py-2 rounded-2xl flex items-center gap-2">
+              <span className="text-primary text-xl font-black">{summary.total}</span>
+              <span className="text-primary/70 text-xs font-bold uppercase tracking-widest">Responses</span>
             </div>
           </div>
-        </section>
 
-        {/* Audio & Performance Ratings */}
-        <section>
-          <h2 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
-            <span className="bg-blue-100 text-blue-700 w-8 h-8 flex items-center justify-center rounded-full text-sm">2</span> 
-            Performance Ratings
-          </h2>
-          <div className="grid md:grid-cols-2 gap-y-6 bg-white p-5 rounded-lg border border-gray-100 shadow-sm">
-            {renderRatingGroup('Battery Autonomy', batteryAutonomyRate, setBatteryAutonomyRate)}
-            {renderRatingGroup('Delay / Sync (Video & Gaming)', delaySyncRate, setDelaySyncRate)}
-            {renderRatingGroup('Durability / Robustness', robustnessRate, setRobustnessRate)}
-            {renderRatingGroup('Noise Reduction Quality', noiseReductionRate, setNoiseReductionRate)}
-            {renderRatingGroup('Sound Quality (Music)', soundQualityMusic, setSoundQualityMusic)}
-            {renderRatingGroup('Sound Quality (Video/Movies)', soundQualityVideo, setSoundQualityVideo)}
-            {renderRatingGroup('Sound Quality (Podcasts/Interviews)', soundQualityPodcasts, setSoundQualityPodcasts)}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 border-b pb-8 mb-8">
+            {renderMiniChart(summary.averages.battery, 'Battery')}
+            {renderMiniChart(summary.averages.music, 'Music Q.')}
+            {renderMiniChart(summary.averages.noiseReduction, 'ANC')}
+            {renderMiniChart(summary.averages.delay, 'Sync')}
+            {renderMiniChart(summary.averages.robustness, 'Build')}
           </div>
-        </section>
 
-        {/* Use Cases */}
-        <section>
-          <h2 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
-            <span className="bg-blue-100 text-blue-700 w-8 h-8 flex items-center justify-center rounded-full text-sm">3</span> 
-            Music Styles & Context
-          </h2>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label className="label"><span className="label-text font-medium">Style you listen to the MOST</span></label>
-              <select className="select select-bordered w-full" value={musicStyleMostListened} onChange={e => setMusicStyleMostListened(e.target.value)}>
-                <option value="">Select style</option>
-                {MUSIC_STYLES.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="label"><span className="label-text font-medium">Style the earbuds are BEST SUITABLE for</span></label>
-              <select className="select select-bordered w-full" value={musicStyleMostSuitable} onChange={e => setMusicStyleMostSuitable(e.target.value)}>
-                <option value="">Select style</option>
-                {MUSIC_STYLES.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-          </div>
-        </section>
-
-        {/* Localization Anti-Loss Features */}
-        <section>
-          <h2 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
-            <span className="bg-blue-100 text-blue-700 w-8 h-8 flex items-center justify-center rounded-full text-sm">4</span> 
-            Localization (Anti-Loss)
-          </h2>
-          <div className="bg-orange-50 p-5 rounded-lg border border-orange-100 space-y-4">
-            
-            <div className="flex flex-col sm:flex-row sm:items-center gap-6 p-3 bg-white rounded border">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" className="checkbox checkbox-primary" checked={hasEarbudLocalization} onChange={e => setHasEarbudLocalization(e.target.checked)} />
-                <span className="font-semibold text-gray-800">Has Earbud Localization</span>
-              </label>
-              {hasEarbudLocalization && (
-                <div className="flex items-center gap-2 border-l pl-4">
-                  <span className="text-sm font-medium">Rating:</span>
-                  <select className="select select-sm select-bordered w-24" value={earbudLocRate} onChange={e => setEarbudLocRate(Number(e.target.value))}>
-                    <option value="">N/A</option>
-                    {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}/5</option>)}
-                  </select>
-                </div>
-              )}
-            </div>
-
-            <div className="flex flex-col sm:flex-row sm:items-center gap-6 p-3 bg-white rounded border">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" className="checkbox checkbox-primary" checked={hasCaseLocalization} onChange={e => setHasCaseLocalization(e.target.checked)} />
-                <span className="font-semibold text-gray-800">Has Case Localization</span>
-              </label>
-              {hasCaseLocalization && (
-                <div className="flex items-center gap-2 border-l pl-4">
-                  <span className="text-sm font-medium">Rating:</span>
-                  <select className="select select-sm select-bordered w-24" value={caseLocRate} onChange={e => setCaseLocRate(Number(e.target.value))}>
-                    <option value="">N/A</option>
-                    {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}/5</option>)}
-                  </select>
-                </div>
-              )}
-            </div>
-
-            {(hasEarbudLocalization || hasCaseLocalization) && (
-              <div className="p-4 bg-orange-100/50 rounded mt-4 space-y-4 border border-orange-200">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">What type of localization features are provided?</label>
-                  <div className="flex gap-4">
-                    <label className="flex items-center gap-2"><input type="radio" className="radio radio-sm" checked={localizationType === 'MAP'} onChange={() => setLocalizationType('MAP')} /> Map / GPS based</label>
-                    <label className="flex items-center gap-2"><input type="radio" className="radio radio-sm" checked={localizationType === 'SOUND'} onChange={() => setLocalizationType('SOUND')} /> Sound Emitting</label>
-                    <label className="flex items-center gap-2"><input type="radio" className="radio radio-sm" checked={localizationType === 'BOTH'} onChange={() => setLocalizationType('BOTH')} /> Both</label>
-                  </div>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">Localization Stats</h3>
+              <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600 text-xl font-black">
+                  {Math.round((summary.localization.supportCount / summary.total) * 100)}%
                 </div>
                 <div>
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input type="checkbox" className="checkbox checkbox-success" checked={localizationSavedLife} onChange={e => setLocalizationSavedLife(e.target.checked)} />
-                    <span className="font-bold text-green-800">Did this feature ever save you from having to buy a replacement?</span>
-                  </label>
+                  <div className="text-sm font-bold text-gray-700">Market Adoption</div>
+                  <p className="text-xs text-gray-400">Devices equipped with localization features</p>
                 </div>
               </div>
-            )}
-            
-          </div>
-        </section>
-
-        {/* Details & Ownership */}
-        <section>
-          <h2 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
-            <span className="bg-blue-100 text-blue-700 w-8 h-8 flex items-center justify-center rounded-full text-sm">5</span> 
-            Ownership & Price
-          </h2>
-          <div className="grid md:grid-cols-3 gap-4">
-             <div>
-              <label className="label"><span className="label-text font-medium">Date of Purchase</span></label>
-              <input type="date" className="input input-bordered w-full" value={dateOfPurchase} onChange={e => setDateOfPurchase(e.target.value)} />
             </div>
-            <div>
-              <label className="label"><span className="label-text font-medium">Usage Duration (Months)</span></label>
-              <input type="number" className="input input-bordered w-full" min={1} placeholder="e.g. 12" value={usageDurationMonths} onChange={e => setUsageDurationMonths(Number(e.target.value))} />
-            </div>
-            <div>
-              <label className="label"><span className="label-text font-medium">Price Paid ($/€)</span></label>
-              <input type="number" step="0.01" className="input input-bordered w-full" placeholder="e.g. 199.99" value={pricePaid} onChange={e => setPricePaid(Number(e.target.value))} />
-            </div>
-            
-            <div className="mt-2 text-xl font-semibold w-full col-span-3 border-t pt-4">Location Geography</div>
-
-            <div>
-              <label className="label"><span className="label-text font-medium">Store location (Name/Web)</span></label>
-              <input type="text" className="input input-bordered w-full" placeholder="e.g. Apple Store, Amazon" value={locationPurchase} onChange={e => setLocationPurchase(e.target.value)} />
-            </div>
-            <div>
-              <label className="label"><span className="label-text font-medium">Country of Purchase</span></label>
-              <select className="select select-bordered w-full" value={countryOfPurchase} onChange={e => setCountryOfPurchase(e.target.value)}>
-                <option value="">Select country</option>
-                {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="label"><span className="label-text font-medium">Country of Usage</span></label>
-              <select className="select select-bordered w-full" value={countryOfUsage} onChange={e => setCountryOfUsage(e.target.value)}>
-                <option value="">Select country</option>
-                {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
-              </select>
-            </div>
-
-          </div>
-        </section>
-
-        {/* Loss Scenario */}
-        <section>
-          <h2 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
-            <span className="bg-blue-100 text-blue-700 w-8 h-8 flex items-center justify-center rounded-full text-sm">6</span> 
-            Loss Experience & Replacements
-          </h2>
-          <div className="bg-gray-50 p-5 rounded-lg border border-gray-100 space-y-4">
-            
-            <div>
-              <label className="label"><span className="label-text font-medium">Rate of loss / Experience details</span></label>
-              <textarea 
-                className="textarea textarea-bordered w-full h-24" 
-                placeholder="Explain if you lost them frequently, how you dealt with it, etc." 
-                value={lossExperienceDetails} 
-                onChange={e => setLossExperienceDetails(e.target.value)} 
-              />
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-6">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" className="checkbox" checked={purchasedNewKit} onChange={e => setPurchasedNewKit(e.target.checked)} />
-                <span className="font-semibold text-gray-700">I completely purchased a new kit</span>
-              </label>
-
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" className="checkbox" checked={boughtSpareItem} onChange={e => setBoughtSpareItem(e.target.checked)} />
-                <span className="font-semibold text-gray-700">I bought a spare replacement part</span>
-              </label>
-            </div>
-
-            {boughtSpareItem && (
-              <div className="grid md:grid-cols-2 gap-4 mt-4 p-4 bg-white rounded border border-gray-200">
-                <div>
-                  <label className="label"><span className="label-text">Condition of spare part</span></label>
-                  <select className="select select-bordered w-full" value={spareCondition} onChange={e => setSpareCondition(e.target.value)}>
-                    <option value="">Select...</option>
-                    <option value="NEW">New</option>
-                    <option value="USED">Used / Refurbished</option>
-                  </select>
+            <div className="space-y-4">
+              <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">Utility Impact</h3>
+              <div className="flex items-center gap-4 bg-orange-50 p-4 rounded-2xl border border-orange-100">
+                <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center text-orange-600 text-xl font-black">
+                  {summary.localization.savedLifeCount}
                 </div>
                 <div>
-                  <label className="label"><span className="label-text">Where did you buy the spare?</span></label>
-                  <input type="text" className="input input-bordered w-full" placeholder="e.g. eBay, Manufacturer" value={sparePurchaseLocation} onChange={e => setSparePurchaseLocation(e.target.value)} />
+                  <div className="text-sm font-bold text-gray-700">Wallet Saved</div>
+                  <p className="text-xs text-gray-400">Users who avoided repurchasing thanks to tracking</p>
                 </div>
               </div>
-            )}
-
+            </div>
           </div>
-        </section>
 
-        {error && (
-          <div className="alert alert-error shadow-sm rounded-lg">
-            <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <span>{error}</span>
+          <div className="mt-8 overflow-hidden rounded-2xl border border-gray-100">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-gray-50 text-gray-400 uppercase text-[10px] font-black tracking-widest">
+                <tr>
+                  <th className="px-4 py-3">Metric category</th>
+                  <th className="px-4 py-3 text-right">Avg Rating</th>
+                  <th className="px-4 py-3 text-right">Confidence</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                <tr>
+                  <td className="px-4 py-3 font-semibold text-gray-700">Soundstage for Music</td>
+                  <td className="px-4 py-3 text-right font-black text-primary">{summary.averages.music}/5</td>
+                  <td className="px-4 py-3 text-right"><span className="badge badge-success badge-xs">High</span></td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-3 font-semibold text-gray-700">Daily Life Battery</td>
+                  <td className="px-4 py-3 text-right font-black text-primary">{summary.averages.battery}/5</td>
+                  <td className="px-4 py-3 text-right"><span className="badge badge-success badge-xs">High</span></td>
+                </tr>
+                 <tr>
+                  <td className="px-4 py-3 font-semibold text-gray-700">Gaming & Video Latency</td>
+                  <td className="px-4 py-3 text-right font-black text-primary">{summary.averages.delay}/5</td>
+                  <td className="px-4 py-3 text-right"><span className="badge badge-warning badge-xs">Medium</span></td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-        )}
+        </div>
+      )}
 
-        <div className="pt-6 border-t flex justify-end">
-          <button type="submit" className="btn btn-primary btn-lg px-10 shadow-lg" disabled={loading}>
-            {loading ? <span className="loading loading-spinner"></span> : 'Submit Survey'}
-          </button>
+      {/* Main Survey Form */}
+      <div className="bg-white shadow-xl rounded-2xl p-6 lg:p-10 border border-gray-100">
+        <div className="mb-8 border-b pb-6">
+          <h1 className="text-3xl font-black tracking-tighter text-gray-900 mb-2">Device Satisfaction Survey</h1>
+          <p className="text-gray-500 font-medium leading-relaxed">Your data powers the transparency for future buyers. Help us map the real performance of earbud models.</p>
         </div>
 
-      </form>
+        <form onSubmit={handleSubmit} className="space-y-10">
+          
+          {/* Device Selection */}
+          <section>
+            <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
+              <span className="bg-blue-600 text-white w-8 h-8 flex items-center justify-center rounded-xl text-xs font-black shadow-lg shadow-blue-200">1</span> 
+              Identify Your Device
+            </h2>
+            <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100 grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="label"><span className="label-text font-bold text-gray-600">Brand</span></label>
+                <select
+                  className="select select-bordered w-full bg-white font-medium"
+                  value={showCustomBrand ? 'custom' : brandId}
+                  onChange={(e) => {
+                    if (e.target.value === 'custom') { setShowCustomBrand(true); setBrandId(''); setModelId(''); setShowCustomModel(false); setCustomModel(''); }
+                    else { setShowCustomBrand(false); setBrandId(e.target.value); setCustomBrand(''); }
+                  }}
+                  required
+                >
+                  <option value="" disabled>Select brand</option>
+                  {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                  <option value="custom">➕ Other Brand</option>
+                </select>
+                {showCustomBrand && <input className="input input-bordered w-full mt-2" placeholder="Describe Brand" value={customBrand} onChange={e => setCustomBrand(e.target.value)} required />}
+              </div>
+
+              <div>
+                <label className="label"><span className="label-text font-bold text-gray-600">Model</span></label>
+                <select
+                  className="select select-bordered w-full bg-white font-medium"
+                  value={showCustomModel ? 'custom' : modelId}
+                  onChange={(e) => {
+                    if (e.target.value === 'custom') { setShowCustomModel(true); setModelId(''); setCustomModel(''); }
+                    else { setShowCustomModel(false); setModelId(e.target.value); setCustomModel(''); }
+                  }}
+                  required
+                  disabled={showCustomBrand && !customBrand}
+                >
+                  <option value="" disabled>Select model</option>
+                  {models.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                  <option value="custom">➕ Other Model</option>
+                </select>
+                {showCustomModel && <input className="input input-bordered w-full mt-2" placeholder="Describe Model" value={customModel} onChange={e => setCustomModel(e.target.value)} required />}
+              </div>
+              
+              <div className="md:col-span-2 mt-2">
+                <label className="label"><span className="label-text text-gray-400 font-bold text-xs uppercase tracking-widest">Reference (Optional Model/Gen suffix)</span></label>
+                <input type="text" className="input input-sm input-bordered w-full bg-white" placeholder="e.g. 2nd Gen, ANC Edition" value={referenceString} onChange={e => setReferenceString(e.target.value)} />
+              </div>
+            </div>
+          </section>
+
+          {/* Audio & Performance Ratings */}
+          <section>
+            <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
+              <span className="bg-blue-600 text-white w-8 h-8 flex items-center justify-center rounded-xl text-xs font-black shadow-lg shadow-blue-200">2</span> 
+              Performance Ratings
+            </h2>
+            <div className="grid md:grid-cols-2 gap-x-12 gap-y-6 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+              {renderRatingGroup('Battery Autonomy', batteryAutonomyRate, setBatteryAutonomyRate)}
+              {renderRatingGroup('Delay / Sync (Video & Gaming)', delaySyncRate, setDelaySyncRate)}
+              {renderRatingGroup('Durability / Robustness', robustnessRate, setRobustnessRate)}
+              {renderRatingGroup('Noise Reduction Quality', noiseReductionRate, setNoiseReductionRate)}
+              {renderRatingGroup('Sound Quality (Music)', soundQualityMusic, setSoundQualityMusic)}
+              {renderRatingGroup('Sound Quality (Video/Movies)', soundQualityVideo, setSoundQualityVideo)}
+              {renderRatingGroup('Sound Quality (Podcasts/Interviews)', soundQualityPodcasts, setSoundQualityPodcasts)}
+            </div>
+          </section>
+
+          {/* Use Cases */}
+          <section>
+            <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
+              <span className="bg-blue-600 text-white w-8 h-8 flex items-center justify-center rounded-xl text-xs font-black shadow-lg shadow-blue-200">3</span> 
+              Music Styles & Context
+            </h2>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="label"><span className="label-text font-bold text-gray-600">Style you listen to the MOST</span></label>
+                <select className="select select-bordered w-full bg-white font-medium" value={musicStyleMostListened} onChange={e => setMusicStyleMostListened(e.target.value)}>
+                  <option value="">Select style</option>
+                  {MUSIC_STYLES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="label"><span className="label-text font-bold text-gray-600">Style the earbuds are BEST SUITABLE for</span></label>
+                <select className="select select-bordered w-full bg-white font-medium" value={musicStyleMostSuitable} onChange={e => setMusicStyleMostSuitable(e.target.value)}>
+                  <option value="">Select style</option>
+                  {MUSIC_STYLES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+            </div>
+          </section>
+
+          {/* Localization Anti-Loss Features */}
+          <section>
+            <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
+              <span className="bg-blue-600 text-white w-8 h-8 flex items-center justify-center rounded-xl text-xs font-black shadow-lg shadow-blue-200">4</span> 
+              Localization (Anti-Loss)
+            </h2>
+            <div className="bg-orange-50 p-6 rounded-3xl border border-orange-100 space-y-4">
+              
+              <div className="flex flex-col sm:flex-row sm:items-center gap-6 p-4 bg-white rounded-2xl border border-orange-200/50">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input type="checkbox" className="checkbox checkbox-primary" checked={hasEarbudLocalization} onChange={e => setHasEarbudLocalization(e.target.checked)} />
+                  <span className="font-bold text-gray-800">Has Earbud Localization</span>
+                </label>
+                {hasEarbudLocalization && (
+                  <div className="flex items-center gap-2 border-l pl-4">
+                    <span className="text-sm font-bold text-gray-500">Rating:</span>
+                    <select className="select select-sm select-bordered w-24" value={earbudLocRate} onChange={e => setEarbudLocRate(Number(e.target.value))}>
+                      <option value="">N/A</option>
+                      {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}/5</option>)}
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center gap-6 p-4 bg-white rounded-2xl border border-orange-200/50">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input type="checkbox" className="checkbox checkbox-primary" checked={hasCaseLocalization} onChange={e => setHasCaseLocalization(e.target.checked)} />
+                  <span className="font-bold text-gray-800">Has Case Localization</span>
+                </label>
+                {hasCaseLocalization && (
+                  <div className="flex items-center gap-2 border-l pl-4">
+                    <span className="text-sm font-bold text-gray-500">Rating:</span>
+                    <select className="select select-sm select-bordered w-24" value={caseLocRate} onChange={e => setCaseLocRate(Number(e.target.value))}>
+                      <option value="">N/A</option>
+                      {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}/5</option>)}
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {(hasEarbudLocalization || hasCaseLocalization) && (
+                <div className="p-6 bg-orange-100/30 rounded-3xl mt-4 space-y-6 border border-orange-200">
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-3">Feature capabilities</label>
+                    <div className="flex flex-wrap gap-4">
+                      <label className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-orange-100 cursor-pointer text-sm font-bold text-gray-700">
+                        <input type="radio" className="radio radio-primary radio-sm" checked={localizationType === 'MAP'} onChange={() => setLocalizationType('MAP')} /> Map based
+                      </label>
+                      <label className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-orange-100 cursor-pointer text-sm font-bold text-gray-700">
+                        <input type="radio" className="radio radio-primary radio-sm" checked={localizationType === 'SOUND'} onChange={() => setLocalizationType('SOUND')} /> Sound Emitting
+                      </label>
+                      <label className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-orange-100 cursor-pointer text-sm font-bold text-gray-700">
+                        <input type="radio" className="radio radio-primary radio-sm" checked={localizationType === 'BOTH'} onChange={() => setLocalizationType('BOTH')} /> Both
+                      </label>
+                    </div>
+                  </div>
+                  <div className="pt-2">
+                    <label className="flex items-center gap-3 cursor-pointer bg-white/50 p-3 rounded-xl">
+                      <input type="checkbox" className="checkbox checkbox-success" checked={localizationSavedLife} onChange={e => setLocalizationSavedLife(e.target.checked)} />
+                      <span className="font-bold text-orange-900 text-sm italic">Did this tracking feature save you from having to buy a new one?</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+              
+            </div>
+          </section>
+
+          {/* Details & Ownership */}
+          <section>
+            <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
+              <span className="bg-blue-600 text-white w-8 h-8 flex items-center justify-center rounded-xl text-xs font-black shadow-lg shadow-blue-200">5</span> 
+              Ownership & Purchase
+            </h2>
+            <div className="grid md:grid-cols-3 gap-6">
+               <div>
+                <label className="label"><span className="label-text font-bold text-gray-600">Purchase Date</span></label>
+                <input type="date" className="input input-bordered w-full bg-white font-medium" value={dateOfPurchase} onChange={e => setDateOfPurchase(e.target.value)} />
+              </div>
+              <div>
+                <label className="label"><span className="label-text font-bold text-gray-600">Months Used</span></label>
+                <input type="number" className="input input-bordered w-full bg-white font-medium" min={1} placeholder="e.g. 12" value={usageDurationMonths} onChange={e => setUsageDurationMonths(Number(e.target.value))} />
+              </div>
+              <div>
+                <label className="label"><span className="label-text font-bold text-gray-600">Price Paid</span></label>
+                <input type="number" step="0.01" className="input input-bordered w-full bg-white font-medium" placeholder="Currency ($/€)" value={pricePaid} onChange={e => setPricePaid(Number(e.target.value))} />
+              </div>
+              
+              <div className="mt-4 col-span-3 border-t pt-6">
+                <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">Localization Geography</h3>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="label"><span className="label-text font-bold text-gray-600 text-xs">Store / Web Name</span></label>
+                    <input type="text" className="input input-bordered w-full bg-white" placeholder="e.g. Amazon, BestBuy" value={locationPurchase} onChange={e => setLocationPurchase(e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="label"><span className="label-text font-bold text-gray-600 text-xs">Country of Purchase</span></label>
+                    <select className="select select-bordered w-full bg-white" value={countryOfPurchase} onChange={e => setCountryOfPurchase(e.target.value)}>
+                      <option value="">Select country</option>
+                      {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label"><span className="label-text font-bold text-gray-600 text-xs">Country of Usage</span></label>
+                    <select className="select select-bordered w-full bg-white" value={countryOfUsage} onChange={e => setCountryOfUsage(e.target.value)}>
+                      <option value="">Select country</option>
+                      {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Loss Scenario */}
+          <section>
+            <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
+              <span className="bg-blue-600 text-white w-8 h-8 flex items-center justify-center rounded-xl text-xs font-black shadow-lg shadow-blue-200">6</span> 
+              Loss Experience
+            </h2>
+            <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100 space-y-6">
+              
+              <div>
+                <label className="label"><span className="label-text font-bold text-gray-600">Share your experience with losing earbud parts</span></label>
+                <textarea 
+                  className="textarea textarea-bordered w-full h-32 bg-white" 
+                  placeholder="Did they fall out often? How was the replacement process?" 
+                  value={lossExperienceDetails} 
+                  onChange={e => setLossExperienceDetails(e.target.value)} 
+                />
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-6 bg-white p-4 rounded-2xl border border-gray-100">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input type="checkbox" className="checkbox checkbox-primary" checked={purchasedNewKit} onChange={e => setPurchasedNewKit(e.target.checked)} />
+                  <span className="font-bold text-gray-700 text-sm leading-tight">I eventually purchased a completely new kit</span>
+                </label>
+
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input type="checkbox" className="checkbox checkbox-primary" checked={boughtSpareItem} onChange={e => setBoughtSpareItem(e.target.checked)} />
+                  <span className="font-bold text-gray-700 text-sm leading-tight">I managed to buy a spare replacement part</span>
+                </label>
+              </div>
+
+              {boughtSpareItem && (
+                <div className="grid md:grid-cols-2 gap-6 mt-4 p-6 bg-white rounded-3xl border border-primary/10 shadow-sm">
+                  <div>
+                    <label className="label"><span className="label-text text-xs font-black uppercase text-gray-400">Spare condition</span></label>
+                    <select className="select select-bordered w-full font-bold" value={spareCondition} onChange={e => setSpareCondition(e.target.value)}>
+                      <option value="">Select condition...</option>
+                      <option value="NEW">Brand New</option>
+                      <option value="USED">Used / Refurbished</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label"><span className="label-text text-xs font-black uppercase text-gray-400">Where was the spare sourced?</span></label>
+                    <input type="text" className="input input-bordered w-full font-bold" placeholder="e.g. Marketplace, Friend, Maker" value={sparePurchaseLocation} onChange={e => setSparePurchaseLocation(e.target.value)} />
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </section>
+
+          {error && (
+            <div className="alert alert-error shadow-xl rounded-2xl border-none text-white italic font-bold">
+              <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <span>{error}</span>
+            </div>
+          )}
+
+          <div className="pt-10 border-t flex justify-between items-center">
+            <p className="text-xs text-gray-400 max-w-sm">By submitting, you agree that your anonymized data will be used to generate community statistics.</p>
+            <button type="submit" className="btn btn-primary btn-lg rounded-2xl px-12 shadow-2xl shadow-primary/30 transform transition-all hover:scale-105 active:scale-95" disabled={loading}>
+              {loading ? <span className="loading loading-spinner"></span> : 'Submit Insights'}
+            </button>
+          </div>
+
+        </form>
+      </div>
     </div>
   );
 }

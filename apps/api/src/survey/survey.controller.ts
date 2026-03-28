@@ -23,7 +23,12 @@ export class SurveyController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   findAll(@Request() req: any) {
-    // Ideally check if req.user is admin here
     return this.surveyService.findAll();
+  }
+
+  @Get('summary')
+  @ApiOperation({ summary: 'Get summary statistics of all surveys' })
+  getSummary() {
+    return this.surveyService.getSummary();
   }
 }

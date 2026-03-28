@@ -11,8 +11,6 @@ export class SurveyService {
   async create(createSurveyDto: CreateSurveyDto, userId?: string) {
     this.logger.log(`Creating new survey response`);
     
-    // We pass the decimal fields directly as numbers, Prisma handles it if mapped correctly or we let Prisma do the cohersion.
-    // In our schema, pricePaid is Decimal. We might need to ensure it's coerced if needed, but Prisma Client handles number -> Decimal automatically usually.
     return this.prisma.surveyResponse.create({
       data: {
         ...createSurveyDto,
@@ -29,5 +27,45 @@ export class SurveyService {
         model: { select: { name: true } },
       }
     });
+  }
+
+  async getSummary() {
+    const responses = await this.prisma.surveyResponse.findMany({
+      select: {
+        batteryAutonomyRate: true,
+        delaySyncRate: true,
+        robustnessRate: true,
+        soundQualityMusic: true,
+        noiseReductionRate: true,
+        hasEarbudLocalization: true,
+        localizationSavedLife: true,
+      }
+    });
+
+    const total = responses.length;
+    if (total === 0) return { total: 0, averages: {}, localization: {} };
+
+    // Filter out null/undefined ratings and calculate averages
+    const avg = (key: string) => {
+      const valid = responses.filter(r => r[key] !== null && r[key] !== undefined);
+      if (valid.length === 0) return "0.0";
+      const sum = valid.reduce((acc, curr) => acc + (curr[key] as number), 0);
+      return (sum / valid.length).toFixed(1);
+    };
+
+    return {
+      total,
+      averages: {
+        battery: avg('batteryAutonomyRate'),
+        delay: avg('delaySyncRate'),
+        robustness: avg('robustnessRate'),
+        music: avg('soundQualityMusic'),
+        noiseReduction: avg('noiseReductionRate'),
+      },
+      localization: {
+        supportCount: responses.filter(r => r.hasEarbudLocalization).length,
+        savedLifeCount: responses.filter(r => r.localizationSavedLife).length,
+      }
+    };
   }
 }
