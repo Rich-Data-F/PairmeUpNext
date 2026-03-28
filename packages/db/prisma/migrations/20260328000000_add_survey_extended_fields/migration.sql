@@ -28,4 +28,10 @@ ALTER TABLE "survey_responses"
   -- Spare purchase details
   ADD COLUMN IF NOT EXISTS "spareCountry"            TEXT,
   ADD COLUMN IF NOT EXISTS "sparePrice"              DECIMAL(10,2),
-  ADD COLUMN IF NOT EXISTS "spareCurrency"           TEXT;
+  ADD COLUMN IF NOT EXISTS "spareCurrency"           TEXT,
+
+  -- Highlights & Frustrations
+  ADD COLUMN IF NOT EXISTS "likedMostCategories"     TEXT,
+  ADD COLUMN IF NOT EXISTS "likedMostFreeText"       TEXT,
+  ADD COLUMN IF NOT EXISTS "dislikedMostCategories"  TEXT,
+  ADD COLUMN IF NOT EXISTS "dislikedMostFreeText"    TEXT;

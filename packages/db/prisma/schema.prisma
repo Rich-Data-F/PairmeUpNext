@@ -1297,6 +1297,12 @@ model SurveyResponse {
   customModel           String?
   referenceString       String?
 
+  // Highlights & Frustrations
+  likedMostCategories   String?  // comma-separated category tags
+  likedMostFreeText     String?
+  dislikedMostCategories String? // comma-separated category tags
+  dislikedMostFreeText  String?
+
   // Core performance ratings (1-5)
   batteryAutonomyRate   Int?
   delaySyncRate         Int?

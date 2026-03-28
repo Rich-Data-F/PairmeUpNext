@@ -125,6 +125,12 @@ export default function SurveyPage() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [models, setModels] = useState<Model[]>([]);
 
+  // ── Highlights & Frustrations ─────────────────────────────────────────────
+  const [likedMostCategories, setLikedMostCategories] = useState<string[]>([]);
+  const [likedMostFreeText, setLikedMostFreeText] = useState('');
+  const [dislikedMostCategories, setDislikedMostCategories] = useState<string[]>([]);
+  const [dislikedMostFreeText, setDislikedMostFreeText] = useState('');
+
   // ── Battery ───────────────────────────────────────────────────────────────────
   const [batteryAutonomyRate, setBatteryAutonomyRate] = useState<number | ''>('');
   const [batteryAutonomyMinutes, setBatteryAutonomyMinutes] = useState<number>(90);
@@ -225,6 +231,11 @@ export default function SurveyPage() {
       customBrand: showCustomBrand ? customBrand : undefined,
       customModel: showCustomModel ? customModel : undefined,
       referenceString,
+      // highlights
+      likedMostCategories: likedMostCategories.length ? likedMostCategories.join(',') : undefined,
+      likedMostFreeText: likedMostFreeText || undefined,
+      dislikedMostCategories: dislikedMostCategories.length ? dislikedMostCategories.join(',') : undefined,
+      dislikedMostFreeText: dislikedMostFreeText || undefined,
       // battery
       batteryAutonomyRate: batteryAutonomyRate ? Number(batteryAutonomyRate) : undefined,
       batteryAutonomyMinutes: batteryAutonomyMinutes,
@@ -502,10 +513,76 @@ export default function SurveyPage() {
             </div>
           </section>
 
-          {/* ── Section 2: Battery ─────────────────────────────────────────────── */}
+          {/* ── Section 2: Highlights & Frustrations ──────────────────────── */}
           <section>
             <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
               <SectionBadge num={2} /> {t('s2Title')}
+            </h2>
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Liked most */}
+              <div className="bg-green-50 p-5 rounded-3xl border border-green-100 space-y-4">
+                <h3 className="text-sm font-black uppercase tracking-widest text-green-700">{t('likedMostTitle')}</h3>
+                <div className="flex flex-wrap gap-2">
+                  {(t.raw('likeCategories') as string[]).map((cat: string) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setLikedMostCategories(prev =>
+                        prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
+                      )}
+                      className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                        likedMostCategories.includes(cat)
+                          ? 'bg-green-600 text-white border-green-600 shadow-md'
+                          : 'bg-white text-gray-600 border-gray-200 hover:border-green-400'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  className="textarea textarea-bordered w-full bg-white text-sm h-20"
+                  placeholder={t('likedFreeTextPlaceholder')}
+                  value={likedMostFreeText}
+                  onChange={e => setLikedMostFreeText(e.target.value)}
+                />
+              </div>
+
+              {/* Disliked most */}
+              <div className="bg-red-50 p-5 rounded-3xl border border-red-100 space-y-4">
+                <h3 className="text-sm font-black uppercase tracking-widest text-red-700">{t('dislikedMostTitle')}</h3>
+                <div className="flex flex-wrap gap-2">
+                  {(t.raw('likeCategories') as string[]).map((cat: string) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setDislikedMostCategories(prev =>
+                        prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
+                      )}
+                      className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                        dislikedMostCategories.includes(cat)
+                          ? 'bg-red-600 text-white border-red-600 shadow-md'
+                          : 'bg-white text-gray-600 border-gray-200 hover:border-red-400'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  className="textarea textarea-bordered w-full bg-white text-sm h-20"
+                  placeholder={t('dislikedFreeTextPlaceholder')}
+                  value={dislikedMostFreeText}
+                  onChange={e => setDislikedMostFreeText(e.target.value)}
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* ── Section 3: Battery ─────────────────────────────────────────────── */}
+          <section>
+            <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
+              <SectionBadge num={3} /> {t('s3Title')}
             </h2>
             <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-6">
               {renderRatingGroup(t('batteryAutonomyRate'), batteryAutonomyRate, setBatteryAutonomyRate)}
@@ -536,7 +613,7 @@ export default function SurveyPage() {
           {/* ── Section 3: Performance & Sound ────────────────────────────────── */}
           <section>
             <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
-              <SectionBadge num={3} /> {t('s3Title')}
+              <SectionBadge num={4} /> {t('s3Title')}
             </h2>
             <div className="grid md:grid-cols-2 gap-x-12 gap-y-6 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
               {renderRatingGroup(t('delaySyncRate'), delaySyncRate, setDelaySyncRate)}
@@ -550,7 +627,7 @@ export default function SurveyPage() {
           {/* ── Section 4: Style, Comfort & Resistance ────────────────────────── */}
           <section>
             <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
-              <SectionBadge num={4} /> {t('s4Title')}
+              <SectionBadge num={5} /> {t('s4Title')}
             </h2>
             <div className="grid md:grid-cols-2 gap-x-12 gap-y-6 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
               {renderRatingGroup(t('styleRate'), styleRate, setStyleRate)}
@@ -565,7 +642,7 @@ export default function SurveyPage() {
           {/* ── Section 5: Music Styles ───────────────────────────────────────── */}
           <section>
             <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
-              <SectionBadge num={5} /> {t('s5Title')}
+              <SectionBadge num={6} /> {t('s5Title')}
             </h2>
             <div className="grid md:grid-cols-2 gap-4">
               <div>
@@ -588,7 +665,7 @@ export default function SurveyPage() {
           {/* ── Section 6: Localization ───────────────────────────────────────── */}
           <section>
             <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
-              <SectionBadge num={6} /> {t('s6Title')}
+              <SectionBadge num={7} /> {t('s6Title')}
             </h2>
             <div className="bg-orange-50 p-6 rounded-3xl border border-orange-100 space-y-4">
 
@@ -666,7 +743,7 @@ export default function SurveyPage() {
           {/* ── Section 7: Ownership & Purchase ──────────────────────────────── */}
           <section>
             <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
-              <SectionBadge num={7} /> {t('s7Title')}
+              <SectionBadge num={8} /> {t('s7Title')}
             </h2>
             <div className="grid md:grid-cols-3 gap-6">
               <div>
@@ -718,7 +795,7 @@ export default function SurveyPage() {
           {/* ── Section 8: Loss & Replacement ────────────────────────────────── */}
           <section>
             <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
-              <SectionBadge num={8} /> {t('s8Title')}
+              <SectionBadge num={9} /> {t('s9Title')}
             </h2>
             <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100 space-y-6">
 

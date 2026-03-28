@@ -10,7 +10,12 @@ export class CreateSurveyDto {
   @ApiProperty({ required: false }) @IsOptional() @IsString() customModel?: string;
   @ApiProperty({ required: false }) @IsOptional() @IsString() referenceString?: string;
 
-  // ── Core performance ratings (1-5) ─────────────────────────────────────────
+  // ── Highlights & Frustrations ────────────────────────────────────────────────
+  @ApiProperty({ required: false }) @IsOptional() @IsString() likedMostCategories?: string;  // comma-separated
+  @ApiProperty({ required: false }) @IsOptional() @IsString() likedMostFreeText?: string;
+  @ApiProperty({ required: false }) @IsOptional() @IsString() dislikedMostCategories?: string; // comma-separated
+  @ApiProperty({ required: false }) @IsOptional() @IsString() dislikedMostFreeText?: string;
+
   @ApiProperty({ required: false }) @IsOptional() @IsInt() @Min(1) @Max(5) batteryAutonomyRate?: number;
   @ApiProperty({ required: false }) @IsOptional() @IsInt() @Min(1) @Max(5) delaySyncRate?: number;
   @ApiProperty({ required: false }) @IsOptional() @IsInt() @Min(1) @Max(5) robustnessRate?: number;
