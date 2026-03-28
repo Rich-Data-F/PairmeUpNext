@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { CacheModule } from '@nestjs/cache-manager';
 import { PrismaModule } from './prisma/prisma.module';
 import { CommonModule } from './common/common.module';
 import { AuthModule } from './auth/auth.module';
@@ -20,6 +21,7 @@ import { HealthModule } from './health/health.module';
 import { GeoModule } from './geo/geo.module';
 import { NegotiationModule } from './negotiation/negotiation.module';
 import { SupportModule } from './support/support.module';
+import { SurveyModule } from './survey/survey.module';
 // import { AdminModule } from './admin/admin.module';
 
 @Module({
@@ -30,6 +32,13 @@ import { SupportModule } from './support/support.module';
       envFilePath: ['.env.development', '.env.local', '.env'],
     }),
     
+    // In-memory caching (optimized for Neon DB & Free Render instance)
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 300000, // 5 minutes default
+      max: 100, // Maximum number of items in cache (to keep RAM low)
+    }),
+
     // Rate limiting
     ThrottlerModule.forRoot([
       {
@@ -62,6 +71,7 @@ import { SupportModule } from './support/support.module';
     GeoModule,
     NegotiationModule,
     SupportModule,
+    SurveyModule,
     // AdminModule,
   ],
 })

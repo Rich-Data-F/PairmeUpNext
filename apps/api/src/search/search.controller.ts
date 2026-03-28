@@ -1,4 +1,5 @@
-import { Controller, Get, Query, Param } from '@nestjs/common';
+import { Controller, Get, Query, Param, UseInterceptors } from '@nestjs/common';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { SearchService, SearchFilters } from './search.service';
 import { AdvancedSearchService } from './advanced-search.service';
@@ -6,6 +7,7 @@ import { FacetedSearchService } from './faceted-search.service';
 
 @ApiTags('search')
 @Controller('search')
+@UseInterceptors(CacheInterceptor)
 export class SearchController {
   constructor(
     private readonly searchService: SearchService,

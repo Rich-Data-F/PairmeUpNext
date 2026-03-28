@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseInterceptors } from '@nestjs/common';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { BrandsService } from './brands.service';
 
 @ApiTags('brands')
 @Controller('brands')
+@UseInterceptors(CacheInterceptor)
 export class BrandsController {
   constructor(private readonly brandsService: BrandsService) { }
 

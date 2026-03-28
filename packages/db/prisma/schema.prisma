@@ -84,6 +84,7 @@ model User {
   files        File[]
   savedSearches SavedSearch[] @relation("UserSavedSearches")
   searchAnalytics SearchAnalytics[] @relation("UserSearchAnalytics")
+  SurveyResponse SurveyResponse[]
   Account      Account[]
   Session      Session[]
   
@@ -191,6 +192,7 @@ model Brand {
   LostReport     LostReport[]
   FoundItem      FoundItem[]
   Rating         Rating[]
+  SurveyResponse SurveyResponse[]
   SponsoredLink  SponsoredLink[]
   submitter      User?        @relation("BrandSubmissions", fields: [submittedBy], references: [id])
   approver       User?        @relation("BrandApprovals", fields: [approvedBy], references: [id])
@@ -295,6 +297,7 @@ model Model {
   foundItems    FoundItem[]
   ratings       Rating[]
   blogPosts     BlogPost[]
+  SurveyResponse SurveyResponse[]
   SponsoredLink SponsoredLink[]
   submitter     User?           @relation("ModelSubmissions", fields: [submittedBy], references: [id])
   approver      User?           @relation("ModelApprovals", fields: [approvedBy], references: [id])
@@ -1278,3 +1281,67 @@ model AuditLog {
   @@index([createdAt])
   @@map("audit_logs")
 }
+
+// ============================================================================
+// SATISFACTION SURVEY
+// ============================================================================
+
+model SurveyResponse {
+  id                    String   @id @default(cuid())
+  userId                String?
+  
+  // Item Identity
+  brandId               String?
+  modelId               String?
+  customBrand           String?
+  customModel           String?
+  referenceString       String?
+  
+  // Ratings (1-5 or 1-10 scale)
+  batteryAutonomyRate   Int?
+  delaySyncRate         Int?
+  robustnessRate        Int?
+  soundQualityVideo     Int?
+  soundQualityMusic     Int?
+  soundQualityPodcasts  Int?
+  noiseReductionRate    Int?
+  
+  // Specific Use Cases
+  musicStyleMostListened String?  // e.g., classic, rap, folk, drum_n_bass, techno
+  musicStyleMostSuitable String?  
+  
+  // Localization features
+  hasEarbudLocalization Boolean  @default(false)
+  earbudLocRate         Int?
+  hasCaseLocalization   Boolean  @default(false)
+  caseLocRate           Int?
+  localizationType      String?  // SOUND, MAP, BOTH
+  localizationSavedLife Boolean  @default(false)
+  
+  // Ownership details
+  dateOfPurchase        DateTime?
+  usageDurationMonths   Int?
+  pricePaid             Decimal? @db.Decimal(10, 2)
+  
+  // Locations
+  locationPurchase      String? 
+  countryOfPurchase     String?
+  countryOfUsage        String? 
+  
+  // Loss & Replacement 
+  lossExperienceDetails String?
+  purchasedNewKit       Boolean  @default(false)
+  boughtSpareItem       Boolean  @default(false)
+  spareCondition        String?  // NEW, USED
+  sparePurchaseLocation String?
+
+  createdAt             DateTime @default(now())
+
+  // Relationships
+  user  User?  @relation(fields: [userId], references: [id])
+  brand Brand? @relation(fields: [brandId], references: [id])
+  model Model? @relation(fields: [modelId], references: [id])
+  
+  @@map("survey_responses")
+}
+

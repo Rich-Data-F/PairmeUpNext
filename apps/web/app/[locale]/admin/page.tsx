@@ -141,33 +141,33 @@ export default function AdminPage() {
 
         if (canonicalBrandsRes.ok) {
           const canonicalBrandsData = await canonicalBrandsRes.json();
-          setCanonicalBrands(canonicalBrandsData);
+          setCanonicalBrands(canonicalBrandsData.data || canonicalBrandsData);
         }
 
-        // For now, skip canonical models as endpoint doesn't exist
-        // if (canonicalModelsRes.ok) {
-        //   const canonicalModelsData = await canonicalModelsRes.json();
-        //   setCanonicalModels(canonicalModelsData);
-        // }
+        if (canonicalModelsRes.ok) {
+          const canonicalModelsData = await canonicalModelsRes.json();
+          setCanonicalModels(canonicalModelsData.data || canonicalModelsData);
+        }
 
           // Load model assignments for review
-          if (canonicalBrandsRes.ok) {
-            const brands = await canonicalBrandsRes.json();
-            // For now, we'll create mock model assignments - in real implementation, 
-            // you'd fetch models with their brand assignments
-            const mockAssignments = [
-              { 
-                model: { 
-                  id: '1', 
-                  name: 'AirPods Pro', 
-                  brandId: 'apple', 
-                  description: 'Wireless earbuds',
-                  status: 'APPROVED',
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString()
-                }, 
-                brand: brands.find((b: any) => b.id === 'apple') 
-              },
+              if (canonicalBrandsRes.ok) {
+                // Since canonicalBrandsRes is already consumed, fetch it again or use the state
+                // But the easiest is just map from canonicalBrandsData if we structured it
+                const brandsObj = await fetch('/api/proxy/brands/canonical').then(r => r.json());
+                
+                const mockAssignments = [
+                  { 
+                    model: { 
+                      id: '1', 
+                      name: 'AirPods Pro', 
+                      brandId: 'apple', 
+                      description: 'Wireless earbuds',
+                      status: 'APPROVED',
+                      createdAt: new Date().toISOString(),
+                      updatedAt: new Date().toISOString()
+                    }, 
+                    brand: brandsObj.find((b: any) => b.slug === 'apple') 
+                  },
               { 
                 model: { 
                   id: '2', 
@@ -178,7 +178,7 @@ export default function AdminPage() {
                   createdAt: new Date().toISOString(),
                   updatedAt: new Date().toISOString()
                 }, 
-                brand: brands.find((b: any) => b.id === 'samsung') 
+                brand: brandsObj.find((b: any) => b.slug === 'samsung') 
               },
             ];
             setModelAssignments(mockAssignments);

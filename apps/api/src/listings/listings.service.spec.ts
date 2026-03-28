@@ -3,7 +3,7 @@ import { ListingsService } from './listings.service';
 describe('ListingsService', () => {
   it('passes extended listing fields through to prisma.listing.create', async () => {
     const mockPrisma: any = {
-      proposedBrand: { findUnique: jest.fn(), create: jest.fn() },
+      proposedBrand: { findUnique: jest.fn(), findFirst: jest.fn(), create: jest.fn() },
       brand: { findFirst: jest.fn(), create: jest.fn() },
       proposedModel: { findFirst: jest.fn(), create: jest.fn() },
       model: { findFirst: jest.fn(), create: jest.fn() },
@@ -13,6 +13,7 @@ describe('ListingsService', () => {
 
     // Minimal mocks for the flows where customBrand/customModel create temp objects
     mockPrisma.proposedBrand.findUnique.mockResolvedValue(null);
+    mockPrisma.proposedBrand.findFirst.mockResolvedValue(null);
     mockPrisma.proposedBrand.create.mockResolvedValue({ id: 'pb-1', name: 'TestBrand' });
     mockPrisma.brand.findFirst.mockResolvedValue(null);
     mockPrisma.brand.create.mockResolvedValue({ id: 'temp-brand-1' });
