@@ -316,11 +316,12 @@
     "locSound": "Geräuschausgabe",
     "locMap": "Kartenbasiert",
     "locBoth": "Beide",
+    "locUsed": "Ich habe diese Lokalisierungsfunktion tatsächlich genutzt",
     "locSavedLife": "Hat Ihnen diese Tracking-Funktion einen Neukauf erspart?",
     "locUsefulQuestion": "Fanden Sie die Lokalisierungsfunktion insgesamt nützlich?",
     "yes": "Ja",
     "no": "Nein",
-    "s8Title": "Eigentum & Kauf",
+    "s8Title": "Erstkauf",
     "purchaseDate": "Kaufdatum",
     "monthsUsed": "Nutzungsmonate",
     "pricePaid": "Bezahlter Preis",
@@ -343,6 +344,13 @@
     "sparePlaceholder": "z.B. PairAgain, Amazon, eBay, Freund...",
     "spareCountry": "Land, in dem das Ersatzteil gekauft wurde",
     "disclaimer": "Mit dem Absenden stimmen Sie zu, dass Ihre anonymisierten Daten zur Erstellung von Community-Statistiken verwendet werden.",
-    "submit": "Einblicke übermitteln"
+    "submit": "Einblicke übermitteln",
+    "resoldItem": "Ich habe ein oder mehrere Teile dieses Sets weiterverkauft",
+    "resaleDetails": "Details zum Weiterverkauf",
+    "resoldItemType": "Verkaufte(s) Teil(e)",
+    "resoldCase": "Nur Ladecase",
+    "resoldOneEarbud": "Ein einzelner Ohrhörer",
+    "resoldTwoEarbuds": "Beide Ohrhörer (ohne Case)",
+    "resoldFullKit": "Komplettes Set (Ohrhörer + Case)"
   }
 }

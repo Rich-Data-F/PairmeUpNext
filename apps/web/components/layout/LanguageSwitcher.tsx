@@ -1,7 +1,7 @@
 'use client';
 
 import { useLocale } from 'next-intl';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname } from 'next-intl/navigation';
 import { routing } from '@/i18n/routing';
 
 const LABELS: Record<string, string> = { en: 'EN', fr: 'FR', de: 'DE', es: 'ES' };
@@ -12,12 +12,7 @@ export function LanguageSwitcher() {
   const pathname = usePathname();
 
   const switchLocale = (next: string) => {
-    const currentPath = pathname || '/';
-    // Strip any known locale prefix from the current path
-    const knownLocale = routing.locales.find((l) => currentPath === `/${l}` || currentPath.startsWith(`/${l}/`));
-    const bare = knownLocale ? currentPath.slice(`/${knownLocale}`.length) || '/' : currentPath;
-    const newPath = next === routing.defaultLocale ? bare : `/${next}${bare}`;
-    router.push(newPath);
+    router.push(pathname, { locale: next });
   };
 
   return (

@@ -186,6 +186,14 @@ export default function SurveyPage() {
   const [sparePrice, setSparePrice] = useState<number | ''>('');
   const [spareCurrency, setSpareCurrency] = useState('EUR');
 
+  // ── Resale ───────────────────────────────────────────────────────────────
+  const [resoldItem, setResoldItem] = useState(false);
+  const [resoldItemType, setResoldItemType] = useState('');  // case | one_earbud | two_earbuds | full_kit
+  const [resoldCondition, setResoldCondition] = useState('');  // NEW | USED
+  const [resoldPrice, setResoldPrice] = useState<number | ''>('');
+  const [resoldCurrency, setResoldCurrency] = useState('EUR');
+  const [resoldStore, setResoldStore] = useState('');
+
   // ── Effects ───────────────────────────────────────────────────────────────────
   useEffect(() => {
     fetch('/api/proxy/auth/profile')
@@ -613,7 +621,7 @@ export default function SurveyPage() {
           {/* ── Section 3: Performance & Sound ────────────────────────────────── */}
           <section>
             <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
-              <SectionBadge num={4} /> {t('s3Title')}
+              <SectionBadge num={4} /> {t('s4Title')}
             </h2>
             <div className="grid md:grid-cols-2 gap-x-12 gap-y-6 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
               {renderRatingGroup(t('delaySyncRate'), delaySyncRate, setDelaySyncRate)}
@@ -718,6 +726,11 @@ export default function SurveyPage() {
               {/* Shared localization questions */}
               {(hasEarbudLocalization || hasCaseLocalization) && (
                 <div className="p-6 bg-orange-100/30 rounded-3xl space-y-4 border border-orange-200">
+                  {/* Used or not */}
+                  <label className="flex items-center gap-3 cursor-pointer bg-white/50 p-3 rounded-xl">
+                    <input type="checkbox" className="checkbox checkbox-warning" checked={localizationSavedLife} onChange={e => setLocalizationSavedLife(e.target.checked)} />
+                    <span className="font-bold text-orange-900 text-sm italic">{t('locUsed')}</span>
+                  </label>
                   <label className="flex items-center gap-3 cursor-pointer bg-white/50 p-3 rounded-xl">
                     <input type="checkbox" className="checkbox checkbox-success" checked={localizationSavedLife} onChange={e => setLocalizationSavedLife(e.target.checked)} />
                     <span className="font-bold text-orange-900 text-sm italic">{t('locSavedLife')}</span>
@@ -743,7 +756,7 @@ export default function SurveyPage() {
           {/* ── Section 7: Ownership & Purchase ──────────────────────────────── */}
           <section>
             <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
-              <SectionBadge num={8} /> {t('s7Title')}
+              <SectionBadge num={8} /> {t('s8Title')}
             </h2>
             <div className="grid md:grid-cols-3 gap-6">
               <div>
@@ -858,6 +871,59 @@ export default function SurveyPage() {
                       <option value="">{t('selectCountry')}</option>
                       {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
                     </select>
+                  </div>
+                </div>
+              )}
+
+              {/* Resale */}
+              <div className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-gray-100 cursor-pointer">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input type="checkbox" className="checkbox checkbox-secondary" checked={resoldItem} onChange={e => setResoldItem(e.target.checked)} />
+                  <span className="font-bold text-gray-700 text-sm">{t('resoldItem')}</span>
+                </label>
+              </div>
+
+              {resoldItem && (
+                <div className="p-6 bg-white rounded-3xl border border-purple-100 shadow-sm space-y-4">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-purple-400">{t('resaleDetails')}</h3>
+
+                  {/* Item type */}
+                  <div>
+                    <label className="label"><span className="label-text text-xs font-black uppercase text-gray-400">{t('resoldItemType')}</span></label>
+                    <select className="select select-bordered w-full font-bold" value={resoldItemType} onChange={e => setResoldItemType(e.target.value)}>
+                      <option value="">{t('selectCondition')}</option>
+                      <option value="case">{t('resoldCase')}</option>
+                      <option value="one_earbud">{t('resoldOneEarbud')}</option>
+                      <option value="two_earbuds">{t('resoldTwoEarbuds')}</option>
+                      <option value="full_kit">{t('resoldFullKit')}</option>
+                    </select>
+                  </div>
+
+                  {/* Condition */}
+                  <div>
+                    <label className="label"><span className="label-text text-xs font-black uppercase text-gray-400">{t('spareCondition')}</span></label>
+                    <select className="select select-bordered w-full font-bold" value={resoldCondition} onChange={e => setResoldCondition(e.target.value)}>
+                      <option value="">{t('selectCondition')}</option>
+                      <option value="NEW">{t('conditionNew')}</option>
+                      <option value="USED">{t('conditionUsed')}</option>
+                    </select>
+                  </div>
+
+                  {/* Price */}
+                  <div>
+                    <label className="label"><span className="label-text text-xs font-black uppercase text-gray-400">{t('sparePrice')}</span></label>
+                    <div className="flex gap-2">
+                      <select className="select select-bordered bg-white font-bold w-28" value={resoldCurrency} onChange={e => setResoldCurrency(e.target.value)}>
+                        {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                      <input type="number" step="0.01" className="input input-bordered w-full font-bold" placeholder="0.00" value={resoldPrice} onChange={e => setResoldPrice(Number(e.target.value))} />
+                    </div>
+                  </div>
+
+                  {/* Store */}
+                  <div>
+                    <label className="label"><span className="label-text text-xs font-black uppercase text-gray-400">{t('spareStore')}</span></label>
+                    <input type="text" className="input input-bordered w-full font-bold" placeholder={t('sparePlaceholder')} value={resoldStore} onChange={e => setResoldStore(e.target.value)} />
                   </div>
                 </div>
               )}

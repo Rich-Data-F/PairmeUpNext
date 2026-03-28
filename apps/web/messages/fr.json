@@ -316,11 +316,12 @@
     "locSound": "Émission sonore",
     "locMap": "Basée sur une carte",
     "locBoth": "Les deux",
+    "locUsed": "J'ai effectivement utilisé cette fonctionnalité de localisation",
     "locSavedLife": "Cette fonction de suivi vous a-t-elle évité d'avoir à en racheter un ?",
     "locUsefulQuestion": "Avez-vous trouvé la fonction de localisation utile dans l'ensemble ?",
     "yes": "Oui",
     "no": "Non",
-    "s8Title": "Propriété & Achat",
+    "s8Title": "Achat initial",
     "purchaseDate": "Date d'achat",
     "monthsUsed": "Mois d'utilisation",
     "pricePaid": "Prix payé",
@@ -343,6 +344,13 @@
     "sparePlaceholder": "ex. PairAgain, Amazon, eBay, Ami...",
     "spareCountry": "Pays d'achat de la pièce",
     "disclaimer": "En soumettant, vous acceptez que vos données anonymisées soient utilisées pour générer des statistiques communautaires.",
-    "submit": "Envoyer mes retours"
+    "submit": "Envoyer mes retours",
+    "resoldItem": "J'ai revendu une ou plusieurs pièces de ce kit",
+    "resaleDetails": "Détails de la revente",
+    "resoldItemType": "Article(s) revendu(s)",
+    "resoldCase": "Boîtier de charge uniquement",
+    "resoldOneEarbud": "Un seul écouteur",
+    "resoldTwoEarbuds": "Les deux écouteurs (sans boîtier)",
+    "resoldFullKit": "Kit complet (écouteurs + boîtier)"
   }
 }

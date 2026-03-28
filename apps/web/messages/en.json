@@ -314,11 +314,12 @@
     "locSound": "Sound Emitting",
     "locMap": "Map Based",
     "locBoth": "Both",
+    "locUsed": "I actually used this localization feature",
     "locSavedLife": "Did this tracking feature save you from having to buy a new one?",
     "locUsefulQuestion": "Did you find the localization feature useful overall?",
     "yes": "Yes",
     "no": "No",
-    "s8Title": "Ownership & Purchase",
+    "s8Title": "Initial Purchase",
     "purchaseDate": "Purchase Date",
     "monthsUsed": "Months Used",
     "pricePaid": "Price Paid",
@@ -342,6 +343,13 @@
     "sparePlaceholder": "e.g. PairAgain, Amazon, eBay, Friend...",
     "spareCountry": "Country where spare was purchased",
     "disclaimer": "By submitting, you agree that your anonymized data will be used to generate community statistics.",
-    "submit": "Submit Insights"
+    "submit": "Submit Insights",
+    "resoldItem": "I have resold one or more parts of this kit",
+    "resaleDetails": "Resale details",
+    "resoldItemType": "Item(s) resold",
+    "resoldCase": "Charging case only",
+    "resoldOneEarbud": "One earbud",
+    "resoldTwoEarbuds": "Both earbuds (no case)",
+    "resoldFullKit": "Full kit (earbuds + case)"
   }
 }

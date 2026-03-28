@@ -316,11 +316,12 @@
     "locSound": "Emisión de sonido",
     "locMap": "Basado en mapa",
     "locBoth": "Ambos",
+    "locUsed": "Realmente utilicé esta función de localización",
     "locSavedLife": "¿Esta función de rastreo te evitó tener que comprar uno nuevo?",
     "locUsefulQuestion": "¿Encontraste útil la función de localización en general?",
     "yes": "Sí",
     "no": "No",
-    "s8Title": "Propiedad & Compra",
+    "s8Title": "Compra inicial",
     "purchaseDate": "Fecha de compra",
     "monthsUsed": "Meses de uso",
     "pricePaid": "Precio pagado",
@@ -343,6 +344,13 @@
     "sparePlaceholder": "ej. PairAgain, Amazon, eBay, Amigo...",
     "spareCountry": "País donde se compró la pieza",
     "disclaimer": "Al enviar, aceptas que tus datos anonimizados se utilicen para generar estadísticas de la comunidad.",
-    "submit": "Enviar mis valoraciones"
+    "submit": "Enviar mis valoraciones",
+    "resoldItem": "He revendido una o más partes de este kit",
+    "resaleDetails": "Detalles de la reventa",
+    "resoldItemType": "Artículo(s) revendido(s)",
+    "resoldCase": "Solo el estuche de carga",
+    "resoldOneEarbud": "Un auricular",
+    "resoldTwoEarbuds": "Ambos auriculares (sin estuche)",
+    "resoldFullKit": "Kit completo (auriculares + estuche)"
   }
 }
