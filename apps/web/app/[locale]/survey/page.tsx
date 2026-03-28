@@ -17,7 +17,12 @@ type SurveySummary = {
   };
   localization: {
     supportCount: number;
+    usedCount: number;
     savedLifeCount: number;
+  };
+  resale: {
+    resoldCount: number;
+    resaleRate: string;
   };
 };
 
@@ -164,6 +169,7 @@ export default function SurveyPage() {
   const [caseLocRate, setCaseLocRate] = useState<number | ''>('');
   const [caseLocType, setCaseLocType] = useState('');
 
+  const [localizationUsed, setLocalizationUsed] = useState(false);
   const [localizationSavedLife, setLocalizationSavedLife] = useState(false);
   const [localizationUseful, setLocalizationUseful] = useState<boolean | null>(null);
 
@@ -271,6 +277,7 @@ export default function SurveyPage() {
       hasCaseLocalization,
       caseLocRate: hasCaseLocalization && caseLocRate ? Number(caseLocRate) : undefined,
       caseLocType: hasCaseLocalization ? caseLocType : undefined,
+      localizationUsed: localizationUsed,
       localizationSavedLife: hasLoc ? localizationSavedLife : undefined,
       localizationUseful: hasLoc ? localizationUseful : undefined,
       // ownership
@@ -290,6 +297,13 @@ export default function SurveyPage() {
       spareCountry: boughtSpareItem ? spareCountry : undefined,
       sparePrice: boughtSpareItem && sparePrice ? Number(sparePrice) : undefined,
       spareCurrency: boughtSpareItem && sparePrice ? spareCurrency : undefined,
+      // resale
+      resoldItem,
+      resoldItemType: resoldItem ? resoldItemType : undefined,
+      resoldCondition: resoldItem ? resoldCondition : undefined,
+      resoldPrice: resoldItem && resoldPrice ? Number(resoldPrice) : undefined,
+      resoldCurrency: resoldItem && resoldPrice ? resoldCurrency : undefined,
+      resoldStore: resoldItem ? resoldStore : undefined,
     };
 
     try {
@@ -404,28 +418,40 @@ export default function SurveyPage() {
             {renderMiniChart(summary.averages.robustness, t('chartBuild'))}
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-3 gap-6">
             <div className="space-y-4">
               <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">{t('locStatsTitle')}</h3>
-              <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600 text-xl font-black">
+              <div className="flex items-center gap-4 bg-green-50 p-4 rounded-2xl border border-green-100">
+                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-green-600 text-lg font-black shadow-sm">
                   {Math.round((summary.localization.supportCount / summary.total) * 100)}%
                 </div>
                 <div>
                   <div className="text-sm font-bold text-gray-700">{t('marketAdoption')}</div>
-                  <p className="text-xs text-gray-400">{t('marketAdoptionDesc')}</p>
+                  <p className="text-xs text-green-700/60 font-medium italic">{t('marketAdoptionDesc')}</p>
                 </div>
               </div>
             </div>
             <div className="space-y-4">
               <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">{t('utilityTitle')}</h3>
               <div className="flex items-center gap-4 bg-orange-50 p-4 rounded-2xl border border-orange-100">
-                <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center text-orange-600 text-xl font-black">
+                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-orange-600 text-lg font-black shadow-sm">
                   {summary.localization.savedLifeCount}
                 </div>
                 <div>
                   <div className="text-sm font-bold text-gray-700">{t('walletSaved')}</div>
-                  <p className="text-xs text-gray-400">{t('walletSavedDesc')}</p>
+                  <p className="text-xs text-orange-700/60 font-medium italic">{t('walletSavedDesc')}</p>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">{t('resaleTitle')}</h3>
+              <div className="flex items-center gap-4 bg-purple-50 p-4 rounded-2xl border border-purple-100">
+                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-purple-600 text-lg font-black shadow-sm">
+                  {summary.resale.resaleRate}%
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-gray-700">{t('resaleImpact')}</div>
+                  <p className="text-xs text-purple-700/60 font-medium italic">{t('resaleImpactDesc')}</p>
                 </div>
               </div>
             </div>
@@ -618,7 +644,7 @@ export default function SurveyPage() {
             </div>
           </section>
 
-          {/* ── Section 3: Performance & Sound ────────────────────────────────── */}
+          {/* ── Section 4: Performance & Sound ────────────────────────────────── */}
           <section>
             <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
               <SectionBadge num={4} /> {t('s4Title')}
@@ -632,10 +658,10 @@ export default function SurveyPage() {
             </div>
           </section>
 
-          {/* ── Section 4: Style, Comfort & Resistance ────────────────────────── */}
+          {/* ── Section 5: Style, Comfort & Resistance ────────────────────────── */}
           <section>
             <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
-              <SectionBadge num={5} /> {t('s4Title')}
+              <SectionBadge num={5} /> {t('s5Title')}
             </h2>
             <div className="grid md:grid-cols-2 gap-x-12 gap-y-6 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
               {renderRatingGroup(t('styleRate'), styleRate, setStyleRate)}
@@ -647,10 +673,10 @@ export default function SurveyPage() {
             </div>
           </section>
 
-          {/* ── Section 5: Music Styles ───────────────────────────────────────── */}
+          {/* ── Section 6: Music Styles ───────────────────────────────────────── */}
           <section>
             <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
-              <SectionBadge num={6} /> {t('s5Title')}
+              <SectionBadge num={6} /> {t('s6Title')}
             </h2>
             <div className="grid md:grid-cols-2 gap-4">
               <div>
@@ -670,10 +696,10 @@ export default function SurveyPage() {
             </div>
           </section>
 
-          {/* ── Section 6: Localization ───────────────────────────────────────── */}
+          {/* ── Section 7: Localization ───────────────────────────────────────── */}
           <section>
             <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
-              <SectionBadge num={7} /> {t('s6Title')}
+              <SectionBadge num={7} /> {t('s7Title')}
             </h2>
             <div className="bg-orange-50 p-6 rounded-3xl border border-orange-100 space-y-4">
 
@@ -728,7 +754,7 @@ export default function SurveyPage() {
                 <div className="p-6 bg-orange-100/30 rounded-3xl space-y-4 border border-orange-200">
                   {/* Used or not */}
                   <label className="flex items-center gap-3 cursor-pointer bg-white/50 p-3 rounded-xl">
-                    <input type="checkbox" className="checkbox checkbox-warning" checked={localizationSavedLife} onChange={e => setLocalizationSavedLife(e.target.checked)} />
+                    <input type="checkbox" className="checkbox checkbox-warning" checked={localizationUsed} onChange={e => setLocalizationUsed(e.target.checked)} />
                     <span className="font-bold text-orange-900 text-sm italic">{t('locUsed')}</span>
                   </label>
                   <label className="flex items-center gap-3 cursor-pointer bg-white/50 p-3 rounded-xl">
@@ -753,7 +779,7 @@ export default function SurveyPage() {
             </div>
           </section>
 
-          {/* ── Section 7: Ownership & Purchase ──────────────────────────────── */}
+          {/* ── Section 8: Initial Purchase ──────────────────────────────────── */}
           <section>
             <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
               <SectionBadge num={8} /> {t('s8Title')}

@@ -1339,6 +1339,7 @@ model SurveyResponse {
 
   // Localization – shared
   localizationType      String?  // legacy / combined; kept for backwards compat
+  localizationUsed      Boolean  @default(false)
   localizationSavedLife Boolean  @default(false)
   localizationUseful    Boolean? // user considers the feature useful
 
@@ -1366,6 +1367,14 @@ model SurveyResponse {
   spareCountry          String?  // country where spare was bought
   sparePrice            Decimal? @db.Decimal(10, 2)
   spareCurrency         String?  // ISO 4217
+
+  // Resale details
+  resoldItem            Boolean  @default(false)
+  resoldItemType        String?  // case, one_earbud, two_earbuds, full_kit
+  resoldCondition       String?  // NEW, USED
+  resoldPrice           Decimal? @db.Decimal(10, 2)
+  resoldCurrency        String?  // ISO 4217
+  resoldStore           String?  // store or website name
 
   createdAt             DateTime @default(now())
 

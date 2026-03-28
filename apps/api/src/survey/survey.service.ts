@@ -42,12 +42,14 @@ export class SurveyService {
         soundQualityMusic: true,
         noiseReductionRate: true,
         hasEarbudLocalization: true,
+        localizationUsed: true,
         localizationSavedLife: true,
+        resoldItem: true,
       }
     });
 
     const total = responses.length;
-    if (total === 0) return { total: 0, averages: {}, localization: {} };
+    if (total === 0) return { total: 0, averages: {}, localization: {}, resale: {} };
 
     const avg = (key: string) => {
       const valid = responses.filter((r: any) => r[key] !== null && r[key] !== undefined);
@@ -67,7 +69,12 @@ export class SurveyService {
       },
       localization: {
         supportCount: responses.filter((r: any) => r.hasEarbudLocalization).length,
+        usedCount: responses.filter((r: any) => r.localizationUsed).length,
         savedLifeCount: responses.filter((r: any) => r.localizationSavedLife).length,
+      },
+      resale: {
+        resoldCount: responses.filter((r: any) => r.resoldItem).length,
+        resaleRate: ((responses.filter((r: any) => r.resoldItem).length / total) * 100).toFixed(0),
       }
     };
   }

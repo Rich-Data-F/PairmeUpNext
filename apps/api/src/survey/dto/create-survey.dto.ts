@@ -53,30 +53,39 @@ export class CreateSurveyDto {
   /** @deprecated kept for backwards compat; use earbudLocType/caseLocType */
   @ApiProperty({ required: false }) @IsOptional() @IsString() localizationType?: string;
   @ApiProperty({ required: false }) @IsOptional() @IsBoolean() localizationSavedLife?: boolean;
+  @ApiProperty({ required: false }) @IsOptional() @IsBoolean() localizationUsed?: boolean;
   @ApiProperty({ required: false }) @IsOptional() @IsBoolean() localizationUseful?: boolean;
 
   // ── Ownership details ───────────────────────────────────────────────────────
-  @ApiProperty({ required: false }) @IsOptional() @Type(() => Date) dateOfPurchase?: Date;
-  @ApiProperty({ required: false }) @IsOptional() @IsInt() usageDurationMonths?: number;
+  @ApiProperty({ required: false }) @Type(() => Date) @IsOptional() dateOfPurchase?: Date;
+  @ApiProperty({ required: false }) @IsInt() @IsOptional() usageDurationMonths?: number;
 
   // ── Original purchase price (split currency + amount) ──────────────────────
-  @ApiProperty({ required: false }) @IsOptional() @IsNumber() pricePaid?: number;
-  @ApiProperty({ required: false }) @IsOptional() @IsString() currency?: string;           // ISO 4217: USD, EUR, GBP …
+  @ApiProperty({ required: false }) @IsNumber() @IsOptional() pricePaid?: number;
+  @ApiProperty({ required: false }) @IsString() @IsOptional() currency?: string;           // ISO 4217: USD, EUR, GBP …
 
   // ── Original purchase location ──────────────────────────────────────────────
-  @ApiProperty({ required: false }) @IsOptional() @IsString() locationPurchase?: string;   // store or website name
-  @ApiProperty({ required: false }) @IsOptional() @IsString() countryOfPurchase?: string;
-  @ApiProperty({ required: false }) @IsOptional() @IsString() countryOfUsage?: string;
+  @ApiProperty({ required: false }) @IsString() @IsOptional() locationPurchase?: string;   // store or website name
+  @ApiProperty({ required: false }) @IsString() @IsOptional() countryOfPurchase?: string;
+  @ApiProperty({ required: false }) @IsString() @IsOptional() countryOfUsage?: string;
 
   // ── Loss & Replacement ──────────────────────────────────────────────────────
-  @ApiProperty({ required: false }) @IsOptional() @IsString() lossExperienceDetails?: string;
-  @ApiProperty({ required: false }) @IsOptional() @IsBoolean() purchasedNewKit?: boolean;
-  @ApiProperty({ required: false }) @IsOptional() @IsBoolean() boughtSpareItem?: boolean;
+  @ApiProperty({ required: false }) @IsString() @IsOptional() lossExperienceDetails?: string;
+  @ApiProperty({ required: false }) @IsBoolean() @IsOptional() purchasedNewKit?: boolean;
+  @ApiProperty({ required: false }) @IsBoolean() @IsOptional() boughtSpareItem?: boolean;
 
   // Spare part details
-  @ApiProperty({ required: false }) @IsOptional() @IsString() spareCondition?: string;         // NEW, USED
-  @ApiProperty({ required: false }) @IsOptional() @IsString() sparePurchaseLocation?: string;  // store or website
-  @ApiProperty({ required: false }) @IsOptional() @IsString() spareCountry?: string;           // country where spare was bought
-  @ApiProperty({ required: false }) @IsOptional() @IsNumber() sparePrice?: number;             // price of spare
-  @ApiProperty({ required: false }) @IsOptional() @IsString() spareCurrency?: string;          // currency for spare
+  @ApiProperty({ required: false }) @IsString() @IsOptional() spareCondition?: string;         // NEW, USED
+  @ApiProperty({ required: false }) @IsString() @IsOptional() sparePurchaseLocation?: string;  // store or website
+  @ApiProperty({ required: false }) @IsString() @IsOptional() spareCountry?: string;           // country where spare was bought
+  @ApiProperty({ required: false }) @IsNumber() @IsOptional() sparePrice?: number;             // price of spare
+  @ApiProperty({ required: false }) @IsString() @IsOptional() spareCurrency?: string;          // currency for spare
+
+  // Resale details
+  @ApiProperty({ required: false }) @IsBoolean() @IsOptional() resoldItem?: boolean;
+  @ApiProperty({ required: false }) @IsString() @IsOptional() resoldItemType?: string;          // case, one_earbud, two_earbuds, full_kit
+  @ApiProperty({ required: false }) @IsString() @IsOptional() resoldCondition?: string;         // NEW, USED
+  @ApiProperty({ required: false }) @IsNumber() @IsOptional() resoldPrice?: number;             // resale price
+  @ApiProperty({ required: false }) @IsString() @IsOptional() resoldCurrency?: string;          // resale currency
+  @ApiProperty({ required: false }) @IsString() @IsOptional() resoldStore?: string;             // resale store/website
 }

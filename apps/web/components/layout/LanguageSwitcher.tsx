@@ -1,8 +1,7 @@
 'use client';
 
 import { useLocale } from 'next-intl';
-import { useRouter, usePathname } from 'next-intl/navigation';
-import { routing } from '@/i18n/routing';
+import { useRouter, usePathname, routing } from '@/i18n/routing';
 
 const LABELS: Record<string, string> = { en: 'EN', fr: 'FR', de: 'DE', es: 'ES' };
 

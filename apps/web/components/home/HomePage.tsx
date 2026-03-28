@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/routing';
 import { MagnifyingGlassIcon, MapPinIcon, FunnelIcon } from '@heroicons/react/24/outline';
 import { ListingCard } from '../listings/ListingCard';
 import { CategoryFilter } from './CategoryFilter';
@@ -38,7 +39,8 @@ interface SearchSuggestion {
 
 export function HomePage() {
   const router = useRouter();
-  const t = useTranslations('hero');
+  const t_hero = useTranslations('hero');
+  const t_home = useTranslations('home');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -124,11 +126,11 @@ export function HomePage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
-              {t('headline').split(' ').slice(0, -1).join(' ')}
-              <span className="block text-yellow-400">{t('headline').split(' ').slice(-1)[0]}</span>
+              {t_hero('headline').split(' ').slice(0, -1).join(' ')}
+              <span className="block text-yellow-400">{t_hero('headline').split(' ').slice(-1)[0]}</span>
             </h1>
             <p className="text-xl sm:text-2xl mb-12 text-blue-100 max-w-3xl mx-auto">
-              {t('subheadline')}
+              {t_hero('subheadline')}
             </p>
 
             {/* Search Form */}
@@ -141,7 +143,7 @@ export function HomePage() {
                       <MagnifyingGlassIcon className="absolute left-4 top-4 h-6 w-6 text-gray-400" />
                       <input
                         type="text"
-                        placeholder="Search AirPods, Galaxy Buds, charging cases..."
+                        placeholder={t_hero('searchPlaceholder')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onFocus={() => setShowSuggestions(true)}
@@ -164,7 +166,7 @@ export function HomePage() {
                       <MapPinIcon className="absolute left-4 top-4 h-6 w-6 text-gray-400" />
                       <input
                         type="text"
-                        placeholder="City, Country"
+                        placeholder={t_hero('locationPlaceholder')}
                         value={selectedCity}
                         onChange={(e) => setSelectedCity(e.target.value)}
                         className="w-full pl-12 pr-4 py-4 text-gray-900 placeholder-gray-500 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -178,7 +180,7 @@ export function HomePage() {
                       type="submit"
                       className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
                     >
-                      Search
+                      {t_hero('searchButton')}
                     </button>
                   </div>
                 </div>
@@ -202,21 +204,21 @@ export function HomePage() {
             <div className="mt-12 max-w-4xl mx-auto">
               <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-md rounded-2xl border border-white/20 p-8 flex flex-col md:flex-row items-center justify-between gap-8">
                 <div className="text-left">
-                  <h3 className="text-2xl font-bold text-white mb-2">Lost or Found something?</h3>
-                  <p className="text-blue-100">Join the community effort to reunite lost buds in our unified registry.</p>
+                  <h3 className="text-2xl font-bold text-white mb-2">{t_hero('lostFoundPromoTitle')}</h3>
+                  <p className="text-blue-100">{t_hero('lostFoundPromoDesc')}</p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
                   <button 
                     onClick={() => router.push('/lost-stolen')}
                     className="px-8 py-3 bg-white text-blue-600 font-bold rounded-xl hover:bg-blue-50 hover:shadow-xl transition-all shadow-lg active:scale-95 flex items-center justify-center"
                   >
-                    Go to Lost & Found
+                    {t_hero('goLostFound')}
                   </button>
                   <button 
                     onClick={() => router.push('/marketplace')}
                     className="px-8 py-3 bg-blue-700 text-white border border-blue-400 font-bold rounded-xl hover:bg-blue-800 transition-all shadow-lg active:scale-95 flex items-center justify-center"
                   >
-                    Go to Transaction (Sell or Buy)
+                    {t_hero('goMarketplace')}
                   </button>
                 </div>
               </div>
@@ -239,9 +241,9 @@ export function HomePage() {
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Featured Listings</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t_home('featuredTitle')}</h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Discover verified listings from trusted sellers with high ratings and authentic products
+              {t_home('featuredSubtitle')}
             </p>
           </div>
 
@@ -273,7 +275,7 @@ export function HomePage() {
               className="inline-flex items-center px-8 py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-colors shadow-lg hover:shadow-xl"
             >
               <FunnelIcon className="w-5 h-5 mr-2" />
-              View All Listings
+              {t_home('viewAll')}
             </button>
           </div>
         </div>
@@ -283,8 +285,8 @@ export function HomePage() {
       <section className="py-16 bg-gray-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Trusted Globally</h2>
-            <p className="text-lg text-gray-300">Join the largest community for earbud parts and accessories</p>
+            <h2 className="text-3xl font-bold mb-4">{t_home('statsTitle')}</h2>
+            <p className="text-lg text-gray-300">{t_home('statsSubtitle')}</p>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
@@ -292,23 +294,23 @@ export function HomePage() {
               <div className="text-4xl font-bold text-blue-400 mb-2">
                 {stats.activeListings.toLocaleString()}
               </div>
-              <div className="text-gray-300">Active Listings</div>
+              <div className="text-gray-300">{t_home('activeListings')}</div>
             </div>
             <div>
               <div className="text-4xl font-bold text-purple-400 mb-2">
                 {stats.totalUsers.toLocaleString()}
               </div>
-              <div className="text-gray-300">Happy Users</div>
+              <div className="text-gray-300">{t_home('happyUsers')}</div>
             </div>
             <div>
               <div className="text-4xl font-bold text-green-400 mb-2">
                 {stats.totalViews.toLocaleString()}
               </div>
-              <div className="text-gray-300">Total Views</div>
+              <div className="text-gray-300">{t_home('totalViews')}</div>
             </div>
             <div>
               <div className="text-4xl font-bold text-yellow-400 mb-2">99%</div>
-              <div className="text-gray-300">Success Rate</div>
+              <div className="text-gray-300">{t_home('successRate')}</div>
             </div>
           </div>
         </div>
@@ -318,8 +320,8 @@ export function HomePage() {
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">How It Works</h2>
-            <p className="text-lg text-gray-600">Get started in just a few simple steps</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t_home('howItWorksTitle')}</h2>
+            <p className="text-lg text-gray-600">{t_home('howItWorksSubtitle')}</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-12">
@@ -327,9 +329,9 @@ export function HomePage() {
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <MagnifyingGlassIcon className="w-8 h-8 text-blue-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-4">Search & Browse</h3>
+              <h3 className="text-xl font-semibold mb-4">{t_home('step1Title')}</h3>
               <p className="text-gray-600">
-                Use our advanced search to find exactly what you need. Filter by brand, model, condition, and location.
+                {t_home('step1Desc')}
               </p>
             </div>
 
@@ -339,9 +341,9 @@ export function HomePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-4">Connect & Negotiate</h3>
+              <h3 className="text-xl font-semibold mb-4">{t_home('step2Title')}</h3>
               <p className="text-gray-600">
-                Contact sellers directly through our secure messaging system. Negotiate prices and arrange pickup or shipping.
+                {t_home('step2Desc')}
               </p>
             </div>
 
@@ -351,11 +353,26 @@ export function HomePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-4">Safe Transaction</h3>
+              <h3 className="text-xl font-semibold mb-4">{t_home('step3Title')}</h3>
               <p className="text-gray-600">
-                Complete your purchase with confidence using our secure payment system and buyer protection.
+                {t_home('step3Desc')}
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Survey CTA Section */}
+      <section className="py-16 bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 md:p-12 border border-white/20 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="max-w-xl text-center md:text-left">
+              <h2 className="text-3xl font-black mb-4">{t_home('surveyCTA_Title')}</h2>
+              <p className="text-blue-100 text-lg">{t_home('surveyCTA_Desc')}</p>
+            </div>
+            <Link href="/survey" className="px-10 py-4 bg-white text-blue-600 font-black rounded-2xl hover:bg-blue-50 transition-all shadow-xl hover:shadow-blue-500/20 active:scale-95 flex items-center justify-center whitespace-nowrap">
+              {t_home('surveyCTA_Button')}
+            </Link>
           </div>
         </div>
       </section>
