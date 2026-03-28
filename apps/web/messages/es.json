@@ -5,12 +5,14 @@
     "brands": "Marcas",
     "lostFound": "Objetos perdidos",
     "createListing": "Crear anuncio",
+    "survey": "Encuesta",
+    "maps": "Mapas",
     "signIn": "Iniciar sesión",
     "signUp": "Registrarse",
     "logout": "Cerrar sesión"
   },
   "footer": {
-    "tagline": "Marketplace profesional de piezas de auriculares con registro de objetos perdidos/robados y cumplimiento legal.",
+    "tagline": "Una plataforma para localizar, intercambiar repuestos de auriculares, kits completos y mucho más.",
     "allListings": "Todos los anuncios",
     "browseListings": "Explorar anuncios",
     "sellItems": "Vender tus artículos",
@@ -30,8 +32,8 @@
     "legalCompliance": "Cumplimiento legal"
   },
   "hero": {
-    "headline": "Encuentra tu auricular perdido",
-    "subheadline": "Marketplace profesional para auriculares individuales, estuches de carga y accesorios. Compra, vende y encuentra objetos perdidos con nuestra plataforma segura y funciones de cumplimiento legal.",
+    "headline": "Localiza, Intercambia & Reconecta",
+    "subheadline": "Una plataforma para localizar, intercambiar repuestos de auriculares, kits completos y mucho más. Únete a la comunidad para comprar, vender, reportar objetos perdidos y valorar tu experiencia.",
     "browseMarketplace": "Explorar marketplace",
     "reportLostItem": "Reportar objeto perdido"
   },

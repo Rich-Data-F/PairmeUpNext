@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { MagnifyingGlassIcon, MapPinIcon, FunnelIcon } from '@heroicons/react/24/outline';
 import { ListingCard } from '../listings/ListingCard';
 import { CategoryFilter } from './CategoryFilter';
@@ -37,6 +38,7 @@ interface SearchSuggestion {
 
 export function HomePage() {
   const router = useRouter();
+  const t = useTranslations('hero');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -122,11 +124,11 @@ export function HomePage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
-              Find Your Perfect
-              <span className="block text-yellow-400">Earbud Match</span>
+              {t('headline').split(' ').slice(0, -1).join(' ')}
+              <span className="block text-yellow-400">{t('headline').split(' ').slice(-1)[0]}</span>
             </h1>
             <p className="text-xl sm:text-2xl mb-12 text-blue-100 max-w-3xl mx-auto">
-              Buy, sell, and find lost earbuds, charging cases, and accessories from trusted sellers worldwide
+              {t('subheadline')}
             </p>
 
             {/* Search Form */}

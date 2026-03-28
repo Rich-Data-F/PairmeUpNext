@@ -13,11 +13,9 @@ export function LanguageSwitcher() {
 
   const switchLocale = (next: string) => {
     const currentPath = pathname || '/';
-    // Strip current locale prefix if present, then add new one
-    const localePrefix = routing.locales.find(
-      (l) => l !== routing.defaultLocale && currentPath.startsWith(`/${l}`)
-    );
-    const bare = localePrefix ? currentPath.slice(`/${localePrefix}`.length) || '/' : currentPath;
+    // Strip any known locale prefix from the current path
+    const knownLocale = routing.locales.find((l) => currentPath === `/${l}` || currentPath.startsWith(`/${l}/`));
+    const bare = knownLocale ? currentPath.slice(`/${knownLocale}`.length) || '/' : currentPath;
     const newPath = next === routing.defaultLocale ? bare : `/${next}${bare}`;
     router.push(newPath);
   };

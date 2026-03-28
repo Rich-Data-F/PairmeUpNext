@@ -5,12 +5,14 @@
     "brands": "Brands",
     "lostFound": "Lost & Found",
     "createListing": "Create Listing",
+    "survey": "Survey",
+    "maps": "Maps",
     "signIn": "Sign In",
     "signUp": "Sign Up",
     "logout": "Logout"
   },
   "footer": {
-    "tagline": "Professional marketplace for earbud parts with lost/stolen registry and legal compliance.",
+    "tagline": "A platform to locate, exchange earbud spare items, complete kits, and much more.",
     "allListings": "All Listings",
     "browseListings": "Browse Listings",
     "sellItems": "Sell Your Items",
@@ -30,8 +32,8 @@
     "legalCompliance": "Legal Compliance"
   },
   "hero": {
-    "headline": "Find Your Missing Earbud",
-    "subheadline": "Professional marketplace for individual earbuds, charging cases, and accessories. Buy, sell, and find lost items with our secure platform and legal compliance features.",
+    "headline": "Locate, Exchange & Reconnect",
+    "subheadline": "A platform to locate, exchange earbud spare items, complete kits, and much more. Connect with a community of earbud owners to buy, sell, find lost items, and rate your experience.",
     "browseMarketplace": "Browse Marketplace",
     "reportLostItem": "Report Lost Item"
   },

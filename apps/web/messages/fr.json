@@ -5,12 +5,14 @@
     "brands": "Marques",
     "lostFound": "Objets perdus",
     "createListing": "Créer une annonce",
+    "survey": "Enquête",
+    "maps": "Cartes",
     "signIn": "Connexion",
     "signUp": "Inscription",
     "logout": "Déconnexion"
   },
   "footer": {
-    "tagline": "Place de marché professionnelle pour pièces d'écouteurs avec registre des objets perdus/volés et conformité légale.",
+    "tagline": "Une plateforme pour localiser, échanger des pièces détachées d'écouteurs, des kits complets et bien plus encore.",
     "allListings": "Toutes les annonces",
     "browseListings": "Parcourir les annonces",
     "sellItems": "Vendre vos articles",
@@ -30,8 +32,8 @@
     "legalCompliance": "Conformité légale"
   },
   "hero": {
-    "headline": "Retrouvez votre écouteur manquant",
-    "subheadline": "Place de marché professionnelle pour écouteurs individuels, étuis de chargement et accessoires. Achetez, vendez et retrouvez des objets perdus avec notre plateforme sécurisée.",
+    "headline": "Localisez, Échangez & Reconnectez",
+    "subheadline": "Une plateforme pour localiser, échanger des pièces détachées d'écouteurs, des kits complets et bien plus encore. Rejoignez une communauté d'utilisateurs pour acheter, vendre, signaler des objets perdus et noter votre expérience.",
     "browseMarketplace": "Parcourir le marché",
     "reportLostItem": "Signaler un objet perdu"
   },

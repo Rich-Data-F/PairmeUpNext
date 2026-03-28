@@ -5,12 +5,14 @@
     "brands": "Marken",
     "lostFound": "Fundsachen",
     "createListing": "Anzeige erstellen",
+    "survey": "Umfrage",
+    "maps": "Karten",
     "signIn": "Anmelden",
     "signUp": "Registrieren",
     "logout": "Abmelden"
   },
   "footer": {
-    "tagline": "Professioneller Marktplatz für Ohrhörerteile mit Verlust-/Diebstahlregister und rechtlicher Compliance.",
+    "tagline": "Eine Plattform zum Auffinden und Austauschen von Ohrhörer-Ersatzteilen, kompletten Kits und vielem mehr.",
     "allListings": "Alle Anzeigen",
     "browseListings": "Anzeigen durchsuchen",
     "sellItems": "Artikel verkaufen",
@@ -30,8 +32,8 @@
     "legalCompliance": "Rechtliche Compliance"
   },
   "hero": {
-    "headline": "Finden Sie Ihren fehlenden Ohrhörer",
-    "subheadline": "Professioneller Marktplatz für einzelne Ohrhörer, Ladeetuis und Zubehör. Kaufen, verkaufen und finden Sie verlorene Gegenstände mit unserer sicheren Plattform.",
+    "headline": "Lokalisieren, Tauschen & Verbinden",
+    "subheadline": "Eine Plattform, um Ohrhörer-Ersatzteile und komplette Kits zu finden, zu tauschen und vieles mehr. Werden Sie Teil der Community – kaufen, verkaufen, verlorene Artikel melden und Erfahrungen teilen.",
     "browseMarketplace": "Marktplatz durchsuchen",
     "reportLostItem": "Verlorenes Objekt melden"
   },
