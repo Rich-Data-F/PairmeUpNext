@@ -10,8 +10,10 @@ export class SurveyService {
 
   async create(createSurveyDto: CreateSurveyDto, userId?: string) {
     this.logger.log(`Creating new survey response`);
-    
-    return this.prisma.surveyResponse.create({
+
+    // Use type-safe dynamic property access to be compatible across Prisma client versions
+    const db = this.prisma as any;
+    return db.surveyResponse.create({
       data: {
         ...createSurveyDto,
         userId: userId || null,
@@ -20,7 +22,8 @@ export class SurveyService {
   }
 
   async findAll() {
-    return this.prisma.surveyResponse.findMany({
+    const db = this.prisma as any;
+    return db.surveyResponse.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
         brand: { select: { name: true } },
@@ -30,7 +33,8 @@ export class SurveyService {
   }
 
   async getSummary() {
-    const responses = await this.prisma.surveyResponse.findMany({
+    const db = this.prisma as any;
+    const responses = await db.surveyResponse.findMany({
       select: {
         batteryAutonomyRate: true,
         delaySyncRate: true,
@@ -45,11 +49,10 @@ export class SurveyService {
     const total = responses.length;
     if (total === 0) return { total: 0, averages: {}, localization: {} };
 
-    // Filter out null/undefined ratings and calculate averages
     const avg = (key: string) => {
-      const valid = responses.filter(r => r[key] !== null && r[key] !== undefined);
+      const valid = responses.filter((r: any) => r[key] !== null && r[key] !== undefined);
       if (valid.length === 0) return "0.0";
-      const sum = valid.reduce((acc, curr) => acc + (curr[key] as number), 0);
+      const sum = valid.reduce((acc: number, curr: any) => acc + (curr[key] as number), 0);
       return (sum / valid.length).toFixed(1);
     };
 
@@ -63,8 +66,8 @@ export class SurveyService {
         noiseReduction: avg('noiseReductionRate'),
       },
       localization: {
-        supportCount: responses.filter(r => r.hasEarbudLocalization).length,
-        savedLifeCount: responses.filter(r => r.localizationSavedLife).length,
+        supportCount: responses.filter((r: any) => r.hasEarbudLocalization).length,
+        savedLifeCount: responses.filter((r: any) => r.localizationSavedLife).length,
       }
     };
   }

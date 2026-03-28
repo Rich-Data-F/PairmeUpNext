@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ... existing models ...
+
+// Negotiation & Messaging System
+model Conversation {
+  id        String   @id @default(cuid())
+  listingId String
+  buyerId   String
+  sellerId  String
+  status    ConversationStatus @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  listing  Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyer    User    @relation("BuyerConversations", fields: [buyerId], references: [id])
+  seller   User    @relation("SellerConversations", fields: [sellerId], references: [id])
+  messages Message[]
+  offers   Offer[]
+
+  @@unique([listingId, buyerId])
+  @@map("conversations")
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  senderId       String
+  content        String
+  messageType    MessageType @default(TEXT)
+  attachments    Json?    // Array of file URLs
+  isRead         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id])
+
+  @@map("messages")
+}
+
+model Offer {
+  id             String      @id @default(cuid())
+  conversationId String
+  senderId       String
+  amount         Decimal     @db.Decimal(10, 2)
+  currency       String      @default("EUR")
+  message        String?
+  status         OfferStatus @default(PENDING)
+  expiresAt      DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id])
+
+  @@map("offers")
+}
+
+// Enums for Negotiation System
+enum ConversationStatus {
+  ACTIVE
+  CLOSED
+  BLOCKED
+}
+
+enum MessageType {
+  TEXT
+  OFFER
+  SYSTEM
+  IMAGE
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+  WITHDRAWN
+}
+
+// Update User model to include conversations
+model User {
+  // ... existing fields ...
+  
+  // Conversation relationships
+  buyerConversations  Conversation[] @relation("BuyerConversations")
+  sellerConversations Conversation[] @relation("SellerConversations")
+  messages            Message[]
+  offers              Offer[]
+}

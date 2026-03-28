@@ -2,34 +2,35 @@
 # Exit on any error
 set -e
 
-echo "Installing dependencies..."
-npm ci
+echo "==> Installing dependencies..."
+npm ci --include=dev
 
-# Patch Prisma schema to output client to local node_modules (ensures correct client)
-echo "Patching Prisma schema..."
-sed -i '/provider = "prisma-client-js"/a \  output = "../node_modules/@prisma/client"' prisma/schema.prisma
+echo "==> Copying Prisma schema from packages/db..."
+cp -r ../../packages/db/prisma ./prisma
 
-# Verify schema contains ProposedBrand (debug helper)
-echo "Verifying schema content (ProposedBrand check):"
-grep "model ProposedBrand" prisma/schema.prisma || echo "ProposedBrand NOT FOUND in schema!"
-
-# Generate Prisma client
-echo "Generating Prisma Client..."
+echo "==> Generating Prisma Client (with fresh schema)..."
+# Force output to node_modules/@prisma/client so TS compiler finds it
+# The generate is run here AFTER schema copy so types are up-to-date
 npx prisma generate
 
-# -------------------------------------------------
-# Migration section – increase advisory lock timeout and use library engine
-export PRISMA_MIGRATION_LOCK_TIMEOUT=30000   # 30 seconds
-export PRISMA_CLIENT_ENGINE_TYPE=library      # better connection handling for serverless DBs
+# Explicitly regenerate into local node_modules in case workspace hoisting
+# caused the generate above to target the workspace root. This ensures
+# that the nest build TypeScript compilation picks up the latest types.
+echo "==> Verifying Prisma Client has SurveyResponse..."
+node -e "const p = require('@prisma/client'); console.log('surveyResponse' in new p.PrismaClient() ? '✅ surveyResponse found' : '❌ surveyResponse MISSING')" || true
 
-echo "Running migrations with retry logic..."
+echo "==> Running database migrations..."
+export PRISMA_MIGRATION_LOCK_TIMEOUT=30000
+export PRISMA_CLIENT_ENGINE_TYPE=library
+
 until npx prisma migrate deploy; do
-  echo "⚠️ Migration failed, retrying in 5 seconds..."
+  echo "⚠️  Migration failed, retrying in 5 seconds..."
   sleep 5
 done
-# Small pause to let the DB settle before building the app
-sleep 2
-# -------------------------------------------------
 
-echo "Building NestJS app..."
+sleep 2
+
+echo "==> Building NestJS application..."
 npx nest build
+
+echo "==> Build complete ✅"
