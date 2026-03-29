@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
 
