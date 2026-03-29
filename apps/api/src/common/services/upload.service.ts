@@ -314,10 +314,17 @@ export class UploadService {
    */
   private getFileUrl(key: string): string {
     const endpoint = this.configService.get<string>('MINIO_ENDPOINT') || 'localhost';
-    const port = this.configService.get<string>('MINIO_PORT') || '9000';
+    const portStr = this.configService.get<string>('MINIO_PORT');
     const protocol = this.configService.get<string>('NODE_ENV') === 'production' ? 'https' : 'http';
     
-    return `${protocol}://${endpoint}:${port}/${this.bucketName}/${key}`;
+    let portPart = '';
+    if (portStr && portStr !== '80' && portStr !== '443') {
+      portPart = `:${portStr}`;
+    } else if (!portStr && protocol === 'http') {
+      portPart = ':9000';
+    }
+    
+    return `${protocol}://${endpoint}${portPart}/${this.bucketName}/${key}`;
   }
 
   /**

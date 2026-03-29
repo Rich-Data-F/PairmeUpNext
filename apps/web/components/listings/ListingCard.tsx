@@ -96,6 +96,23 @@ export function ListingCard({ listing }: ListingCardProps) {
     }
   };
 
+  const normalizeImageUrl = (url: string) => {
+    if (!url) return '';
+    // Detect MinIO localhost absolute URLs
+    if (typeof window !== 'undefined' && url.includes('localhost:') && !window.location.hostname.includes('localhost')) {
+      // Running on a public domain, but DB has localhost (e.g., from local Neon DB)
+      return url.replace(/https?:\/\/localhost:\d+/, ''); // Falls back to relative path, which may fail if no proxy exists, but removes CORS error
+    }
+    // Clean up old legacy paths
+    if (url.includes('localhost:4000/uploads/')) {
+        return url.replace(/https?:\/\/localhost:4000\/uploads\//, '/api/proxy/uploads/');
+    }
+    if (url.includes('localhost:4000/upload/serve/')) {
+        return url.replace(/https?:\/\/localhost:4000\/upload\/serve\//, '/api/proxy/upload/serve/');
+    }
+    return url;
+  };
+
   return (
     <div
       onClick={handleCardClick}
@@ -105,7 +122,7 @@ export function ListingCard({ listing }: ListingCardProps) {
       <div className="relative aspect-square overflow-hidden">
         {listing.images && listing.images.length > 0 && !imageError ? (
           <img
-            src={listing.images[0]}
+            src={normalizeImageUrl(listing.images[0])}
             alt={listing.title}
             onError={() => setImageError(true)}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

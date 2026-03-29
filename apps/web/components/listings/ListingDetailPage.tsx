@@ -221,6 +221,22 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
     }
   };
 
+  const normalizeImageUrl = (url: string) => {
+    if (!url) return '';
+    // Detect MinIO localhost absolute URLs
+    if (typeof window !== 'undefined' && url.includes('localhost:') && !window.location.hostname.includes('localhost')) {
+      return url.replace(/https?:\/\/localhost:\d+/, '');
+    }
+    // Clean up old legacy paths
+    if (url.includes('localhost:4000/uploads/')) {
+        return url.replace(/https?:\/\/localhost:4000\/uploads\//, '/api/proxy/uploads/');
+    }
+    if (url.includes('localhost:4000/upload/serve/')) {
+        return url.replace(/https?:\/\/localhost:4000\/upload\/serve\//, '/api/proxy/upload/serve/');
+    }
+    return url;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -304,7 +320,7 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
                   {/* Main Image Display */}
                   <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center relative">
                     <img
-                      src={listing.images[currentImageIndex]}
+                      src={normalizeImageUrl(listing.images[currentImageIndex])}
                       alt={`${listing.title} - Image ${currentImageIndex + 1}`}
                       className="max-w-full max-h-full object-contain rounded-lg"
                     />
@@ -347,7 +363,7 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
                             }`}
                         >
                           <img
-                            src={image}
+                            src={normalizeImageUrl(image)}
                             alt={`Thumbnail ${index + 1}`}
                             className="w-full h-full object-cover"
                           />
@@ -379,7 +395,7 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
                 {listing.images.slice(1, 5).map((image, index) => (
                   <div key={index} className="aspect-square bg-gray-100 rounded-lg">
                     <img
-                      src={image}
+                      src={normalizeImageUrl(image)}
                       alt={`${listing.title} ${index + 2}`}
                       className="w-full h-full object-cover rounded-lg"
                     />
