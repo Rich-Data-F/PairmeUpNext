@@ -53,6 +53,7 @@ export class UploadService {
       useSSL: this.configService.get<string>('NODE_ENV') === 'production',
       accessKey: this.configService.get<string>('MINIO_ACCESS_KEY') || 'minioadmin',
       secretKey: this.configService.get<string>('MINIO_SECRET_KEY') || 'minioadmin123',
+      region: this.configService.get<string>('MINIO_REGION') || 'us-east-1',
     });
 
     this.bucketName = this.configService.get<string>('MINIO_BUCKET_NAME') || 'earbudhub-uploads';
@@ -313,6 +314,12 @@ export class UploadService {
    * @returns string
    */
   private getFileUrl(key: string): string {
+    const publicUrl = this.configService.get<string>('MINIO_PUBLIC_URL');
+    if (publicUrl) {
+      const baseUrl = publicUrl.endsWith('/') ? publicUrl.slice(0, -1) : publicUrl;
+      return `${baseUrl}/${key}`;
+    }
+
     const endpoint = this.configService.get<string>('MINIO_ENDPOINT') || 'localhost';
     const portStr = this.configService.get<string>('MINIO_PORT');
     const protocol = this.configService.get<string>('NODE_ENV') === 'production' ? 'https' : 'http';
