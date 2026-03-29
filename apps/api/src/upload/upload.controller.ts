@@ -15,13 +15,16 @@ import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
-import { UploadService, UploadedFile as UploadedFileDto } from './upload.service';
-import * as path from 'path';
-import * as fs from 'fs';
+import { UploadService } from '../common/services/upload.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { v4 as uuidv4 } from 'uuid';
 
 @Controller('upload')
 export class UploadController {
-  constructor(private readonly uploadService: UploadService) {}
+  constructor(
+    private readonly uploadService: UploadService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   @Post('image')
   @UseGuards(JwtAuthGuard)
@@ -29,37 +32,61 @@ export class UploadController {
   async uploadImage(
     @UploadedFile() file: Express.Multer.File,
     @GetUser() user: any,
-    @Body() body: any, // Allow any body for multipart form data
-  ): Promise<UploadedFileDto> {
+    @Body() body: any,
+  ) {
     if (!file) {
       throw new BadRequestException('No image file provided');
     }
 
-    // Get source from body - handle both string and object cases
-    let source: 'camera' | 'upload' = 'upload';
-    if (body) {
-      if (typeof body === 'object' && body.source) {
-        source = body.source;
-      } else if (typeof body === 'string') {
-        // Try to parse as JSON or get source from string
-        try {
-          const parsed = JSON.parse(body);
-          if (parsed.source) source = parsed.source;
-        } catch {
-          // If it's not JSON, it might be the source value directly
-          if (body === 'camera' || body === 'upload') {
-            source = body;
-          }
-        }
-      }
-    }
+    const category = body.category || 'listing';
+    const source = body.source || 'upload';
 
-    return this.uploadService.uploadImage(
-      file,
+    // Upload to MinIO
+    const variants = await this.uploadService.uploadImage(
+      {
+        fieldname: file.fieldname,
+        originalname: file.originalname,
+        encoding: file.encoding,
+        mimetype: file.mimetype,
+        size: file.size,
+        buffer: file.buffer,
+      },
+      category,
       user.id,
-      body.category || 'listing',
-      source
     );
+
+    // Pick 'medium' as main URL, and 'original' for full size
+    const original = variants.find(v => v.key.includes('_original.webp')) || variants[0];
+    const medium = variants.find(v => v.key.includes('_medium.webp')) || original;
+    const thumbnail = variants.find(v => v.key.includes('_thumbnail.webp')) || original;
+
+    // Save to Prisma
+    const fileRecord = await this.prisma.file.create({
+      data: {
+        id: uuidv4(),
+        originalName: file.originalname,
+        filename: original.key,
+        path: original.key, // Using key as path
+        thumbnailPath: thumbnail.key,
+        size: original.size,
+        mimeType: 'image/webp',
+        width: original.width,
+        height: original.height,
+        uploadedById: user.id,
+        type: category,
+        source: source,
+      },
+    });
+
+    return {
+      id: fileRecord.id,
+      originalName: fileRecord.originalName,
+      filename: fileRecord.filename,
+      url: medium.url,
+      thumbnailUrl: thumbnail.url,
+      fullUrl: original.url,
+      variants: variants,
+    };
   }
 
   @Post('verification')
@@ -68,16 +95,12 @@ export class UploadController {
   async uploadVerification(
     @UploadedFile() file: Express.Multer.File,
     @GetUser() user: any,
-  ): Promise<UploadedFileDto> {
+  ) {
     if (!file) {
       throw new BadRequestException('No verification file provided');
     }
 
-    return this.uploadService.uploadImage(
-      file,
-      user.id,
-      'verification',
-    );
+    return this.uploadImage(file, user, { category: 'verification' });
   }
 
   @Post('multiple')
@@ -86,94 +109,39 @@ export class UploadController {
   async uploadMultipleImages(
     @UploadedFiles() files: Express.Multer.File[],
     @GetUser() user: any,
-    @Body() body: any, // Allow any body for multipart form data
-  ): Promise<UploadedFileDto[]> {
+    @Body() body: any,
+  ) {
     if (!files || files.length === 0) {
       throw new BadRequestException('No image files provided');
     }
 
-    // Get sources from body - can be array or single value
-    let sources: ('camera' | 'upload')[] = [];
-    if (body) {
-      if (typeof body === 'object' && body.sources) {
-        // Handle array of sources
-        if (Array.isArray(body.sources)) {
-          sources = body.sources.map(s => s === 'camera' ? 'camera' : 'upload');
-        } else {
-          sources = [body.sources === 'camera' ? 'camera' : 'upload'];
-        }
-      } else if (typeof body === 'string') {
-        // Try to parse as JSON or get source from string
-        try {
-          const parsed = JSON.parse(body);
-          if (parsed.sources && Array.isArray(parsed.sources)) {
-            sources = parsed.sources.map(s => s === 'camera' ? 'camera' : 'upload');
-          } else if (parsed.source) {
-            sources = [parsed.source === 'camera' ? 'camera' : 'upload'];
-          }
-        } catch {
-          // If it's not JSON, it might be the source value directly
-          const source = body === 'camera' ? 'camera' : 'upload';
-          sources = [source];
-        }
-      }
-    }
-
-    // If we don't have enough sources, fill with 'upload' default
-    while (sources.length < files.length) {
-      sources.push('upload');
-    }
-
-    // Trim to match file count
-    sources = sources.slice(0, files.length);
-
-    return this.uploadService.uploadMultipleImages(
-      files,
-      user.id,
-      'listing',
-      sources
-    );
+    const uploadPromises = files.map(file => this.uploadImage(file, user, body));
+    return Promise.all(uploadPromises);
   }
 
+  // Backwards compatibility redirect or serving
   @Get('serve/:fileId')
   async serveFile(@Param('fileId') fileId: string, @Res() res: Response) {
     try {
-      const file = await this.uploadService.getFileById(fileId);
+      const file = await this.prisma.file.findUnique({
+        where: { id: fileId },
+      });
       if (!file) {
         return res.status(404).json({ message: 'File not found' });
       }
 
-      const filePath = path.resolve(file.path);
-      
-      // Check if file exists on filesystem
-      if (!fs.existsSync(filePath)) {
-        return res.status(404).json({ message: 'File not found on disk' });
+      // Instead of serving from disk, we redirect to MinIO unless it's a legacy local path
+      if (file.path.startsWith('uploads/')) {
+        // Redirect to MinIO public URL if it's a key
+        // Or actually, just return the URL directly from Common service
+        // Since we don't have the key directly if it was an old path, let's try to infer
+        const url = `http://${process.env.MINIO_ENDPOINT || 'localhost'}:${process.env.MINIO_PORT || '9000'}/${process.env.MINIO_BUCKET_NAME || 'earbudhub-uploads'}/${file.path}`;
+        return res.redirect(url);
       }
 
-      // Set appropriate headers
-      res.setHeader('Content-Type', file.mimeType);
-      res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1 year cache
-      
-      return res.sendFile(filePath);
+      return res.status(404).json({ message: 'File has no valid path' });
     } catch (error) {
       return res.status(500).json({ message: 'Error serving file' });
-    }
-  }
-
-  @Get('thumbnail/:fileId')
-  async serveThumbnail(@Param('fileId') fileId: string, @Res() res: Response) {
-    try {
-      const thumbnailPath = await this.uploadService.getThumbnailPath(fileId);
-      if (!thumbnailPath || !fs.existsSync(thumbnailPath)) {
-        return res.status(404).json({ message: 'Thumbnail not found' });
-      }
-
-      res.setHeader('Content-Type', 'image/jpeg');
-      res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1 year cache
-      
-      return res.sendFile(path.resolve(thumbnailPath));
-    } catch (error) {
-      return res.status(500).json({ message: 'Error serving thumbnail' });
     }
   }
 
@@ -183,22 +151,31 @@ export class UploadController {
     @Param('userId') userId: string,
     @GetUser() user: any,
   ) {
-    // Users can only access their own files (or implement admin check)
-    if (user.id !== userId) {
+    if (user.id !== userId && user.role !== 'ADMIN') {
       throw new BadRequestException('Access denied');
     }
 
-    return this.uploadService.getUserFiles(userId);
+    const files = await this.prisma.file.findMany({
+      where: { uploadedById: userId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return files.map(f => ({
+      id: f.id,
+      originalName: f.originalName,
+      filename: f.filename,
+      url: `http://${process.env.MINIO_ENDPOINT || 'localhost'}:${process.env.MINIO_PORT || '9000'}/${process.env.MINIO_BUCKET_NAME || 'earbudhub-uploads'}/${f.path}`,
+      createdAt: f.createdAt,
+    }));
   }
 
   @Post('test')
   async testUploadModule() {
     return {
       status: 'success',
-      message: 'Upload module is properly loaded and configured',
+      message: 'Upload module rebranded to use MinIO',
       timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || 'development',
-      uploadDir: process.env.UPLOAD_DIR || './uploads',
+      provider: 'MinIO',
     };
   }
 }

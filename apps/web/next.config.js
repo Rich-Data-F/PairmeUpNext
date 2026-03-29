@@ -8,11 +8,6 @@ const nextConfig = {
     // Fix any type errors before deploying.
     ignoreBuildErrors: false,
   },
-  eslint: {
-    // ESLint is now enforced at build time.
-    // Run `npm run lint` to find and fix issues.
-    ignoreDuringBuilds: false,
-  },
   images: {
     remotePatterns: [
       {

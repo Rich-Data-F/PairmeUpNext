@@ -125,9 +125,8 @@ export function HomePage() {
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
-              {t_hero('headline').split(' ').slice(0, -1).join(' ')}
-              <span className="block text-yellow-400">{t_hero('headline').split(' ').slice(-1)[0]}</span>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black mb-6 tracking-tight">
+              {t_hero('headline')}
             </h1>
             <p className="text-xl sm:text-2xl mb-12 text-blue-100 max-w-3xl mx-auto">
               {t_hero('subheadline')}
@@ -187,13 +186,19 @@ export function HomePage() {
 
                 {/* Quick Filters */}
                 <div className="mt-6 flex flex-wrap gap-2">
-                  {['AirPods Pro', 'Galaxy Buds', 'Charging Cases', 'Left Earbud', 'Right Earbud'].map((filter) => (
+                  {[
+                    { key: 'airpodsPro', label: t_home('quickFilters.airpodsPro') },
+                    { key: 'galaxyBuds', label: t_home('quickFilters.galaxyBuds') },
+                    { key: 'chargingCases', label: t_home('quickFilters.chargingCases') },
+                    { key: 'leftEarbud', label: t_home('quickFilters.leftEarbud') },
+                    { key: 'rightEarbud', label: t_home('quickFilters.rightEarbud') }
+                  ].map((filter) => (
                     <button
-                      key={filter}
-                      onClick={() => setSearchQuery(filter)}
+                      key={filter.key}
+                      onClick={() => setSearchQuery(filter.label)}
                       className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors"
                     >
-                      {filter}
+                      {filter.label}
                     </button>
                   ))}
                 </div>

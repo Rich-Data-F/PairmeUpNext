@@ -32,8 +32,8 @@
     "legalCompliance": "Legal Compliance"
   },
   "hero": {
-    "headline": "Locate, Exchange & Reconnect",
-    "subheadline": "A platform to locate, exchange earbud spare items, complete kits, and much more. Connect with a community of earbud owners to buy, sell, find lost items, and rate your experience.",
+    "headline": "Locate & Exchange Spare Parts",
+    "subheadline": "A platform to locate, exchange earbud spare items, complete kits and much more.",
     "searchPlaceholder": "Search AirPods, Galaxy Buds, charging cases...",
     "locationPlaceholder": "City, Country",
     "searchButton": "Search",
@@ -46,6 +46,12 @@
     "featuredTitle": "Featured Listings",
     "featuredSubtitle": "Discover verified listings from trusted sellers with high ratings and authentic products",
     "viewAll": "View All Listings",
+    "viewAllListings": "View All Listings",
+    "surveyIntroLabel": "Community Insights",
+    "surveyHeadline": "Share Your Earbud Experience",
+    "surveySubheadline": "Help the community by rating your earbuds or charging cases. Your feedback helps others find the perfect pair.",
+    "takeSurveyButton": "Take the Survey",
+    "surveyParticipantsCount": "1,200+ contributors",
     "statsTitle": "Trusted Community",
     "statsSubtitle": "Join the largest community for earbud parts and accessories",
     "activeListings": "Active Listings",
@@ -61,8 +67,25 @@
     "step3Title": "Safe Transaction",
     "step3Desc": "Complete your purchase with confidence using our secure payment system and buyer protection.",
     "surveyCTA_Title": "Help the Community",
-    "surveyCTA_Desc": "Share your earbud experience and help others make better purchase decisions. Your data powers our global insights.",
-    "surveyCTA_Button": "Take the Survey"
+    "surveyCTA_Desc": "Share your earbud experience and help others make better purchase decisions. Your data powers our community insights.",
+    "surveyCTA_Button": "Take the Survey",
+    "categories": {
+      "all": "All Categories",
+      "airpods": "AirPods",
+      "galaxy-buds": "Galaxy Buds",
+      "charging-cases": "Charging Cases",
+      "left-earbuds": "Left Earbuds",
+      "right-earbuds": "Right Earbuds",
+      "accessories": "Accessories",
+      "other-brands": "Other Brands"
+    },
+    "quickFilters": {
+      "airpodsPro": "AirPods Pro",
+      "galaxyBuds": "Galaxy Buds",
+      "chargingCases": "Charging Cases",
+      "leftEarbud": "Left Earbud",
+      "rightEarbud": "Right Earbud"
+    }
   },
   "features": {
     "title": "Features",
@@ -335,7 +358,7 @@
     "musicMostListened": "Style you listen to the MOST",
     "musicBestSuitable": "Style the earbuds are BEST SUITABLE for",
     "selectStyle": "Select style",
-    "s7Title": "Localization (Anti-Loss Features)",
+    "s7Title": "Localisation (anti-loss feature)",
     "hasEarbudLoc": "My earbud has localization / find-my feature",
     "hasCaseLoc": "My charging case has localization / find-my feature",
     "rating": "Rating",
@@ -355,6 +378,7 @@
     "pricePaid": "Price Paid",
     "purchaseGeo": "Purchase geography",
     "storeOrWebsite": "Store or Website name",
+    "purchaseCondition": "Bought as",
     "countryOfPurchase": "Country of Purchase",
     "countryOfUsage": "Country of Usage",
     "selectCountry": "Select country",

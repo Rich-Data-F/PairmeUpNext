@@ -32,8 +32,8 @@
     "legalCompliance": "Conformité légale"
   },
   "hero": {
-    "headline": "Localisez, Échangez & Reconnectez",
-    "subheadline": "Une plateforme pour localiser, échanger des pièces détachées d'écouteurs, des kits complets, et bien plus encore. Connectez-vous à une communauté pour acheter, vendre, trouver des objets perdus et partager votre expérience.",
+    "headline": "Localisez & Échangez vos Pièces",
+    "subheadline": "Une plateforme pour localiser, échanger des pièces détachées d'écouteurs, des kits complets et bien plus encore.",
     "searchPlaceholder": "AirPods, Galaxy Buds, boîtiers...",
     "locationPlaceholder": "Ville, Pays",
     "searchButton": "Rechercher",
@@ -46,7 +46,13 @@
     "featuredTitle": "Annonces à la Une",
     "featuredSubtitle": "Découvrez des annonces vérifiées de vendeurs de confiance",
     "viewAll": "Voir Toutes les Annonces",
-    "statsTitle": "Communauté de Confiance",
+    "viewAllListings": "Voir toutes les annonces",
+    "surveyIntroLabel": "Avis de la Communauté",
+    "surveyHeadline": "Partagez votre Expérience",
+    "surveySubheadline": "Aidez la communauté en évaluant vos écouteurs ou boîtiers de charge. Vos retours aident les autres à trouver la paire parfaite.",
+    "takeSurveyButton": "Participer à l'Enquête",
+    "surveyParticipantsCount": "Plus de 1 200 contributeurs",
+    "statsTitle": "Communauté de confiance",
     "statsSubtitle": "Rejoignez la plus grande communauté de pièces pour écouteurs",
     "activeListings": "Annonces Actives",
     "happyUsers": "Utilisateurs Heureux",
@@ -61,8 +67,25 @@
     "step3Title": "Transaction Sécurisée",
     "step3Desc": "Finalisez votre achat en toute confiance avec notre système sécurisé.",
     "surveyCTA_Title": "Aidez la Communauté",
-    "surveyCTA_Desc": "Partagez votre expérience et aidez les autres à faire les meilleurs choix. Vos données alimentent nos statistiques globales.",
-    "surveyCTA_Button": "Participer à l'Enquête"
+    "surveyCTA_Desc": "Partagez votre expérience et aidez les autres à faire les meilleurs choix. Vos données alimentent nos statistiques communautaires.",
+    "surveyCTA_Button": "Participer à l'Enquête",
+    "categories": {
+      "all": "Toutes les catégories",
+      "airpods": "AirPods",
+      "galaxy-buds": "Galaxy Buds",
+      "charging-cases": "Boîtiers de charge",
+      "left-earbuds": "Écouteurs gauches",
+      "right-earbuds": "Écouteurs droits",
+      "accessories": "Accessoires",
+      "other-brands": "Autres marques"
+    },
+    "quickFilters": {
+      "airpodsPro": "AirPods Pro",
+      "galaxyBuds": "Galaxy Buds",
+      "chargingCases": "Boîtiers",
+      "leftEarbud": "Écouteur gauche",
+      "rightEarbud": "Écouteur droit"
+    }
   },
   "features": {
     "title": "Fonctionnalités",
@@ -303,7 +326,6 @@
       "Qualité de construction", "Connectivité / Couplage", "Sport & Fitness",
       "Design de l'étui", "Autre"
     ],
-    "s9Title": "Expérience de perte & Remplacement",
     "brand": "Marque",
     "selectBrand": "Sélectionner une marque",
     "otherBrand": "Autre marque",
@@ -357,9 +379,11 @@
     "pricePaid": "Prix payé",
     "purchaseGeo": "Géographie de l'achat",
     "storeOrWebsite": "Nom du magasin ou du site",
+    "purchaseCondition": "Acheté comme",
     "countryOfPurchase": "Pays d'achat",
     "countryOfUsage": "Pays d'utilisation",
     "selectCountry": "Sélectionner un pays",
+    "s9Title": "Expérience de perte & Remplacement",
     "lossDetails": "Partagez votre expérience de perte d'écouteurs",
     "lossPlaceholder": "Tombaient-ils souvent ? Comment s'est passé le remplacement ?",
     "purchasedNewKit": "J'ai finalement acheté un kit complet neuf",

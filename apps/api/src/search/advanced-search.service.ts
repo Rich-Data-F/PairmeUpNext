@@ -93,7 +93,7 @@ export class AdvancedSearchService {
           include: {
             brand: { select: { id: true, name: true, logo: true } },
             model: { select: { id: true, name: true } },
-            city: { select: { id: true, name: true, countryCode: true } },
+            city: { select: { id: true, name: true, countryCode: true, latitude: true, longitude: true } },
             seller: {
               select: {
                 id: true,
@@ -116,7 +116,16 @@ export class AdvancedSearchService {
 
       return {
         searchId: this.generateSearchId(),
-        listings,
+        listings: listings.map(l => ({
+          ...l,
+          latitude: l.latitude ? Number(l.latitude) : null,
+          longitude: l.longitude ? Number(l.longitude) : null,
+          city: l.city ? {
+            ...l.city,
+            latitude: l.city.latitude ? Number(l.city.latitude) : null,
+            longitude: l.city.longitude ? Number(l.city.longitude) : null,
+          } : null
+        })),
         total,
         page,
         totalPages: Math.ceil(total / limit),

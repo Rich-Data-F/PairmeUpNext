@@ -1,6 +1,4 @@
-'use client';
-
-import React, { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
 
 interface Category {
@@ -15,19 +13,20 @@ interface CategoryFilterProps {
   onCategoryChange: (category: string) => void;
 }
 
-const categories: Category[] = [
-  { id: '', name: 'All Categories', icon: '🎧', count: 15420 },
-  { id: 'airpods', name: 'AirPods', icon: '🍎', count: 8520 },
-  { id: 'galaxy-buds', name: 'Galaxy Buds', icon: '📱', count: 3240 },
-  { id: 'charging-cases', name: 'Charging Cases', icon: '🔋', count: 2150 },
-  { id: 'left-earbuds', name: 'Left Earbuds', icon: '⬅️', count: 890 },
-  { id: 'right-earbuds', name: 'Right Earbuds', icon: '➡️', count: 620 },
-  { id: 'accessories', name: 'Accessories', icon: '🎛️', count: 340 },
-  { id: 'other-brands', name: 'Other Brands', icon: '🎵', count: 180 },
-];
-
 export function CategoryFilter({ selectedCategory, onCategoryChange }: CategoryFilterProps) {
+  const t = useTranslations('home.categories');
   const [isOpen, setIsOpen] = useState(false);
+
+  const categories: Category[] = [
+    { id: '', name: t('all'), icon: '🎧', count: 15420 },
+    { id: 'airpods', name: t('airpods'), icon: '🍎', count: 8520 },
+    { id: 'galaxy-buds', name: t('galaxy-buds'), icon: '📱', count: 3240 },
+    { id: 'charging-cases', name: t('charging-cases'), icon: '🔋', count: 2150 },
+    { id: 'left-earbuds', name: t('left-earbuds'), icon: '⬅️', count: 890 },
+    { id: 'right-earbuds', name: t('right-earbuds'), icon: '➡️', count: 620 },
+    { id: 'accessories', name: t('accessories'), icon: '🎛️', count: 340 },
+    { id: 'other-brands', name: t('other-brands'), icon: '🎵', count: 180 },
+  ];
 
   const selectedCategoryData = categories.find(cat => cat.id === selectedCategory) || categories[0];
 

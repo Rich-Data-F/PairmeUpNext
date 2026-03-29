@@ -179,6 +179,7 @@ export default function SurveyPage() {
   const [pricePaid, setPricePaid] = useState<number | ''>('');
   const [currency, setCurrency] = useState('EUR');
   const [locationPurchase, setLocationPurchase] = useState('');
+  const [purchaseCondition, setPurchaseCondition] = useState('');
   const [countryOfPurchase, setCountryOfPurchase] = useState('');
   const [countryOfUsage, setCountryOfUsage] = useState('');
 
@@ -287,6 +288,7 @@ export default function SurveyPage() {
       currency: pricePaid ? currency : undefined,
       locationPurchase,
       countryOfPurchase,
+      purchaseCondition,
       countryOfUsage,
       // loss
       lossExperienceDetails,
@@ -824,6 +826,14 @@ export default function SurveyPage() {
                     <select className="select select-bordered w-full bg-white" value={countryOfUsage} onChange={e => setCountryOfUsage(e.target.value)}>
                       <option value="">{t('selectCountry')}</option>
                       {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="md:col-span-3">
+                    <label className="label"><span className="label-text font-bold text-gray-600 text-xs">{t('purchaseCondition')}</span></label>
+                    <select className="select select-bordered w-full bg-white font-bold" value={purchaseCondition} onChange={e => setPurchaseCondition(e.target.value)}>
+                      <option value="">{t('selectCondition')}</option>
+                      <option value="NEW">{t('conditionNew')}</option>
+                      <option value="USED">{t('conditionUsed')}</option>
                     </select>
                   </div>
                 </div>

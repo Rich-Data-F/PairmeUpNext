@@ -337,7 +337,7 @@ export function LostFoundMapClient({
               : (report.primaryIntent === 'SELLING' ? '#15803d' : '#b91c1c');
 
             return (
-              <div key={report.id}>
+              <React.Fragment key={report.id}>
                 {precision > 0 && (
                   <Circle
                     center={coordinates}
@@ -394,7 +394,7 @@ export function LostFoundMapClient({
                     </div>
                   </Popup>
                 </Marker>
-              </div>
+              </React.Fragment>
             );
           })}
         </MapContainer>
