@@ -726,6 +726,8 @@ export class ListingsService {
         name: listing.city.name,
         displayName: listing.city.displayName,
         countryCode: listing.city.countryCode,
+        latitude: listing.city.latitude ? parseFloat(listing.city.latitude) : null,
+        longitude: listing.city.longitude ? parseFloat(listing.city.longitude) : null,
       },
       seller: {
         id: listing.seller.id,
@@ -739,8 +741,8 @@ export class ListingsService {
       createdAt: listing.createdAt,
       publishedAt: listing.publishedAt,
       sellerNotes: listing.sellerNotes,
-      latitude: listing.latitude ? parseFloat(listing.latitude) : null,
-      longitude: listing.longitude ? parseFloat(listing.longitude) : null,
+      latitude: listing.latitude ? parseFloat(listing.latitude) : (listing.city?.latitude ? parseFloat(listing.city.latitude) : null),
+      longitude: listing.longitude ? parseFloat(listing.longitude) : (listing.city?.longitude ? parseFloat(listing.city.longitude) : null),
       locationPrecision: listing.locationPrecision,
     };
   }
