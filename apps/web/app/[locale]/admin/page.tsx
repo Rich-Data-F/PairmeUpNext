@@ -32,17 +32,28 @@ type CanonicalBrand = {
   status: string;
   createdAt: string;
   updatedAt: string;
+  _count?: {
+    models: number;
+    Listing: number;
+  };
+  creator?: { id: string; email: string; name?: string };
+  updater?: { id: string; email: string; name?: string };
 };
 
 type CanonicalModel = {
   id: string;
   name: string;
   brandId: string;
-  brandName?: string;
+  brand?: { id: string; name: string; status: string };
   description?: string;
   status: string;
   createdAt: string;
   updatedAt: string;
+  _count?: {
+    listings: number;
+  };
+  creator?: { id: string; email: string; name?: string };
+  updater?: { id: string; email: string; name?: string };
 };
 
 type AuditEntry = {
@@ -489,8 +500,8 @@ export default function AdminPage() {
                     <span className={`badge ${brand.status === 'APPROVED' ? 'badge-success' : brand.status === 'SYSTEM' ? 'badge-info' : brand.status === 'PENDING' ? 'badge-warning' : brand.status === 'OBSOLETE' ? 'badge-error' : 'badge-ghost'}`}>
                       {brand.status}
                     </span>
-                    {brand._count?.listings > 0 && <span className="badge badge-sm">{brand._count.listings} listings</span>}
-                    {brand._count?.models > 0 && <span className="badge badge-sm">{brand._count.models} models</span>}
+                    {(brand._count?.Listing ?? 0) > 0 && <span className="badge badge-sm">{brand._count?.Listing} listings</span>}
+                    {(brand._count?.models ?? 0) > 0 && <span className="badge badge-sm">{brand._count?.models} models</span>}
                   </div>
                   <p className="text-xs text-gray-500">
                     Updated: {new Date(brand.updatedAt).toLocaleDateString()}
