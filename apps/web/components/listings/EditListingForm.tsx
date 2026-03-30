@@ -281,7 +281,7 @@ export function EditListingForm({ listingId }: EditListingFormProps) {
       }
 
       // 2. Patch listing
-      const payload = {
+      const payload: any = {
         title,
         description,
         type,
@@ -292,7 +292,6 @@ export function EditListingForm({ listingId }: EditListingFormProps) {
         modelId: showCustomModel ? undefined : modelId,
         customBrand: showCustomBrand ? customBrand : undefined,
         customModel: showCustomModel ? customModel : undefined,
-        cityId: cityId || undefined, // Ensure valid UUID or omit
         serialNumber: serialNumber || undefined,
         sellerNotes: sellerNotes || undefined,
         images: [...existingImages, ...uploadedPhotoUrls],
@@ -306,12 +305,18 @@ export function EditListingForm({ listingId }: EditListingFormProps) {
         needsChargingCase: chargingCaseStatus === 'NEED',
       };
 
-      // Remove undefined values to avoid validation errors
+      // Only include cityId if it's a non-empty valid string
+      if (cityId && cityId.trim()) {
+        payload.cityId = cityId;
+      }
+
+      // Remove undefined values and empty strings to avoid validation errors
       const cleanPayload = Object.fromEntries(
-        Object.entries(payload).filter(([, value]) => value !== undefined)
+        Object.entries(payload).filter(([, value]) => value !== undefined && value !== '')
       );
 
       console.log('📤 Sending update payload:', cleanPayload);
+      console.log('🏙️ CityId value:', cleanPayload.cityId, 'Type:', typeof cleanPayload.cityId);
 
       const res = await fetch(`/api/proxy/listings/${listingId}`, {
         method: 'PATCH',

@@ -224,9 +224,9 @@ export class UpdateListingDto {
   serialNumber?: string;
 
   @ApiPropertyOptional({ description: 'City ID for location' })
+  @Transform(({ value }) => value === '' || !value ? undefined : value)
   @IsOptional()
   @IsUUID()
-  @Transform(({ value }) => value === '' ? undefined : value)
   cityId?: string;
 
   @ApiPropertyOptional({ description: 'Hide exact location coordinates' })
