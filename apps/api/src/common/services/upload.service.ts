@@ -340,6 +340,14 @@ export class UploadService {
   }
 
   /**
+   * Stream an object from storage by key
+   * Used by serve-key endpoint to proxy images to the browser.
+   */
+  async streamObject(key: string): Promise<NodeJS.ReadableStream> {
+    return this.minioClient.getObject(this.bucketName, key);
+  }
+
+  /**
    * Process image with Sharp
    * @param buffer - Image buffer
    * @param variant - Image variant configuration

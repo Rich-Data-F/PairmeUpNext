@@ -119,6 +119,21 @@ export class UploadController {
     return Promise.all(uploadPromises);
   }
 
+  // Serve an image directly by its object key (used by frontend image proxy)
+  @Get('serve-key/*')
+  async serveByKey(@Param('0') rawKey: string, @Res() res: Response) {
+    try {
+      const key = decodeURIComponent(rawKey);
+      const stream = await this.uploadService.streamObject(key);
+      res.setHeader('Content-Type', 'image/webp');
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      stream.pipe(res);
+    } catch (error: any) {
+      console.error(`serve-key error for key: ${rawKey}`, error.message);
+      return res.status(404).json({ message: 'Image not found' });
+    }
+  }
+
   // Backwards compatibility redirect or serving
   @Get('serve/:fileId')
   async serveFile(@Param('fileId') fileId: string, @Res() res: Response) {
