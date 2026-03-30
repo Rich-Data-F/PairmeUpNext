@@ -206,13 +206,19 @@ export function LostStolenPage() {
 
     const formattedDescription = `🚨 STATUS: ${incidentLabel}\n${reportForm.rewardAmount && !isFound ? `💰 REWARD: ${reportForm.currency} ${reportForm.rewardAmount}\n` : ''}${labelDate}: ${reportForm.lastSeenDate.replace('T', ' ')}\n${labelLoc}: ${cityQuery}${reportForm.address ? ` (${reportForm.address})` : ''}\n=====================\n\n${reportForm.description}${reportForm.contactEmail ? `\n\n📧 CONTACT: ${reportForm.contactEmail}` : ''}`;
 
+    // Reward amount: stored as price for BUYING (lost) items so it is queryable
+    // and properly reflected in the UI. 0 means no reward offered.
+    const rewardPrice = !isFound && reportForm.rewardAmount
+      ? parseFloat(reportForm.rewardAmount) || 0
+      : 0;
+
     // Natively structure for Database Listing mapping
     const payload = {
       title: `${isFound ? '[FOUND]' : '[LOST]'} ${reportForm.title}`,
       description: formattedDescription,
       type: reportForm.type,
-      condition: isFound ? 'GOOD' : 'FAIR', 
-      price: 0, 
+      condition: isFound ? 'GOOD' : 'FAIR',
+      price: rewardPrice,
       currency: reportForm.currency,
       brandId: reportForm.showCustomBrand ? undefined : reportForm.brandId,
       modelId: reportForm.showCustomModel ? undefined : reportForm.modelId,

@@ -182,10 +182,10 @@ export class UpdateListingDto {
   @IsEnum(Condition)
   condition?: Condition;
 
-  @ApiPropertyOptional({ description: 'Price in specified currency' })
+  @ApiPropertyOptional({ description: 'Price in specified currency (0 allowed for Lost/Found registry items and reward-free reports)' })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0.01)
+  @Min(0)
   @Max(9999.99)
   price?: number;
 

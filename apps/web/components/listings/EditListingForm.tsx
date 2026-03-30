@@ -241,7 +241,9 @@ export function EditListingForm({ listingId }: EditListingFormProps) {
     if (!title.trim()) errors.title = 'Title is required';
     if (!description.trim()) errors.description = 'Description is required';
     else if (description.length < 20) errors.description = 'Description must be at least 20 characters';
-    if (price === '' || price < 0) errors.price = 'Valid price is required (0 for Lost/Found reports)';
+    if (price === '' || price < 0) errors.price = primaryIntent === 'BUYING'
+      ? 'Enter a reward amount (0 = no reward)'
+      : 'Valid price is required (0 for Lost/Found reports)';
     if (!brandId && !showCustomBrand) errors.brand = 'Brand is required';
     if (!modelId && !showCustomModel) errors.model = 'Model is required';
     if (!cityId) errors.city = 'City is required';
@@ -531,13 +533,16 @@ export function EditListingForm({ listingId }: EditListingFormProps) {
               </h2>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="label text-xs font-bold uppercase text-gray-500">{t('price')}</label>
+                  <label className="label text-xs font-bold uppercase text-gray-500">
+                    {primaryIntent === 'BUYING' ? 'Reward (optional)' : t('price')}
+                  </label>
                   <input 
                     type="number" 
                     className="input input-bordered w-full font-bold text-lg" 
                     value={price} 
                     onChange={(e) => setPrice(e.target.value === '' ? '' : Number(e.target.value))} 
-                    step="0.01" 
+                    step="0.01"
+                    min="0"
                   />
                 </div>
                 <div>
@@ -549,7 +554,11 @@ export function EditListingForm({ listingId }: EditListingFormProps) {
                   </select>
                 </div>
               </div>
-              <p className="text-xs text-gray-500 italic">Note: Set price to 0 to treat this as a Lost/Found registry item.</p>
+              <p className="text-xs text-gray-500 italic">
+                {primaryIntent === 'BUYING'
+                  ? 'Set a reward amount to offer for recovery, or leave at 0 for no reward.'
+                  : 'Set price to 0 to treat this as a Lost/Found registry item.'}
+              </p>
 
               <div className="pt-4">
                 <label className="label text-xs font-bold uppercase text-gray-500">{t('listingIntent')}</label>
