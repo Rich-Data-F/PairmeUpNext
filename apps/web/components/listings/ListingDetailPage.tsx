@@ -13,7 +13,7 @@ import {
   ShieldCheckIcon,
   CurrencyDollarIcon,
 } from '@heroicons/react/24/outline';
-import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
+import { HeartIcon as HeartSolidIcon, PencilIcon } from '@heroicons/react/24/solid';
 import { NegotiationPanel } from './NegotiationPanel';
 import AuthenticityBadge from '@/components/AuthenticityBadge';
 
@@ -435,6 +435,16 @@ export function ListingDetailPage({ listingId }: ListingDetailPageProps) {
                   >
                     <ShareIcon className="h-6 w-6 text-gray-400" />
                   </button>
+                  
+                  {listing.seller.id === currentUserId && (
+                    <button
+                      onClick={() => router.push(`/listings/${listing.id}/edit`)}
+                      className="p-2 rounded-full hover:bg-blue-50 text-blue-600 border border-blue-100 flex items-center gap-1 px-3 ml-2"
+                    >
+                      <PencilIcon className="h-4 w-4" />
+                      <span className="text-xs font-bold uppercase tracking-wider">Edit</span>
+                    </button>
+                  )}
                 </div>
               </div>
 

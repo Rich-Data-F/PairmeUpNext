@@ -9,6 +9,7 @@
     "maps": "Cartes",
     "signIn": "Connexion",
     "signUp": "Inscription",
+    "profile": "Mon Profil",
     "logout": "Déconnexion"
   },
   "footer": {
@@ -282,7 +283,14 @@
     "location": "Localisation",
     "selling": "Vend",
     "buying": "Achète",
-    "all": "Tous"
+    "all": "Tous",
+    "edit": "Modifier",
+    "update": "Mettre à jour",
+    "delete": "Supprimer",
+    "loadingListing": "Chargement de l'annonce...",
+    "errorLoadingListing": "Erreur lors du chargement de l'annonce",
+    "listingUpdated": "Annonce mise à jour avec succès !",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer cette annonce ?"
   },
   "survey": {
     "loading": "Chargement…",
@@ -406,5 +414,47 @@
     "resoldOneEarbud": "Un seul écouteur",
     "resoldTwoEarbuds": "Les deux écouteurs (sans boîtier)",
     "resoldFullKit": "Kit complet (écouteurs + boîtier)"
+  },
+  "profile": {
+    "title": "Mon Profil",
+    "tabs": {
+      "dashboard": "Tableau de Bord",
+      "listings": "Mes Annonces",
+      "details": "Détails du Profil",
+      "security": "Sécurité",
+      "settings": "Paramètres"
+    },
+    "details": {
+      "title": "Informations Personnelles",
+      "subtitle": "Mettez à jour vos informations personnelles et la façon dont les gens vous voient sur la plateforme.",
+      "name": "Nom Complet",
+      "email": "Adresse E-mail",
+      "phone": "Numéro de Téléphone",
+      "location": "Localisation / Ville",
+      "bio": "Bio / À Propos de Vous",
+      "saveChanges": "Enregistrer les Modifications",
+      "updating": "Mise à jour...",
+      "updateSuccess": "Profil mis à jour avec succès !"
+    },
+    "security": {
+      "title": "Sécurité du Compte",
+      "subtitle": "Gardez votre compte en sécurité en utilisant un mot de passe fort.",
+      "oldPassword": "Mot de passe actuel",
+      "newPassword": "Nouveau mot de passe",
+      "confirmPassword": "Confirmer le nouveau mot de passe",
+      "changePassword": "Changer le mot de passe",
+      "passwordMismatch": "Les nouveaux mots de passe ne correspondent pas",
+      "passwordSuccess": "Mot de passe changé avec succès !"
+    },
+    "listings": {
+      "title": "Gérer Mes Annonces",
+      "subtitle": "Modifiez ou supprimez vos annonces et signalements actifs.",
+      "noListings": "Vous n'avez pas encore créé d'annonces.",
+      "createOne": "Créer votre première annonce",
+      "views": "vues",
+      "active": "Active",
+      "sold": "Vendue",
+      "inactive": "Inactive"
+    }
   }
 }

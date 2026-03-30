@@ -9,6 +9,7 @@
     "maps": "Maps",
     "signIn": "Sign In",
     "signUp": "Sign Up",
+    "profile": "My Profile",
     "logout": "Logout"
   },
   "footer": {
@@ -282,7 +283,14 @@
     "location": "Location",
     "selling": "Selling",
     "buying": "Buying",
-    "all": "All"
+    "all": "All",
+    "edit": "Edit",
+    "update": "Update",
+    "delete": "Delete",
+    "loadingListing": "Loading listing...",
+    "errorLoadingListing": "Error loading listing",
+    "listingUpdated": "Listing updated successfully!",
+    "confirmDelete": "Are you sure you want to delete this listing?"
   },
   "survey": {
     "loading": "Loading...",
@@ -405,5 +413,47 @@
     "resoldOneEarbud": "One earbud",
     "resoldTwoEarbuds": "Both earbuds (no case)",
     "resoldFullKit": "Full kit (earbuds + case)"
+  },
+  "profile": {
+    "title": "My Profile",
+    "tabs": {
+      "dashboard": "Dashboard",
+      "listings": "My Listings",
+      "details": "Profile Details",
+      "security": "Security",
+      "settings": "Settings"
+    },
+    "details": {
+      "title": "Personal Information",
+      "subtitle": "Update your personal details and how people see you on the platform.",
+      "name": "Full Name",
+      "email": "Email Address",
+      "phone": "Phone Number",
+      "location": "Location / City",
+      "bio": "Bio / About You",
+      "saveChanges": "Save Changes",
+      "updating": "Updating...",
+      "updateSuccess": "Profile updated successfully!"
+    },
+    "security": {
+      "title": "Account Security",
+      "subtitle": "Keep your account secure by using a strong password.",
+      "oldPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password",
+      "changePassword": "Change Password",
+      "passwordMismatch": "New passwords do not match",
+      "passwordSuccess": "Password changed successfully!"
+    },
+    "listings": {
+      "title": "Manage My Listings",
+      "subtitle": "Edit or remove your active listings and reports.",
+      "noListings": "You haven't created any listings yet.",
+      "createOne": "Create your first listing",
+      "views": "views",
+      "active": "Active",
+      "sold": "Sold",
+      "inactive": "Inactive"
+    }
   }
 }

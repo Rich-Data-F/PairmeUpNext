@@ -265,4 +265,35 @@ export class AuthService {
     const { password, passwordResetToken, passwordResetExpiry, ...sanitizedUser } = user;
     return sanitizedUser;
   }
+
+  /**
+   * Change user password after verifying old one
+   */
+  async changePassword(userId: string, oldPassword: string, newPassword: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user || !user.password) {
+      throw new NotFoundException('User not found');
+    }
+
+    const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
+    if (!isPasswordValid) {
+      throw new BadRequestException('Invalid current password');
+    }
+
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        password: hashedPassword,
+        lastPasswordChange: new Date(),
+      },
+    });
+
+    return { message: 'Password changed successfully' };
+  }
 }

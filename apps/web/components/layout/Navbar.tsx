@@ -2,7 +2,7 @@
 
 import { Link } from '@/i18n/routing'
 import { useEffect, useState } from 'react'
-import { Bars3Icon, XMarkIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon, XMarkIcon, PlusIcon, UserIcon } from '@heroicons/react/24/outline'
 import { useTranslations } from 'next-intl'
 import { LanguageSwitcher } from './LanguageSwitcher'
 
@@ -77,11 +77,17 @@ export function Navbar() {
             <div className="h-8 w-px bg-gray-200 mx-1"></div>
 
             {user ? (
-              <form action="/api/proxy/auth/logout" method="post">
-                <button className="text-xs font-bold text-gray-400 hover:text-red-500 transition-colors uppercase tracking-wider" type="submit">
-                  {t('logout')}
-                </button>
-              </form>
+              <div className="flex items-center space-x-4">
+                <Link href="/profile" className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 font-bold transition-all group">
+                  <UserIcon className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  <span className="text-sm hidden lg:inline">{t('profile')}</span>
+                </Link>
+                <form action="/api/proxy/auth/logout" method="post" className="flex items-center">
+                  <button className="text-[10px] font-black text-gray-400 hover:text-red-500 transition-colors uppercase tracking-widest border border-gray-100 px-2 py-1 rounded-md hover:bg-red-50 hover:border-red-100" type="submit">
+                    {t('logout')}
+                  </button>
+                </form>
+              </div>
             ) : (
               <div className="flex items-center space-x-2">
                 <Link href="/auth/signin" className="px-4 py-2 text-sm font-bold text-gray-600 hover:text-blue-600 transition-colors">
@@ -136,11 +142,16 @@ export function Navbar() {
 
             <div className="pt-4 border-t border-gray-100 space-y-3">
               {user ? (
-                <form action="/api/proxy/auth/logout" method="post">
-                  <button className="block w-full text-center px-4 py-3 text-red-500 font-bold rounded-xl hover:bg-red-50" type="submit">
-                    {t('logout')}
-                  </button>
-                </form>
+                <div className="space-y-3">
+                  <Link href="/profile" onClick={() => setIsOpen(false)} className="flex items-center justify-center w-full px-4 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-all">
+                    <UserIcon className="w-5 h-5 mr-2" /> {t('profile').toUpperCase()}
+                  </Link>
+                  <form action="/api/proxy/auth/logout" method="post" className="w-full">
+                    <button className="block w-full text-center px-4 py-3 text-red-500 font-bold rounded-xl hover:bg-red-50 border border-red-50" type="submit">
+                      {t('logout')}
+                    </button>
+                  </form>
+                </div>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
                   <Link href="/auth/signin" className="block w-full text-center px-4 py-3 text-gray-700 font-bold border border-gray-200 rounded-xl" onClick={() => setIsOpen(false)}>

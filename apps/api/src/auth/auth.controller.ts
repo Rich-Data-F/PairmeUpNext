@@ -162,4 +162,25 @@ export class AuthController {
   async updateProfile(@Request() req: any, @Body() updateData: any) {
     return this.authService.updateProfile(req.user.id, updateData);
   }
+
+  @Post('change-password')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Change user password' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        oldPassword: { type: 'string' },
+        newPassword: { type: 'string', minLength: 8 }
+      },
+      required: ['oldPassword', 'newPassword']
+    }
+  })
+  @ApiResponse({ status: 200, description: 'Password changed successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid current password' })
+  async changePassword(@Request() req: any, @Body() body: any) {
+    return this.authService.changePassword(req.user.id, body.oldPassword, body.newPassword);
+  }
 }
