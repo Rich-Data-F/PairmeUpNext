@@ -63,3 +63,81 @@ export async function GET(
     );
   }
 }
+
+export async function PATCH(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params;
+  const { getApiBase } = await import('@/lib/config');
+  const { withAuthHeaderFromRequest } = await import('@/lib/auth-headers');
+  
+  try {
+    const body = await request.json();
+    const authConfig = withAuthHeaderFromRequest(request);
+    
+    const response = await fetch(`${getApiBase()}/listings/${id}`, {
+      method: 'PATCH',
+      ...authConfig,
+      headers: {
+        ...authConfig.headers,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      return new Response(JSON.stringify(data), { 
+        status: response.status, 
+        headers: { 'Content-Type': 'application/json' } 
+      });
+    }
+
+    return new Response(JSON.stringify(data), { 
+      status: 200, 
+      headers: { 'Content-Type': 'application/json' } 
+    });
+  } catch (error: any) {
+    return new Response(JSON.stringify({ error: error.message }), { 
+      status: 500, 
+      headers: { 'Content-Type': 'application/json' } 
+    });
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params;
+  const { getApiBase } = await import('@/lib/config');
+  const { withAuthHeaderFromRequest } = await import('@/lib/auth-headers');
+  
+  try {
+    const authConfig = withAuthHeaderFromRequest(request);
+    
+    const response = await fetch(`${getApiBase()}/listings/${id}`, {
+      method: 'DELETE',
+      ...authConfig,
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      return new Response(JSON.stringify(data), { 
+        status: response.status, 
+        headers: { 'Content-Type': 'application/json' } 
+      });
+    }
+
+    return new Response(JSON.stringify(data), { 
+      status: 200, 
+      headers: { 'Content-Type': 'application/json' } 
+    });
+  } catch (error: any) {
+    return new Response(JSON.stringify({ error: error.message }), { 
+      status: 500, 
+      headers: { 'Content-Type': 'application/json' } 
+    });
+  }
+}
