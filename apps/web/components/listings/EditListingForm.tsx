@@ -178,9 +178,9 @@ export function EditListingForm({ listingId }: EditListingFormProps) {
         setRightEarbudStatus(listing.hasRightEarbud ? 'HAVE' : (listing.needsRightEarbud ? 'NEED' : 'NONE'));
         setChargingCaseStatus(listing.hasChargingCase ? 'HAVE' : (listing.needsChargingCase ? 'NEED' : 'NONE'));
 
-        setCityId(listing.city.id);
-        setCityQuery(listing.city.displayName);
-        setCountryCode(listing.city.countryCode);
+        setCityId(listing.city?.id || '');
+        setCityQuery(listing.city?.displayName || '');
+        setCountryCode(listing.city?.countryCode || '');
         setExistingImages(listing.images || []);
 
         // Load brands to find if it was custom (though rarely saved as customId in normalized state)
@@ -305,9 +305,10 @@ export function EditListingForm({ listingId }: EditListingFormProps) {
         needsChargingCase: chargingCaseStatus === 'NEED',
       };
 
-      // Only include cityId if it's a non-empty valid string
-      if (cityId && cityId.trim()) {
-        payload.cityId = cityId;
+      // Only include cityId if it's a valid UUID (not empty, not a display name)
+      const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (cityId && cityId.trim() && UUID_REGEX.test(cityId.trim())) {
+        payload.cityId = cityId.trim();
       }
 
       // Remove undefined values and empty strings to avoid validation errors
