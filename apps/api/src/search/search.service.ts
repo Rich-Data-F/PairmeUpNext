@@ -476,7 +476,6 @@ export class SearchService {
       where: {
         status: 'ACTIVE',
         publishedAt: { lte: new Date() },
-        isVerified: true,
       },
       include: {
         brand: true,
