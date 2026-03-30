@@ -563,16 +563,19 @@ export function EditListingForm({ listingId }: EditListingFormProps) {
               <div className="pt-4">
                 <label className="label text-xs font-bold uppercase text-gray-500">{t('listingIntent')}</label>
                 <div className="grid grid-cols-3 gap-2">
-                  {(['SELLING', 'BUYING', 'TRADING'] as const).map(intent => (
+                  {(['SELLING', 'BUYING', 'TRADING'] as const).map(intent => {
+                    const keyMap: Record<string, string> = { SELLING: 'intentSell', BUYING: 'intentBuy', TRADING: 'intentTrade' };
+                    return (
                     <button 
                       key={intent}
                       type="button" 
                       onClick={() => setPrimaryIntent(intent)} 
                       className={`btn btn-sm ${primaryIntent === intent ? 'btn-primary' : 'btn-outline'}`}
                     >
-                      {t(`intent${intent.charAt(0) + intent.slice(1).toLowerCase()}` as any)}
+                      {t(keyMap[intent] as any)}
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>

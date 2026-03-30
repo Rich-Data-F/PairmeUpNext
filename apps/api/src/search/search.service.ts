@@ -472,7 +472,7 @@ export class SearchService {
   }
 
   async getFeaturedListings(limit: number = 12) {
-    return this.prisma.listing.findMany({
+    const listings = await this.prisma.listing.findMany({
       where: {
         status: 'ACTIVE',
         publishedAt: { lte: new Date() },
@@ -498,6 +498,26 @@ export class SearchService {
       ],
       take: limit,
     });
+
+    return {
+      listings: listings.map(listing => ({
+        id: listing.id,
+        title: listing.title,
+        price: listing.price,
+        currency: listing.currency,
+        condition: listing.condition,
+        images: (listing as any).images || [],
+        brand: { id: listing.brand.id, name: listing.brand.name, slug: listing.brand.slug, logo: listing.brand.logo },
+        model: { id: listing.model.id, name: listing.model.name, slug: listing.model.slug },
+        city: { id: listing.city.id, name: listing.city.name, displayName: listing.city.displayName, countryCode: listing.city.countryCode },
+        seller: { id: listing.seller.id, name: listing.seller.name, trustLevel: listing.seller.trustLevel, isVerified: listing.seller.isVerified },
+        views: listing.views,
+        createdAt: listing.createdAt,
+        publishedAt: listing.publishedAt,
+        primaryIntent: (listing as any).primaryIntent,
+      })),
+      total: listings.length,
+    };
   }
 
 

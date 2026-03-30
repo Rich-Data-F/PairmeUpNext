@@ -261,8 +261,10 @@
     "retry": "Reintentar",
     "back": "Atrás",
     "save": "Guardar",
+    "edit": "Editar",
     "cancel": "Cancelar",
     "confirm": "Confirmar",
+    "logout": "Cerrar sesión",
     "required": "Obligatorio",
     "optional": "Opcional",
     "postedOn": "Publicado el {date}",
@@ -276,6 +278,20 @@
     "confirmDelete": "¿Está seguro de que desea eliminar este artículo?",
     "deleteSuccess": "Artículo eliminado correctamente",
     "deleteError": "Error al eliminar el artículo"
+  },
+  "profile": {
+    "tabs": {
+      "dashboard": "Panel de control",
+      "listings": "Mis anuncios",
+      "details": "Detalles del perfil",
+      "security": "Seguridad"
+    },
+    "listings": {
+      "title": "Mis anuncios",
+      "subtitle": "Administre los artículos que ha publicado para venta o intercambio.",
+      "noListings": "Sin anuncios aún",
+      "createOne": "Crear un anuncio"
+    }
   },
   "myListings": {
     "title": "Mis anuncios",

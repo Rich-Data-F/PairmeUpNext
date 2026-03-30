@@ -46,7 +46,7 @@ export default function MyListingsPage() {
         }
 
         const data = await res.json()
-        setListings(Array.isArray(data) ? data : data.listings || [])
+        setListings(Array.isArray(data) ? data : data.data || data.listings || [])
         setError(null)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred')

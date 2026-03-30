@@ -261,8 +261,10 @@
     "retry": "Erneut versuchen",
     "back": "Zurück",
     "save": "Speichern",
+    "edit": "Bearbeiten",
     "cancel": "Abbrechen",
     "confirm": "Bestätigen",
+    "logout": "Abmelden",
     "required": "Erforderlich",
     "optional": "Optional",
     "postedOn": "Veröffentlicht am {date}",
@@ -276,6 +278,20 @@
     "confirmDelete": "Sind Sie sicher, dass Sie diesen Artikel löschen möchten?",
     "deleteSuccess": "Artikel erfolgreich gelöscht",
     "deleteError": "Fehler beim Löschen des Artikels"
+  },
+  "profile": {
+    "tabs": {
+      "dashboard": "Dashboard",
+      "listings": "Meine Anzeigen",
+      "details": "Profildetails",
+      "security": "Sicherheit"
+    },
+    "listings": {
+      "title": "Meine Anzeigen",
+      "subtitle": "Verwalten Sie die Artikel, die Sie zum Verkauf oder Tausch angeboten haben.",
+      "noListings": "Noch keine Anzeigen",
+      "createOne": "Anzeige erstellen"
+    }
   },
   "myListings": {
     "title": "Meine Anzeigen",

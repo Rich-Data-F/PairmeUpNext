@@ -261,8 +261,10 @@
     "retry": "Réessayer",
     "back": "Retour",
     "save": "Enregistrer",
+    "edit": "Modifier",
     "cancel": "Annuler",
     "confirm": "Confirmer",
+    "logout": "Déconnexion",
     "required": "Requis",
     "optional": "Optionnel",
     "postedOn": "Publié le {date}",
@@ -276,6 +278,20 @@
     "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet article?",
     "deleteSuccess": "Article supprimé avec succès",
     "deleteError": "Échec de la suppression de l'article"
+  },
+  "profile": {
+    "tabs": {
+      "dashboard": "Tableau de bord",
+      "listings": "Mes annonces",
+      "details": "Détails du profil",
+      "security": "Sécurité"
+    },
+    "listings": {
+      "title": "Mes annonces",
+      "subtitle": "Gérez les articles que vous avez mis en vente ou en échange.",
+      "noListings": "Aucune annonce pour le moment",
+      "createOne": "Créer une annonce"
+    }
   },
   "myListings": {
     "title": "Mes annonces",
