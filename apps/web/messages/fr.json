@@ -7,7 +7,10 @@
     "createListing": "Créer une annonce",
     "signIn": "Connexion",
     "signUp": "Inscription",
-    "logout": "Déconnexion"
+    "logout": "Déconnexion",
+    "profile": "Profil",
+    "myListings": "Mes annonces",
+    "maps": "Cartes"
   },
   "footer": {
     "tagline": "Place de marché professionnelle pour pièces d'écouteurs avec registre des objets perdus/volés et conformité légale.",
@@ -230,6 +233,20 @@
     "location": "Localisation",
     "selling": "Vend",
     "buying": "Achète",
-    "all": "Tous"
+    "all": "Tous",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet article?",
+    "deleteSuccess": "Article supprimé avec succès",
+    "deleteError": "Échec de la suppression de l'article"
+  },
+  "myListings": {
+    "title": "Mes annonces",
+    "subtitle": "Gérez vos annonces et suivez l'engagement",
+    "createNew": "Créer une annonce",
+    "fetchError": "Échec du chargement des annonces",
+    "empty": "Aucune annonce pour le moment",
+    "emptyDescription": "Créez votre première annonce pour commencer",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "views": "vues"
   }
 }

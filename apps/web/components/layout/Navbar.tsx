@@ -1,15 +1,18 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Bars3Icon, XMarkIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { UserCircleIcon } from '@heroicons/react/20/solid'
 import { useTranslations } from 'next-intl'
 import { LanguageSwitcher } from './LanguageSwitcher'
 
 export function Navbar() {
   const t = useTranslations('nav')
   const [isOpen, setIsOpen] = useState(false)
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [user, setUser] = useState<any | null>(null)
+  const profileMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let mounted = true
@@ -28,6 +31,23 @@ export function Navbar() {
       mounted = false
     }
   }, [])
+
+  // Close profile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setShowProfileMenu(false)
+      }
+    }
+
+    if (showProfileMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showProfileMenu])
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
@@ -74,11 +94,43 @@ export function Navbar() {
             <div className="h-8 w-px bg-gray-200 mx-1"></div>
 
             {user ? (
-              <form action="/api/proxy/auth/logout" method="post">
-                <button className="text-xs font-bold text-gray-400 hover:text-red-500 transition-colors uppercase tracking-wider" type="submit">
-                  {t('logout')}
+              <div className="relative" ref={profileMenuRef}>
+                <button
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  className="flex items-center space-x-2 px-3 py-2 rounded-xl hover:bg-gray-100 transition-all"
+                >
+                  <UserCircleIcon className="w-6 h-6 text-gray-600" />
+                  <span className="text-sm font-semibold text-gray-700 hidden sm:inline">{user.firstName || user.email}</span>
                 </button>
-              </form>
+
+                {showProfileMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
+                    <Link
+                      href="/profile"
+                      onClick={() => setShowProfileMenu(false)}
+                      className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-600 font-semibold text-sm border-b border-gray-100"
+                    >
+                      {t('profile')}
+                    </Link>
+                    <Link
+                      href="/my-listings"
+                      onClick={() => setShowProfileMenu(false)}
+                      className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-blue-600 font-semibold text-sm border-b border-gray-100"
+                    >
+                      {t('myListings') || 'My Listings'}
+                    </Link>
+                    <form action="/api/proxy/auth/logout" method="post" className="w-full">
+                      <button
+                        type="submit"
+                        className="block w-full text-left px-4 py-3 text-red-500 hover:bg-red-50 font-semibold text-sm"
+                        onClick={() => setShowProfileMenu(false)}
+                      >
+                        {t('logout')}
+                      </button>
+                    </form>
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="flex items-center space-x-2">
                 <Link href="/auth/signin" className="px-4 py-2 text-sm font-bold text-gray-600 hover:text-blue-600 transition-colors">
@@ -130,11 +182,19 @@ export function Navbar() {
 
             <div className="pt-4 border-t border-gray-100 space-y-3">
               {user ? (
-                <form action="/api/proxy/auth/logout" method="post">
-                  <button className="block w-full text-center px-4 py-3 text-red-500 font-bold rounded-xl hover:bg-red-50" type="submit">
-                    {t('logout')}
-                  </button>
-                </form>
+                <>
+                  <Link href="/profile" onClick={() => setIsOpen(false)} className="block w-full text-center px-4 py-3 text-gray-700 font-bold rounded-xl hover:bg-gray-50">
+                    {t('profile')}
+                  </Link>
+                  <Link href="/my-listings" onClick={() => setIsOpen(false)} className="block w-full text-center px-4 py-3 text-gray-700 font-bold rounded-xl hover:bg-gray-50">
+                    {t('myListings') || 'My Listings'}
+                  </Link>
+                  <form action="/api/proxy/auth/logout" method="post">
+                    <button className="block w-full text-center px-4 py-3 text-red-500 font-bold rounded-xl hover:bg-red-50" type="submit">
+                      {t('logout')}
+                    </button>
+                  </form>
+                </>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
                   <Link href="/auth/signin" className="block w-full text-center px-4 py-3 text-gray-700 font-bold border border-gray-200 rounded-xl" onClick={() => setIsOpen(false)}>

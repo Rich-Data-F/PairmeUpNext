@@ -7,7 +7,10 @@
     "createListing": "Crear anuncio",
     "signIn": "Iniciar sesión",
     "signUp": "Registrarse",
-    "logout": "Cerrar sesión"
+    "logout": "Cerrar sesión",
+    "profile": "Perfil",
+    "myListings": "Mis anuncios",
+    "maps": "Mapas"
   },
   "footer": {
     "tagline": "Marketplace profesional de piezas de auriculares con registro de objetos perdidos/robados y cumplimiento legal.",
@@ -230,6 +233,20 @@
     "location": "Ubicación",
     "selling": "Vendiendo",
     "buying": "Comprando",
-    "all": "Todos"
+    "all": "Todos",
+    "confirmDelete": "¿Está seguro de que desea eliminar este artículo?",
+    "deleteSuccess": "Artículo eliminado correctamente",
+    "deleteError": "Error al eliminar el artículo"
+  },
+  "myListings": {
+    "title": "Mis anuncios",
+    "subtitle": "Administre sus anuncios y realice un seguimiento del engagement",
+    "createNew": "Crear anuncio",
+    "fetchError": "Error al cargar los anuncios",
+    "empty": "Sin anuncios aún",
+    "emptyDescription": "Cree su primer anuncio para comenzar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "views": "vistas"
   }
 }

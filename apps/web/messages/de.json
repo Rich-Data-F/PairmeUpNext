@@ -7,7 +7,10 @@
     "createListing": "Anzeige erstellen",
     "signIn": "Anmelden",
     "signUp": "Registrieren",
-    "logout": "Abmelden"
+    "logout": "Abmelden",
+    "profile": "Profil",
+    "myListings": "Meine Anzeigen",
+    "maps": "Karten"
   },
   "footer": {
     "tagline": "Professioneller Marktplatz für Ohrhörerteile mit Verlust-/Diebstahlregister und rechtlicher Compliance.",
@@ -230,6 +233,20 @@
     "location": "Standort",
     "selling": "Verkaufen",
     "buying": "Kaufen",
-    "all": "Alle"
+    "all": "Alle",
+    "confirmDelete": "Sind Sie sicher, dass Sie diesen Artikel löschen möchten?",
+    "deleteSuccess": "Artikel erfolgreich gelöscht",
+    "deleteError": "Fehler beim Löschen des Artikels"
+  },
+  "myListings": {
+    "title": "Meine Anzeigen",
+    "subtitle": "Verwalten Sie Ihre Anzeigen und verfolgen Sie das Engagement",
+    "createNew": "Anzeige erstellen",
+    "fetchError": "Fehler beim Laden der Anzeigen",
+    "empty": "Noch keine Anzeigen",
+    "emptyDescription": "Erstellen Sie Ihre erste Anzeige, um zu beginnen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "views": "Aufrufe"
   }
 }

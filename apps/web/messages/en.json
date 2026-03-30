@@ -7,7 +7,10 @@
     "createListing": "Create Listing",
     "signIn": "Sign In",
     "signUp": "Sign Up",
-    "logout": "Logout"
+    "logout": "Logout",
+    "profile": "Profile",
+    "myListings": "My Listings",
+    "maps": "Maps"
   },
   "footer": {
     "tagline": "Professional marketplace for earbud parts with lost/stolen registry and legal compliance.",
@@ -230,6 +233,20 @@
     "location": "Location",
     "selling": "Selling",
     "buying": "Buying",
-    "all": "All"
+    "all": "All",
+    "confirmDelete": "Are you sure you want to delete this item?",
+    "deleteSuccess": "Item deleted successfully",
+    "deleteError": "Failed to delete item"
+  },
+  "myListings": {
+    "title": "My Listings",
+    "subtitle": "Manage your listings and track engagement",
+    "createNew": "Create Listing",
+    "fetchError": "Failed to load listings",
+    "empty": "No listings yet",
+    "emptyDescription": "Create your first listing to get started",
+    "edit": "Edit",
+    "delete": "Delete",
+    "views": "views"
   }
 }
