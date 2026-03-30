@@ -11,14 +11,11 @@ interface ListingItem {
   id: string
   title: string
   description?: string
-  price: number
+  price: number | string
   currency: string
   status: string
   createdAt: string
-  _count?: {
-    images: number
-    views: number
-  }
+  views?: number
 }
 
 export default function MyListingsPage() {
@@ -71,7 +68,7 @@ export default function MyListingsPage() {
         throw new Error('Failed to delete listing')
       }
 
-      setListings(listings.filter(l => l.id !== id))
+      setListings(listings.filter((l: ListingItem) => l.id !== id))
       toast.success(tc('deleteSuccess') || 'Listing deleted successfully')
     } catch (err) {
       toast.error(tc('deleteError') || 'Failed to delete listing')
@@ -164,16 +161,16 @@ export default function MyListingsPage() {
                   <div className="flex items-center justify-between mb-4 pb-4 border-t border-gray-100 pt-4">
                     <div>
                       <p className="text-2xl font-black text-gray-900">
-                        {listing.currency} {listing.price.toFixed(2)}
+                        {listing.currency} {Number(listing.price).toFixed(2)}
                       </p>
                       <p className="text-xs text-gray-500">
                         {new Date(listing.createdAt).toLocaleDateString()}
                       </p>
                     </div>
-                    {listing._count && (
+                    {listing.views !== undefined && (
                       <div className="text-right">
                         <p className="text-sm font-bold text-gray-900">
-                          {listing._count.views || 0}
+                          {listing.views || 0}
                         </p>
                         <p className="text-xs text-gray-500">
                           {t('views') || 'views'}

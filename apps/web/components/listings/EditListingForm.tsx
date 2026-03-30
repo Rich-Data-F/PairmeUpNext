@@ -329,7 +329,11 @@ export function EditListingForm({ listingId }: EditListingFormProps) {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.message || 'Update failed');
+        // NestJS class-validator returns message as string[] for validation errors
+        const msg = Array.isArray(data.message)
+          ? data.message.join(', ')
+          : data.message || data.error || 'Update failed';
+        throw new Error(msg);
       }
 
       toast.success(tc('listingUpdated'));
