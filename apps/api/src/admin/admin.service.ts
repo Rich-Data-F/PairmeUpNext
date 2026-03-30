@@ -43,9 +43,9 @@ export class AdminService {
       this.prisma.brand.findMany({
         where,
         include: {
-          _count: { select: { models: true, listings: true } },
-          createdBy: { select: { id: true, email: true, name: true } },
-          updatedBy: { select: { id: true, email: true, name: true } },
+          _count: { select: { models: true, Listing: true } },
+          creator: { select: { id: true, email: true, name: true } },
+          updater: { select: { id: true, email: true, name: true } },
         },
         orderBy: { name: 'asc' },
         skip: (page - 1) * limit,
@@ -79,8 +79,8 @@ export class AdminService {
         include: {
           brand: { select: { id: true, name: true, status: true } },
           _count: { select: { listings: true } },
-          createdBy: { select: { id: true, email: true, name: true } },
-          updatedBy: { select: { id: true, email: true, name: true } },
+          creator: { select: { id: true, email: true, name: true } },
+          updater: { select: { id: true, email: true, name: true } },
         },
         orderBy: { name: 'asc' },
         skip: (page - 1) * limit,
