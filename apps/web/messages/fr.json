@@ -216,6 +216,45 @@
     "mapAvailableCount": "articles sur la carte",
     "classified": "Annonce classée"
   },
+  "home": {
+    "quickFilters": {
+      "airpodsPro": "AirPods Pro",
+      "galaxyBuds": "Galaxy Buds",
+      "chargingCases": "Étuis de recharge",
+      "leftEarbud": "Écouteur gauche",
+      "rightEarbud": "Écouteur droit"
+    },
+    "categories": {
+      "all": "Toutes les catégories",
+      "airpods": "AirPods",
+      "galaxy-buds": "Galaxy Buds",
+      "charging-cases": "Étuis de recharge",
+      "left-earbuds": "Écouteurs gauches",
+      "right-earbuds": "Écouteurs droits",
+      "accessories": "Accessoires",
+      "other-brands": "Autres marques"
+    },
+    "featuredTitle": "Annonces mises en avant",
+    "featuredSubtitle": "Découvrez les articles les plus populaires disponibles sur notre marché en ce moment",
+    "viewAll": "Voir tout",
+    "statsTitle": "Par les chiffres",
+    "statsSubtitle": "Voyez combien d'utilisateurs font confiance à notre plateforme",
+    "activeListings": "Annonces actives",
+    "happyUsers": "Utilisateurs satisfaits",
+    "totalViews": "Vues totales",
+    "successRate": "Taux de réussite",
+    "howItWorksTitle": "Comment ça marche",
+    "howItWorksSubtitle": "Commencez en trois étapes simples",
+    "step1Title": "Rechercher et parcourir",
+    "step1Desc": "Trouvez exactement ce que vous cherchez en effectuant une recherche ou en parcourant nos annonces",
+    "step2Title": "Connectez-vous aux vendeurs",
+    "step2Desc": "Contactez directement les vendeurs et négociez les meilleurs prix pour vos articles",
+    "step3Title": "Terminez et vérifiez",
+    "step3Desc": "Finalisez votre transaction en toute sécurité et vérifiez votre achat avec notre système sécurisé",
+    "surveyCTA_Title": "Aidez-nous à nous améliorer",
+    "surveyCTA_Desc": "Prenez notre sondage rapide pour partager votre expérience et nous aider à créer une meilleure plateforme",
+    "surveyCTA_Button": "Répondre au sondage"
+  },
   "common": {
     "loading": "Chargement…",
     "error": "Une erreur est survenue",

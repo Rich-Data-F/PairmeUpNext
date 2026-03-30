@@ -216,6 +216,45 @@
     "mapAvailableCount": "artículos en el mapa",
     "classified": "Anuncio clasificado"
   },
+  "home": {
+    "quickFilters": {
+      "airpodsPro": "AirPods Pro",
+      "galaxyBuds": "Galaxy Buds",
+      "chargingCases": "Estuches de carga",
+      "leftEarbud": "Auricular izquierdo",
+      "rightEarbud": "Auricular derecho"
+    },
+    "categories": {
+      "all": "Todas las categorías",
+      "airpods": "AirPods",
+      "galaxy-buds": "Galaxy Buds",
+      "charging-cases": "Estuches de carga",
+      "left-earbuds": "Auriculares izquierdos",
+      "right-earbuds": "Auriculares derechos",
+      "accessories": "Accesorios",
+      "other-brands": "Otras marcas"
+    },
+    "featuredTitle": "Anuncios destacados",
+    "featuredSubtitle": "Descubra los artículos más populares disponibles en nuestro mercado en este momento",
+    "viewAll": "Ver todo",
+    "statsTitle": "Por los números",
+    "statsSubtitle": "Vea cuántos usuarios confían en nuestra plataforma",
+    "activeListings": "Anuncios activos",
+    "happyUsers": "Usuarios felices",
+    "totalViews": "Vistas totales",
+    "successRate": "Tasa de éxito",
+    "howItWorksTitle": "Cómo funciona",
+    "howItWorksSubtitle": "Comience en tres pasos simples",
+    "step1Title": "Buscar y examinar",
+    "step1Desc": "Encuentre exactamente lo que busca buscando o examinando nuestros numerosos anuncios",
+    "step2Title": "Conectarse con vendedores",
+    "step2Desc": "Contacte directamente a los vendedores y negocie los mejores precios por sus artículos",
+    "step3Title": "Completar y verificar",
+    "step3Desc": "Finalice su transacción de forma segura y verifique su compra con nuestro sistema seguro",
+    "surveyCTA_Title": "Ayúdenos a mejorar",
+    "surveyCTA_Desc": "Realice nuestra encuesta rápida para compartir su experiencia y ayudarnos a construir una plataforma mejor",
+    "surveyCTA_Button": "Realizar encuesta"
+  },
   "common": {
     "loading": "Cargando…",
     "error": "Ocurrió un error",

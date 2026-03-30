@@ -216,6 +216,45 @@
     "mapAvailableCount": "Artikel auf der Karte",
     "classified": "Kleinanzeige"
   },
+  "home": {
+    "quickFilters": {
+      "airpodsPro": "AirPods Pro",
+      "galaxyBuds": "Galaxy Buds",
+      "chargingCases": "Ladeetuis",
+      "leftEarbud": "Linker Ohrhörer",
+      "rightEarbud": "Rechter Ohrhörer"
+    },
+    "categories": {
+      "all": "Alle Kategorien",
+      "airpods": "AirPods",
+      "galaxy-buds": "Galaxy Buds",
+      "charging-cases": "Ladeetuis",
+      "left-earbuds": "Linke Ohrhörer",
+      "right-earbuds": "Rechte Ohrhörer",
+      "accessories": "Zubehör",
+      "other-brands": "Andere Marken"
+    },
+    "featuredTitle": "Ausgewählte Angebote",
+    "featuredSubtitle": "Entdecken Sie die beliebtesten Artikel, die jetzt auf unserem Markt verfügbar sind",
+    "viewAll": "Alle anzeigen",
+    "statsTitle": "Nach den Zahlen",
+    "statsSubtitle": "Sehen Sie, wie viele Benutzer unserer Plattform vertrauen",
+    "activeListings": "Aktive Angebote",
+    "happyUsers": "Zufriedene Benutzer",
+    "totalViews": "Gesamtansichten",
+    "successRate": "Erfolgsquote",
+    "howItWorksTitle": "So funktioniert es",
+    "howItWorksSubtitle": "Beginnen Sie in drei einfachen Schritten",
+    "step1Title": "Suchen & Durchsuchen",
+    "step1Desc": "Finden Sie genau das, was Sie suchen, indem Sie suchen oder unsere umfangreichen Angebote durchsuchen",
+    "step2Title": "Verbinden Sie sich mit Verkäufern",
+    "step2Desc": "Kontaktieren Sie Verkäufer direkt und verhandeln Sie die besten Preise für Ihre Artikel",
+    "step3Title": "Abschließen & Überprüfen",
+    "step3Desc": "Schließen Sie Ihre Transaktion sicher ab und überprüfen Sie Ihren Kauf mit unserem sicheren System",
+    "surveyCTA_Title": "Helfen Sie uns, uns zu verbessern",
+    "surveyCTA_Desc": "Füllen Sie unsere schnelle Umfrage aus, um Ihre Erfahrung zu teilen und uns bei der Verbesserung der Plattform zu helfen",
+    "surveyCTA_Button": "Umfrage ausfüllen"
+  },
   "common": {
     "loading": "Laden…",
     "error": "Ein Fehler ist aufgetreten",

@@ -216,6 +216,45 @@
     "mapAvailableCount": "items on map",
     "classified": "Classified Ad"
   },
+  "home": {
+    "quickFilters": {
+      "airpodsPro": "AirPods Pro",
+      "galaxyBuds": "Galaxy Buds",
+      "chargingCases": "Charging Cases",
+      "leftEarbud": "Left Earbud",
+      "rightEarbud": "Right Earbud"
+    },
+    "categories": {
+      "all": "All Categories",
+      "airpods": "AirPods",
+      "galaxy-buds": "Galaxy Buds",
+      "charging-cases": "Charging Cases",
+      "left-earbuds": "Left Earbuds",
+      "right-earbuds": "Right Earbuds",
+      "accessories": "Accessories",
+      "other-brands": "Other Brands"
+    },
+    "featuredTitle": "Featured Listings",
+    "featuredSubtitle": "Discover the most popular items available on our marketplace right now",
+    "viewAll": "View All",
+    "statsTitle": "By The Numbers",
+    "statsSubtitle": "See how many users trust our platform",
+    "activeListings": "Active Listings",
+    "happyUsers": "Happy Users",
+    "totalViews": "Total Views",
+    "successRate": "Success Rate",
+    "howItWorksTitle": "How It Works",
+    "howItWorksSubtitle": "Get started in three simple steps",
+    "step1Title": "Search & Browse",
+    "step1Desc": "Find exactly what you're looking for by searching or browsing through our extensive listings",
+    "step2Title": "Connect with Sellers",
+    "step2Desc": "Message sellers directly and negotiate the best prices for your items",
+    "step3Title": "Complete & Verify",
+    "step3Desc": "Finalize your transaction safely and verify your purchase with our secure system",
+    "surveyCTA_Title": "Help Us Improve",
+    "surveyCTA_Desc": "Take our quick survey to share your experience and help us build a better platform",
+    "surveyCTA_Button": "Take Survey"
+  },
   "common": {
     "loading": "Loading…",
     "error": "An error occurred",
