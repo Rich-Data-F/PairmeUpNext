@@ -66,6 +66,15 @@ export class UploadService {
 
     // Optionally skip MinIO bucket initialization in local dev to avoid startup failures
     const skipMinioInit = this.configService.get<string>('SKIP_MINIO_INIT') === 'true';
+    
+    console.log('📡 UploadService initializing:', {
+      endPoint: this.configService.get<string>('MINIO_ENDPOINT') || 'localhost',
+      port: this.configService.get<string>('MINIO_PORT') || '9000',
+      useSSL: this.configService.get<string>('NODE_ENV') === 'production',
+      bucket: this.bucketName,
+      skipInit: skipMinioInit
+    });
+
     if (!skipMinioInit) {
       this.initializeBucket();
     } else {
@@ -216,9 +225,9 @@ export class UploadService {
       });
 
       return processedImages;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload error:', error);
-      throw new InternalServerErrorException('Failed to upload image');
+      throw new InternalServerErrorException(`Failed to upload image: ${error.message}`);
     }
   }
 
