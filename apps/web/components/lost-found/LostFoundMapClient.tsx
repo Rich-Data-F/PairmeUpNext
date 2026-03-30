@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import L, { type DivIcon, type LatLngExpression } from 'leaflet';
 import { Circle, MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
@@ -337,7 +337,7 @@ export function LostFoundMapClient({
               : (report.primaryIntent === 'SELLING' ? '#15803d' : '#b91c1c');
 
             return (
-              <React.Fragment key={report.id}>
+              <div key={report.id}>
                 {precision > 0 && (
                   <Circle
                     center={coordinates}
@@ -394,7 +394,7 @@ export function LostFoundMapClient({
                     </div>
                   </Popup>
                 </Marker>
-              </React.Fragment>
+              </div>
             );
           })}
         </MapContainer>

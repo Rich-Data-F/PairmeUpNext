@@ -517,22 +517,32 @@ export class ListingsService {
   }
 
   async update(id: string, sellerId: string, updateListingDto: UpdateListingDto) {
+    console.log(`🔄 [UPDATE] Starting update for listing: ${id}, seller: ${sellerId}`);
+    
     const listing = await this.prisma.listing.findUnique({
       where: { id },
       select: { sellerId: true, status: true },
     });
 
     if (!listing) {
+      console.error(`❌ [UPDATE] Listing not found: ${id}`);
       throw new NotFoundException('Listing not found');
     }
 
+    console.log(`📊 [UPDATE] Current listing status: ${listing.status}, seller: ${listing.sellerId}`);
+
     if (listing.sellerId !== sellerId) {
+      console.error(`❌ [UPDATE] Permission denied: user ${sellerId} trying to update listing of user ${listing.sellerId}`);
       throw new ForbiddenException('You can only update your own listings');
     }
 
-    if (listing.status !== ListingStatus.ACTIVE) {
-      throw new BadRequestException('Cannot update inactive listing');
+    // Allow updates for ACTIVE and DRAFT statuses, but not SUSPENDED
+    if (listing.status === ListingStatus.SUSPENDED) {
+      console.error(`❌ [UPDATE] Cannot update suspended listing: ${id}`);
+      throw new BadRequestException('Cannot update suspended listing. Please contact support.');
     }
+
+    console.log(`✅ [UPDATE] Validation passed, proceeding with update`);
 
     const { cityId, images, verificationPhoto, ...updateData } = updateListingDto;
 
@@ -540,14 +550,17 @@ export class ListingsService {
     if (cityId) {
       const city = await this.prisma.city.findUnique({ where: { id: cityId } });
       if (!city) {
+        console.error(`❌ [UPDATE] City not found: ${cityId}`);
         throw new BadRequestException('City not found');
       }
+      console.log(`✅ [UPDATE] City verified: ${cityId}`);
     }
 
     // Process images if provided - keep as URL strings (same format as create)
     let processedImages: string[] | undefined;
     if (images) {
       processedImages = images; // images are already URL strings from the upload service
+      console.log(`📸 [UPDATE] Processing ${processedImages.length} images`);
     }
 
     // Process verification photo if provided - keep as URL string
@@ -577,6 +590,9 @@ export class ListingsService {
         },
       },
     });
+
+    console.log(`✅ [UPDATE] Listing successfully updated: ${id}`);
+    return this.formatListingResponse(updatedListing);
 
     return this.formatListingResponse(updatedListing);
   }
@@ -726,8 +742,6 @@ export class ListingsService {
         name: listing.city.name,
         displayName: listing.city.displayName,
         countryCode: listing.city.countryCode,
-        latitude: listing.city.latitude ? parseFloat(listing.city.latitude) : null,
-        longitude: listing.city.longitude ? parseFloat(listing.city.longitude) : null,
       },
       seller: {
         id: listing.seller.id,
@@ -741,8 +755,8 @@ export class ListingsService {
       createdAt: listing.createdAt,
       publishedAt: listing.publishedAt,
       sellerNotes: listing.sellerNotes,
-      latitude: listing.latitude ? parseFloat(listing.latitude) : (listing.city?.latitude ? parseFloat(listing.city.latitude) : null),
-      longitude: listing.longitude ? parseFloat(listing.longitude) : (listing.city?.longitude ? parseFloat(listing.city.longitude) : null),
+      latitude: listing.latitude ? parseFloat(listing.latitude) : null,
+      longitude: listing.longitude ? parseFloat(listing.longitude) : null,
       locationPrecision: listing.locationPrecision,
     };
   }

@@ -78,27 +78,34 @@ export async function PATCH(
     const headers = new Headers(authConfig.headers || {});
     headers.set('Content-Type', 'application/json');
     
-    const response = await fetch(`${getApiBase()}/listings/${id}`, {
+    const backendUrl = `${getApiBase()}/listings/${id}`;
+    console.log(`🔄 PATCH request to: ${backendUrl}`);
+    console.log(`📦 Request body keys: ${Object.keys(body).join(', ')}`);
+    
+    const response = await fetch(backendUrl, {
       method: 'PATCH',
       headers,
       body: JSON.stringify(body),
     });
 
     const data = await response.json().catch(() => ({}));
+    console.log(`📊 Backend response status: ${response.status}`);
+    
     if (!response.ok) {
-      console.error('Backend PATCH failed:', { status: response.status, data });
+      console.error('❌ Backend PATCH failed:', { status: response.status, error: data });
       return new Response(JSON.stringify(data), { 
         status: response.status, 
         headers: { 'Content-Type': 'application/json' } 
       });
     }
 
+    console.log(`✅ Successfully updated listing ${id}`);
     return new Response(JSON.stringify(data), { 
       status: 200, 
       headers: { 'Content-Type': 'application/json' } 
     });
   } catch (error: any) {
-    console.error('Proxy PATCH error:', error);
+    console.error('❌ Proxy PATCH error:', error);
     return new Response(JSON.stringify({ error: error.message }), { 
       status: 500, 
       headers: { 'Content-Type': 'application/json' } 

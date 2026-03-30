@@ -47,10 +47,15 @@ export class UploadService {
 
   constructor(private readonly configService: ConfigService) {
     // Initialize MinIO client
+    const useSSL = this.configService.get<string>('NODE_ENV') === 'production' || 
+                   this.configService.get<string>('MINIO_USE_SSL') === 'true';
+    const defaultPort = useSSL ? 443 : 9000;
+    const port = parseInt(this.configService.get<string>('MINIO_PORT') || defaultPort.toString());
+
     this.minioClient = new Minio.Client({
       endPoint: this.configService.get<string>('MINIO_ENDPOINT') || 'localhost',
-      port: parseInt(this.configService.get<string>('MINIO_PORT') || '9000'),
-      useSSL: this.configService.get<string>('NODE_ENV') === 'production',
+      port,
+      useSSL,
       accessKey: this.configService.get<string>('MINIO_ACCESS_KEY') || 'minioadmin',
       secretKey: this.configService.get<string>('MINIO_SECRET_KEY') || 'minioadmin123',
       region: this.configService.get<string>('MINIO_REGION') || 'us-east-1',

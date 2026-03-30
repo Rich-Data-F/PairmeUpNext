@@ -102,8 +102,12 @@ export class ListingsController {
   @ApiOperation({ summary: 'Update listing by ID' })
   @ApiParam({ name: 'id', description: 'Listing ID' })
   @ApiResponse({ status: 200, description: 'Listing updated successfully', type: ListingResponseDto })
+  @ApiResponse({ status: 400, description: 'Bad request - validation failed or listing cannot be updated' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - not listing owner' })
   @ApiResponse({ status: 404, description: 'Listing not found' })
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async update(@Param('id') id: string, @Body() updateListingDto: UpdateListingDto, @Request() req: any) {
     return this.listingsService.update(id, req.user.id, updateListingDto);
   }
