@@ -444,17 +444,69 @@ export function EditListingForm({ listingId }: EditListingFormProps) {
               <div className="grid grid-cols-2 gap-4">
                  <div>
                   <label className="label text-xs font-bold uppercase text-gray-500">Brand</label>
-                  <select className="select select-bordered w-full" value={brandId} onChange={(e) => setBrandId(e.target.value)}>
+                  <select 
+                    className="select select-bordered w-full" 
+                    value={showCustomBrand ? 'custom' : brandId}
+                    onChange={(e) => {
+                      if (e.target.value === 'custom') {
+                        setShowCustomBrand(true);
+                        setBrandId('');
+                        setModelId('');
+                        setShowCustomModel(false);
+                        setCustomModel('');
+                      } else {
+                        setShowCustomBrand(false);
+                        setBrandId(e.target.value);
+                        setCustomBrand('');
+                      }
+                    }}
+                  >
                     <option value="">Select Brand</option>
                     {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                    <option value="custom">➕ {t('otherBrand') || 'Other Brand'}</option>
                   </select>
+                  {showCustomBrand && (
+                    <input
+                      className="input input-bordered w-full mt-2"
+                      placeholder={t('enterBrandName') || 'Enter brand name'}
+                      value={customBrand}
+                      onChange={(e) => setCustomBrand(e.target.value)}
+                    />
+                  )}
                 </div>
                 <div>
                   <label className="label text-xs font-bold uppercase text-gray-500">Model</label>
-                  <select className="select select-bordered w-full" value={modelId} onChange={(e) => setModelId(e.target.value)}>
-                    <option value="">Select Model</option>
+                  <select 
+                    className="select select-bordered w-full" 
+                    value={showCustomModel ? 'custom' : modelId}
+                    onChange={(e) => {
+                      if (e.target.value === 'custom') {
+                        setShowCustomModel(true);
+                        setModelId('');
+                        setCustomModel('');
+                      } else {
+                        setShowCustomModel(false);
+                        setModelId(e.target.value);
+                        setCustomModel('');
+                      }
+                    }}
+                    disabled={showCustomBrand && !customBrand.trim()}
+                  >
+                    <option value="">
+                      {showCustomBrand ? (customBrand.trim() ? t('selectModel') || 'Select Model' : t('enterBrandFirst') || 'Enter brand first') : 
+                       brandId ? t('selectModel') || 'Select Model' : t('pickBrandFirst') || 'Pick brand first'}
+                    </option>
                     {models.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                    <option value="custom">➕ {t('otherModel') || 'Other Model'}</option>
                   </select>
+                  {showCustomModel && (
+                    <input
+                      className="input input-bordered w-full mt-2"
+                      placeholder={t('enterModelName') || 'Enter model name'}
+                      value={customModel}
+                      onChange={(e) => setCustomModel(e.target.value)}
+                    />
+                  )}
                 </div>
               </div>
               <div>

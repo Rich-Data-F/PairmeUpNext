@@ -29,9 +29,10 @@ export class BrandsService {
   }
 
   // New helper to fetch all canonical brands without pagination (used by the create‑listing form)
+  // Includes PENDING brands so user-created brands appear immediately in dropdowns
   async findAllCanonical() {
     return this.prisma.brand.findMany({
-      where: { isActive: true, status: { in: ['APPROVED', 'SYSTEM'] } },
+      where: { isActive: true, status: { in: ['APPROVED', 'SYSTEM', 'PENDING'] } },
       orderBy: { name: 'asc' },
       select: { id: true, name: true, slug: true },
     });
