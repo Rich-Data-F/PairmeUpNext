@@ -172,6 +172,11 @@ export class UpdateListingDto {
   @Length(20, 2000)
   description?: string;
 
+  @ApiPropertyOptional({ enum: ListingType, description: 'Type of listing' })
+  @IsOptional()
+  @IsEnum(ListingType)
+  type?: ListingType;
+
   @ApiPropertyOptional({ enum: Condition, description: 'Condition of the item' })
   @IsOptional()
   @IsEnum(Condition)
@@ -190,6 +195,34 @@ export class UpdateListingDto {
   @Length(3, 3)
   currency?: string;
 
+  @ApiPropertyOptional({ description: 'Brand ID' })
+  @IsOptional()
+  @IsString()
+  brandId?: string;
+
+  @ApiPropertyOptional({ description: 'Model ID' })
+  @IsOptional()
+  @IsString()
+  modelId?: string;
+
+  @ApiPropertyOptional({ description: 'Custom brand name' })
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  customBrand?: string;
+
+  @ApiPropertyOptional({ description: 'Custom model name' })
+  @IsOptional()
+  @IsString()
+  @Length(1, 100)
+  customModel?: string;
+
+  @ApiPropertyOptional({ description: 'Serial number or device identifier' })
+  @IsOptional()
+  @IsString()
+  @Length(4, 50)
+  serialNumber?: string;
+
   @ApiPropertyOptional({ description: 'City ID for location' })
   @IsOptional()
   @IsUUID()
@@ -199,6 +232,16 @@ export class UpdateListingDto {
   @IsOptional()
   @IsBoolean()
   hideExactLocation?: boolean;
+
+  @ApiPropertyOptional({ description: 'Specific address or venue name' })
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @ApiPropertyOptional({ description: 'Accuracy radius in meters' })
+  @IsOptional()
+  @IsNumber()
+  locationPrecision?: number;
 
   @ApiPropertyOptional({ description: 'Precise latitude' })
   @IsOptional()
@@ -230,6 +273,48 @@ export class UpdateListingDto {
   @IsOptional()
   @IsString()
   verificationPhoto?: string;
+
+  // Trading preferences
+  @ApiPropertyOptional({ description: 'Primary intent: SELLING, BUYING, or TRADING', enum: ['SELLING', 'BUYING', 'TRADING'] })
+  @IsOptional()
+  @IsEnum(['SELLING', 'BUYING', 'TRADING'])
+  primaryIntent?: 'SELLING' | 'BUYING' | 'TRADING';
+
+  @ApiPropertyOptional({ description: 'Open to alternate transaction type' })
+  @IsOptional()
+  @IsBoolean()
+  openToAlternate?: boolean;
+
+  // Item availability
+  @ApiPropertyOptional({ description: 'User has left earbud' })
+  @IsOptional()
+  @IsBoolean()
+  hasLeftEarbud?: boolean;
+
+  @ApiPropertyOptional({ description: 'User has right earbud' })
+  @IsOptional()
+  @IsBoolean()
+  hasRightEarbud?: boolean;
+
+  @ApiPropertyOptional({ description: 'User has charging case' })
+  @IsOptional()
+  @IsBoolean()
+  hasChargingCase?: boolean;
+
+  @ApiPropertyOptional({ description: 'User needs left earbud' })
+  @IsOptional()
+  @IsBoolean()
+  needsLeftEarbud?: boolean;
+
+  @ApiPropertyOptional({ description: 'User needs right earbud' })
+  @IsOptional()
+  @IsBoolean()
+  needsRightEarbud?: boolean;
+
+  @ApiPropertyOptional({ description: 'User needs charging case' })
+  @IsOptional()
+  @IsBoolean()
+  needsChargingCase?: boolean;
 }
 
 export class ListingQueryDto {

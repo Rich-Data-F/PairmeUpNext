@@ -544,7 +544,7 @@ export class ListingsService {
 
     console.log(`✅ [UPDATE] Validation passed, proceeding with update`);
 
-    const { cityId, images, verificationPhoto, ...updateData } = updateListingDto;
+    const { cityId, images, verificationPhoto, brandId, modelId, customBrand, customModel, ...updateData } = updateListingDto;
 
     // Verify city if provided
     if (cityId) {
@@ -554,6 +554,26 @@ export class ListingsService {
         throw new BadRequestException('City not found');
       }
       console.log(`✅ [UPDATE] City verified: ${cityId}`);
+    }
+
+    // Verify brand if provided
+    if (brandId) {
+      const brand = await this.prisma.brand.findUnique({ where: { id: brandId } });
+      if (!brand) {
+        console.error(`❌ [UPDATE] Brand not found: ${brandId}`);
+        throw new BadRequestException('Brand not found');
+      }
+      console.log(`✅ [UPDATE] Brand verified: ${brandId}`);
+    }
+
+    // Verify model if provided
+    if (modelId) {
+      const model = await this.prisma.model.findUnique({ where: { id: modelId } });
+      if (!model) {
+        console.error(`❌ [UPDATE] Model not found: ${modelId}`);
+        throw new BadRequestException('Model not found');
+      }
+      console.log(`✅ [UPDATE] Model verified: ${modelId}`);
     }
 
     // Process images if provided - keep as URL strings (same format as create)
@@ -571,6 +591,10 @@ export class ListingsService {
       data: {
         ...updateData,
         cityId,
+        brandId,
+        modelId,
+        customBrand,
+        customModel,
         images: processedImages,
         verificationPhoto: processedVerificationPhoto,
         updatedAt: new Date(),
@@ -592,8 +616,6 @@ export class ListingsService {
     });
 
     console.log(`✅ [UPDATE] Listing successfully updated: ${id}`);
-    return this.formatListingResponse(updatedListing);
-
     return this.formatListingResponse(updatedListing);
   }
 
