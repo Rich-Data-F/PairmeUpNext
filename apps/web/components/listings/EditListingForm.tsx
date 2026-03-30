@@ -269,8 +269,14 @@ export function EditListingForm({ listingId }: EditListingFormProps) {
           method: 'POST',
           body: formData,
         });
-        if (!uploadRes.ok) throw new Error('Photo upload failed');
+
+        if (!uploadRes.ok) {
+          const uploadError = await uploadRes.json().catch(() => ({}));
+          throw new Error(uploadError?.error || uploadError?.message || 'Photo upload failed');
+        }
+
         const uploadData = await uploadRes.json();
+        console.log('Upload response:', uploadData);
         uploadedPhotoUrls = uploadData.map((file: any) => file.url);
       }
 

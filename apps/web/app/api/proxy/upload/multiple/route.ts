@@ -21,10 +21,16 @@ export async function POST(request: Request) {
 
     const data = await resp.json().catch(() => ({}));
     if (!resp.ok) {
+      console.error('Backend upload failed:', {
+        status: resp.status,
+        statusText: resp.statusText,
+        data
+      });
       return NextResponse.json({ error: data?.message || 'Failed to upload images' }, { status: resp.status });
     }
     return NextResponse.json(data);
-  } catch (e) {
-    return NextResponse.json({ error: 'Unexpected error' }, { status: 500 });
+  } catch (e: any) {
+    console.error('Unexpected proxy error during upload:', e);
+    return NextResponse.json({ error: e?.message || 'Unexpected error' }, { status: 500 });
   }
 }
