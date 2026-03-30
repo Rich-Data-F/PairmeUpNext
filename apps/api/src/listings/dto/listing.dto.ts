@@ -226,6 +226,7 @@ export class UpdateListingDto {
   @ApiPropertyOptional({ description: 'City ID for location' })
   @IsOptional()
   @IsUUID()
+  @Transform(({ value }) => value === '' ? undefined : value)
   cityId?: string;
 
   @ApiPropertyOptional({ description: 'Hide exact location coordinates' })

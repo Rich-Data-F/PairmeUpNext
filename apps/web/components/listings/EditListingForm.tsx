@@ -292,7 +292,7 @@ export function EditListingForm({ listingId }: EditListingFormProps) {
         modelId: showCustomModel ? undefined : modelId,
         customBrand: showCustomBrand ? customBrand : undefined,
         customModel: showCustomModel ? customModel : undefined,
-        cityId,
+        cityId: cityId || undefined, // Ensure valid UUID or omit
         serialNumber: serialNumber || undefined,
         sellerNotes: sellerNotes || undefined,
         images: [...existingImages, ...uploadedPhotoUrls],
@@ -306,10 +306,17 @@ export function EditListingForm({ listingId }: EditListingFormProps) {
         needsChargingCase: chargingCaseStatus === 'NEED',
       };
 
+      // Remove undefined values to avoid validation errors
+      const cleanPayload = Object.fromEntries(
+        Object.entries(payload).filter(([, value]) => value !== undefined)
+      );
+
+      console.log('📤 Sending update payload:', cleanPayload);
+
       const res = await fetch(`/api/proxy/listings/${listingId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(cleanPayload),
       });
 
       if (!res.ok) {
