@@ -29,6 +29,7 @@ export default function SignInPage() {
       if (!res.ok) {
         setError(data?.error || 'Login failed');
       } else {
+        router.refresh();
         router.push('/');
       }
     } catch (err) {

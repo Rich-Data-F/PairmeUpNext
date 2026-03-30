@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState, useRef } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
 import { Bars3Icon, XMarkIcon, PlusIcon } from '@heroicons/react/24/outline'
 import { UserCircleIcon } from '@heroicons/react/20/solid'
 import { useTranslations } from 'next-intl'
@@ -9,11 +10,23 @@ import { LanguageSwitcher } from './LanguageSwitcher'
 
 export function Navbar() {
   const t = useTranslations('nav')
+  const router = useRouter()
+  const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [user, setUser] = useState<any | null>(null)
   const profileMenuRef = useRef<HTMLDivElement>(null)
 
+  const handleLogout = async () => {
+    setShowProfileMenu(false)
+    setIsOpen(false)
+    await fetch('/api/proxy/auth/logout', { method: 'POST' })
+    setUser(null)
+    router.push('/')
+    router.refresh()
+  }
+
+  // Re-check auth on every page navigation so login/logout is always reflected
   useEffect(() => {
     let mounted = true
     ;(async () => {
@@ -23,14 +36,17 @@ export function Navbar() {
         if (res.ok) {
           const data = await res.json()
           setUser(data)
+        } else {
+          setUser(null)
         }
       } catch {
+        if (mounted) setUser(null)
       }
     })()
     return () => {
       mounted = false
     }
-  }, [])
+  }, [pathname])
 
   // Close profile menu when clicking outside
   useEffect(() => {
@@ -119,15 +135,13 @@ export function Navbar() {
                     >
                       {t('myListings') || 'My Listings'}
                     </Link>
-                    <form action="/api/proxy/auth/logout" method="post" className="w-full">
-                      <button
-                        type="submit"
-                        className="block w-full text-left px-4 py-3 text-red-500 hover:bg-red-50 font-semibold text-sm"
-                        onClick={() => setShowProfileMenu(false)}
-                      >
-                        {t('logout')}
-                      </button>
-                    </form>
+                    <button
+                      type="button"
+                      className="block w-full text-left px-4 py-3 text-red-500 hover:bg-red-50 font-semibold text-sm"
+                      onClick={handleLogout}
+                    >
+                      {t('logout')}
+                    </button>
                   </div>
                 )}
               </div>
@@ -189,11 +203,13 @@ export function Navbar() {
                   <Link href="/my-listings" onClick={() => setIsOpen(false)} className="block w-full text-center px-4 py-3 text-gray-700 font-bold rounded-xl hover:bg-gray-50">
                     {t('myListings') || 'My Listings'}
                   </Link>
-                  <form action="/api/proxy/auth/logout" method="post">
-                    <button className="block w-full text-center px-4 py-3 text-red-500 font-bold rounded-xl hover:bg-red-50" type="submit">
-                      {t('logout')}
-                    </button>
-                  </form>
+                  <button
+                    type="button"
+                    className="block w-full text-center px-4 py-3 text-red-500 font-bold rounded-xl hover:bg-red-50"
+                    onClick={handleLogout}
+                  >
+                    {t('logout')}
+                  </button>
                 </>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
