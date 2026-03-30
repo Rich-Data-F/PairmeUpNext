@@ -32,6 +32,72 @@ export class AdminService {
     });
   }
 
+  // Get all canonical brands (all statuses: PENDING, APPROVED, SYSTEM, OBSOLETE, REJECTED)
+  async getCanonicalBrands(page = 1, limit = 50, search?: string) {
+    const where: any = {};
+    if (search) {
+      where.name = { contains: search, mode: 'insensitive' };
+    }
+
+    const [brands, total] = await Promise.all([
+      this.prisma.brand.findMany({
+        where,
+        include: {
+          _count: { select: { models: true, listings: true } },
+          createdBy: { select: { id: true, email: true, name: true } },
+          updatedBy: { select: { id: true, email: true, name: true } },
+        },
+        orderBy: { name: 'asc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.brand.count({ where }),
+    ]);
+
+    return {
+      data: brands,
+      total,
+      page,
+      limit,
+      pages: Math.ceil(total / limit),
+    };
+  }
+
+  // Get all canonical models (all statuses)
+  async getCanonicalModels(page = 1, limit = 50, search?: string, brandId?: string) {
+    const where: any = {};
+    if (search) {
+      where.name = { contains: search, mode: 'insensitive' };
+    }
+    if (brandId) {
+      where.brandId = brandId;
+    }
+
+    const [models, total] = await Promise.all([
+      this.prisma.model.findMany({
+        where,
+        include: {
+          brand: { select: { id: true, name: true, status: true } },
+          _count: { select: { listings: true } },
+          createdBy: { select: { id: true, email: true, name: true } },
+          updatedBy: { select: { id: true, email: true, name: true } },
+        },
+        orderBy: { name: 'asc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.model.count({ where }),
+    ]);
+
+    return {
+      data: models,
+      total,
+      page,
+      limit,
+      pages: Math.ceil(total / limit),
+    };
+  }
+
   async approveBrand(brandId: string, adminId: string, options?: { createCanonical?: boolean; name?: string; description?: string; website?: string }) {
     // Get the proposed brand
     const proposedBrand = await this.prisma.proposedBrand.findUnique({
@@ -314,8 +380,8 @@ export class AdminService {
     return brand;
   }
 
-  // Edit a canonical brand with audit
-  async editCanonicalBrand(id: string, data: Partial<{ name: string; description?: string; website?: string; metaTitle?: string; metaDescription?: string }>, adminId: string) {
+  // Edit a canonical brand with audit (supports status changes)
+  async editCanonicalBrand(id: string, data: Partial<{ name: string; description?: string; website?: string; metaTitle?: string; metaDescription?: string; status?: 'PENDING' | 'APPROVED' | 'SYSTEM' | 'OBSOLETE' | 'REJECTED' }>, adminId: string) {
     const existingBrand = await this.prisma.brand.findUnique({ where: { id } });
     if (!existingBrand) throw new Error('Brand not found');
 
@@ -372,8 +438,8 @@ export class AdminService {
     return model;
   }
 
-  // Edit a canonical model with audit
-  async editCanonicalModel(id: string, data: Partial<{ name: string; description?: string; metaTitle?: string; metaDescription?: string }>, adminId: string) {
+  // Edit a canonical model with audit (supports status changes)
+  async editCanonicalModel(id: string, data: Partial<{ name: string; description?: string; metaTitle?: string; metaDescription?: string; status?: 'PENDING' | 'APPROVED' | 'SYSTEM' | 'OBSOLETE' | 'REJECTED' }>, adminId: string) {
     const existingModel = await this.prisma.model.findUnique({ where: { id } });
     if (!existingModel) throw new Error('Model not found');
 

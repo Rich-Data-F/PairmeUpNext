@@ -883,6 +883,7 @@ enum BrandStatus {
   APPROVED
   REJECTED
   SYSTEM
+  OBSOLETE
 }
 
 enum ModelStatus {
@@ -890,6 +891,7 @@ enum ModelStatus {
   APPROVED
   REJECTED
   SYSTEM
+  OBSOLETE
 }
 
 enum ListingIntent {

@@ -24,6 +24,27 @@ export class AdminController {
     return this.adminService.getProposedModels();
   }
 
+  @Get('brands')
+  @ApiOperation({ summary: 'Get all canonical brands (all statuses)' })
+  @ApiResponse({ status: 200, description: 'Canonical brands retrieved successfully' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  async getCanonicalBrands(@Query() query: any) {
+    return this.adminService.getCanonicalBrands(query.page || 1, query.limit || 50, query.search);
+  }
+
+  @Get('models')
+  @ApiOperation({ summary: 'Get all canonical models (all statuses)' })
+  @ApiResponse({ status: 200, description: 'Canonical models retrieved successfully' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'brandId', required: false, type: String })
+  async getCanonicalModels(@Query() query: any) {
+    return this.adminService.getCanonicalModels(query.page || 1, query.limit || 50, query.search, query.brandId);
+  }
+
   @Post('proposed-brands/:id/approve')
   @ApiOperation({ summary: 'Approve a proposed brand' })
   @ApiResponse({ status: 200, description: 'Brand approved successfully' })

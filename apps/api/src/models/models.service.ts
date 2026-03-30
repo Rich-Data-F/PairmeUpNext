@@ -45,10 +45,12 @@ export class ModelsService {
   }
 
   // New helper to fetch canonical models, optionally filtered by brand
+  // Includes PENDING models so user-created models appear immediately in dropdowns
+  // Excludes OBSOLETE and REJECTED models from being available for selection
   async findAllCanonical(brandId?: string) {
     const where: any = {
       isActive: true,
-      status: { in: ['APPROVED', 'SYSTEM'] },
+      status: { in: ['APPROVED', 'SYSTEM', 'PENDING'] },
     };
     if (brandId) {
       where.brandId = brandId;

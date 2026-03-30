@@ -457,6 +457,7 @@ enum BrandStatus {
   APPROVED   // Approved by admin, visible to all users
   REJECTED   // Rejected by admin
   SYSTEM     // Created by system/admin (pre-approved)
+  OBSOLETE   // No longer available for new listings
 }
 
 enum ModelStatus {
@@ -464,6 +465,7 @@ enum ModelStatus {
   APPROVED   // Approved by admin, visible to all users
   REJECTED   // Rejected by admin
   SYSTEM     // Created by system/admin (pre-approved)
+  OBSOLETE   // No longer available for new listings
 }
 
 enum ListingIntent {

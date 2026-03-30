@@ -125,8 +125,8 @@ export default function AdminPage() {
         const [brandsRes, modelsRes, canonicalBrandsRes, canonicalModelsRes] = await Promise.all([
           fetch('/api/proxy/admin/proposed-brands'),
           fetch('/api/proxy/admin/proposed-models'),
-          fetch('/api/proxy/brands'), // Assuming this endpoint exists for canonical brands
-          fetch('/api/proxy/models') // Assuming this endpoint exists for canonical models
+          fetch('/api/proxy/admin/brands?limit=100'), // Get all canonical brands
+          fetch('/api/proxy/admin/models?limit=100') // Get all canonical models
         ]);
 
         if (brandsRes.ok) {
@@ -149,50 +149,15 @@ export default function AdminPage() {
           setCanonicalModels(canonicalModelsData.data || canonicalModelsData);
         }
 
-          // Load model assignments for review
-              if (canonicalBrandsRes.ok) {
-                // Since canonicalBrandsRes is already consumed, fetch it again or use the state
-                // But the easiest is just map from canonicalBrandsData if we structured it
-                const brandsObj = await fetch('/api/proxy/brands/canonical').then(r => r.json());
-                
-                const mockAssignments = [
-                  { 
-                    model: { 
-                      id: '1', 
-                      name: 'AirPods Pro', 
-                      brandId: 'apple', 
-                      description: 'Wireless earbuds',
-                      status: 'APPROVED',
-                      createdAt: new Date().toISOString(),
-                      updatedAt: new Date().toISOString()
-                    }, 
-                    brand: brandsObj.find((b: any) => b.slug === 'apple') 
-                  },
-              { 
-                model: { 
-                  id: '2', 
-                  name: 'Galaxy Buds', 
-                  brandId: 'samsung', 
-                  description: 'True wireless earbuds',
-                  status: 'APPROVED',
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString()
-                }, 
-                brand: brandsObj.find((b: any) => b.slug === 'samsung') 
-              },
-            ];
-            setModelAssignments(mockAssignments);
-          }
-
-          // Load users for management
-          const usersRes = await fetch('/api/proxy/admin/users');
-          if (usersRes.ok) {
-            const usersData = await usersRes.json();
-            setUsers(usersData.users || []);
-          }
-        } catch (error) {
-          console.error('Failed to load data:', error);
+        // Load users for management
+        const usersRes = await fetch('/api/proxy/admin/users');
+        if (usersRes.ok) {
+          const usersData = await usersRes.json();
+          setUsers(usersData.users || []);
         }
+      } catch (error) {
+        console.error('Failed to load data:', error);
+      }
     };
 
     loadData();
@@ -269,30 +234,65 @@ export default function AdminPage() {
 
     setLoading(true);
     try {
-      const endpoint = editingItem.type === 'brand' 
-        ? `/api/proxy/admin/proposed-brands/${editingItem.id}`
-        : `/api/proxy/admin/proposed-models/${editingItem.id}`;
+      // Determine if it's a proposed or canonical item
+      const isProposed = !editingItem.data.status || editingItem.data.status === 'PENDING' && editingItem.id === 'new';
+      const isCanonical = editingItem.data.status && ['APPROVED', 'SYSTEM', 'OBSOLETE', 'REJECTED'].includes(editingItem.data.status);
+      
+      let endpoint = '';
+      if (editingItem.id === 'new') {
+        // Creating new canonical item
+        endpoint = editingItem.type === 'brand' 
+          ? `/api/proxy/admin/brands`
+          : `/api/proxy/admin/models`;
+      } else if (isCanonical || editingItem.data.status) {
+        // Editing canonical item
+        endpoint = editingItem.type === 'brand' 
+          ? `/api/proxy/admin/brands/${editingItem.id}`
+          : `/api/proxy/admin/models/${editingItem.id}`;
+      } else {
+        // Editing proposed item
+        endpoint = editingItem.type === 'brand' 
+          ? `/api/proxy/admin/proposed-brands/${editingItem.id}`
+          : `/api/proxy/admin/proposed-models/${editingItem.id}`;
+      }
+
+      const method = editingItem.id === 'new' ? 'POST' : 'PATCH';
 
       const res = await fetch(endpoint, {
-        method: 'PATCH',
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editingItem.data),
       });
 
       if (res.ok) {
-        // Refresh the data
-        const refreshRes = await fetch('/api/proxy/admin/proposed-' + editingItem.type + 's');
-        if (refreshRes.ok) {
-          const data = await refreshRes.json();
-          if (editingItem.type === 'brand') {
-            setProposedBrands(data);
-          } else {
-            setProposedModels(data);
+        // Refresh the appropriate data
+        if (editingItem.data.status) {
+          // Canonical item
+          const refreshRes = await fetch(`/api/proxy/admin/${editingItem.type}s?limit=100`);
+          if (refreshRes.ok) {
+            const data = await refreshRes.json();
+            if (editingItem.type === 'brand') {
+              setCanonicalBrands(data.data || data);
+            } else {
+              setCanonicalModels(data.data || data);
+            }
+          }
+        } else {
+          // Proposed item
+          const refreshRes = await fetch(`/api/proxy/admin/proposed-${editingItem.type}s`);
+          if (refreshRes.ok) {
+            const data = await refreshRes.json();
+            if (editingItem.type === 'brand') {
+              setProposedBrands(data);
+            } else {
+              setProposedModels(data);
+            }
           }
         }
         setEditingItem(null);
       } else {
-        console.error('Failed to update item');
+        const errorData = await res.json().catch(() => ({}));
+        console.error('Failed to update item:', errorData);
       }
     } catch (error) {
       console.error('Failed to update item:', error);
@@ -476,7 +476,7 @@ export default function AdminPage() {
         <div>
           <h2 className="text-xl font-semibold mb-4">Canonical Brands</h2>
           <div className="mb-4">
-            <button className="btn btn-primary btn-sm">Create New Brand</button>
+            <button className="btn btn-primary btn-sm" onClick={() => setEditingItem({type: 'brand', id: 'new', data: {name: '', description: '', website: '', status: 'APPROVED'}})}>Create New Brand</button>
           </div>
           <div className="space-y-4">
             {canonicalBrands.map((brand) => (
@@ -485,12 +485,18 @@ export default function AdminPage() {
                   <h3 className="card-title">{brand.name}</h3>
                   {brand.description && <p className="text-sm text-gray-600">{brand.description}</p>}
                   {brand.website && <p className="text-sm">Website: {brand.website}</p>}
+                  <div className="flex gap-2 text-xs">
+                    <span className={`badge ${brand.status === 'APPROVED' ? 'badge-success' : brand.status === 'SYSTEM' ? 'badge-info' : brand.status === 'PENDING' ? 'badge-warning' : brand.status === 'OBSOLETE' ? 'badge-error' : 'badge-ghost'}`}>
+                      {brand.status}
+                    </span>
+                    {brand._count?.listings > 0 && <span className="badge badge-sm">{brand._count.listings} listings</span>}
+                    {brand._count?.models > 0 && <span className="badge badge-sm">{brand._count.models} models</span>}
+                  </div>
                   <p className="text-xs text-gray-500">
-                    Status: {brand.status} | Updated: {new Date(brand.updatedAt).toLocaleDateString()}
+                    Updated: {new Date(brand.updatedAt).toLocaleDateString()}
                   </p>
                   <div className="card-actions justify-end">
-                    <button className="btn btn-info btn-sm">Edit</button>
-                    <button className="btn btn-secondary btn-sm">View History</button>
+                    <button className="btn btn-info btn-sm" onClick={() => setEditingItem({type: 'brand', id: brand.id, data: brand})}>Edit</button>
                   </div>
                 </div>
               </div>
@@ -506,21 +512,26 @@ export default function AdminPage() {
         <div>
           <h2 className="text-xl font-semibold mb-4">Canonical Models</h2>
           <div className="mb-4">
-            <button className="btn btn-primary btn-sm">Create New Model</button>
+            <button className="btn btn-primary btn-sm" onClick={() => setEditingItem({type: 'model', id: 'new', data: {name: '', description: '', status: 'APPROVED', brandId: ''}})}>Create New Model</button>
           </div>
           <div className="space-y-4">
             {canonicalModels.map((model) => (
               <div key={model.id} className="card bg-base-100 shadow-md">
                 <div className="card-body">
                   <h3 className="card-title">{model.name}</h3>
-                  {model.brandName && <p className="text-sm">Brand: {model.brandName}</p>}
+                  {model.brand && <p className="text-sm">Brand: {model.brand.name}</p>}
                   {model.description && <p className="text-sm text-gray-600">{model.description}</p>}
+                  <div className="flex gap-2 text-xs">
+                    <span className={`badge ${model.status === 'APPROVED' ? 'badge-success' : model.status === 'SYSTEM' ? 'badge-info' : model.status === 'PENDING' ? 'badge-warning' : model.status === 'OBSOLETE' ? 'badge-error' : 'badge-ghost'}`}>
+                      {model.status}
+                    </span>
+                    {model._count?.listings > 0 && <span className="badge badge-sm">{model._count.listings} listings</span>}
+                  </div>
                   <p className="text-xs text-gray-500">
-                    Status: {model.status} | Updated: {new Date(model.updatedAt).toLocaleDateString()}
+                    Updated: {new Date(model.updatedAt).toLocaleDateString()}
                   </p>
                   <div className="card-actions justify-end">
-                    <button className="btn btn-info btn-sm">Edit</button>
-                    <button className="btn btn-secondary btn-sm">View History</button>
+                    <button className="btn btn-info btn-sm" onClick={() => setEditingItem({type: 'model', id: model.id, data: model})}>Edit</button>
                   </div>
                 </div>
               </div>
@@ -535,14 +546,14 @@ export default function AdminPage() {
       {/* Edit Modal */}
       {editingItem && (
         <div className="modal modal-open">
-          <div className="modal-box">
+          <div className="modal-box max-w-2xl">
             <h3 className="font-bold text-lg">
-              Edit {editingItem.type === 'brand' ? 'Proposed Brand' : 'Proposed Model'}
+              {editingItem.id === 'new' ? 'Create' : 'Edit'} {editingItem.type === 'brand' ? 'Brand' : 'Model'} {editingItem.data.status && `(${editingItem.data.status})`}
             </h3>
-            <form onSubmit={handleEditSubmit} className="py-4">
+            <form onSubmit={handleEditSubmit} className="py-4 space-y-4">
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">Name</span>
+                  <span className="label-text font-semibold">Name *</span>
                 </label>
                 <input
                   type="text"
@@ -553,22 +564,23 @@ export default function AdminPage() {
                 />
               </div>
               
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text font-semibold">Description</span>
+                </label>
+                <textarea
+                  className="textarea textarea-bordered"
+                  rows={3}
+                  value={editingItem.data.description || ''}
+                  onChange={(e) => setEditingItem({...editingItem, data: {...editingItem.data, description: e.target.value}})}
+                />
+              </div>
+
               {editingItem.type === 'brand' && (
                 <>
                   <div className="form-control">
                     <label className="label">
-                      <span className="label-text">Description</span>
-                    </label>
-                    <textarea
-                      className="textarea textarea-bordered"
-                      value={editingItem.data.description || ''}
-                      onChange={(e) => setEditingItem({...editingItem, data: {...editingItem.data, description: e.target.value}})}
-                    />
-                  </div>
-                  
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Website</span>
+                      <span className="label-text font-semibold">Website</span>
                     </label>
                     <input
                       type="url"
@@ -579,30 +591,61 @@ export default function AdminPage() {
                   </div>
                 </>
               )}
-              
+
               {editingItem.type === 'model' && (
                 <>
                   <div className="form-control">
                     <label className="label">
-                      <span className="label-text">Description</span>
+                      <span className="label-text font-semibold">Brand *</span>
                     </label>
-                    <textarea
-                      className="textarea textarea-bordered"
-                      value={editingItem.data.description || ''}
-                      onChange={(e) => setEditingItem({...editingItem, data: {...editingItem.data, description: e.target.value}})}
-                    />
+                    <select 
+                      className="select select-bordered"
+                      value={editingItem.data.brandId || ''}
+                      onChange={(e) => setEditingItem({...editingItem, data: {...editingItem.data, brandId: e.target.value}})}
+                      required
+                    >
+                      <option value="">Select Brand</option>
+                      {canonicalBrands.map(b => (
+                        <option key={b.id} value={b.id}>{b.name}</option>
+                      ))}
+                    </select>
                   </div>
                 </>
               )}
               
+              {/* Status dropdown for canonical items */}
+              {editingItem.data.status && ['APPROVED', 'SYSTEM', 'PENDING', 'OBSOLETE', 'REJECTED'].includes(editingItem.data.status) && (
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-semibold">Status</span>
+                  </label>
+                  <select 
+                    className="select select-bordered"
+                    value={editingItem.data.status || 'PENDING'}
+                    onChange={(e) => setEditingItem({...editingItem, data: {...editingItem.data, status: e.target.value}})}
+                  >
+                    <option value="PENDING">Pending (Awaiting Review)</option>
+                    <option value="APPROVED">Approved (Active)</option>
+                    <option value="SYSTEM">System (Pre-approved)</option>
+                    <option value="OBSOLETE">Obsolete (Historical)</option>
+                    <option value="REJECTED">Rejected</option>
+                  </select>
+                  <label className="label">
+                    <span className="label-text-alt">Items marked as OBSOLETE will not appear in dropdowns but remain for historical reference</span>
+                  </label>
+                </div>
+              )}
+              
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">Submission Note</span>
+                  <span className="label-text font-semibold">Notes</span>
                 </label>
                 <textarea
                   className="textarea textarea-bordered"
-                  value={editingItem.data.submissionNote || ''}
-                  onChange={(e) => setEditingItem({...editingItem, data: {...editingItem.data, submissionNote: e.target.value}})}
+                  rows={2}
+                  placeholder="Admin notes or change reasons"
+                  value={editingItem.data.adminNote || editingItem.data.submissionNote || ''}
+                  onChange={(e) => setEditingItem({...editingItem, data: {...editingItem.data, adminNote: e.target.value, submissionNote: e.target.value}})}
                 />
               </div>
               
@@ -611,10 +654,11 @@ export default function AdminPage() {
                   Cancel
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={loading}>
-                  Save Changes
+                  {loading ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </form>
+            <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" onClick={() => setEditingItem(null)}>✕</button>
           </div>
         </div>
       )}
