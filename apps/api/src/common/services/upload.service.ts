@@ -52,14 +52,47 @@ export class UploadService {
     const defaultPort = useSSL ? 443 : 9000;
     const port = parseInt(this.configService.get<string>('MINIO_PORT') || defaultPort.toString());
 
-    this.minioClient = new Minio.Client({
-      endPoint: this.configService.get<string>('MINIO_ENDPOINT') || 'localhost',
-      port,
-      useSSL,
-      accessKey: this.configService.get<string>('MINIO_ACCESS_KEY') || 'minioadmin',
-      secretKey: this.configService.get<string>('MINIO_SECRET_KEY') || 'minioadmin123',
-      region: this.configService.get<string>('MINIO_REGION') || 'us-east-1',
-    });
+    const accessKey = this.configService.get<string>('MINIO_ACCESS_KEY') || 'minioadmin';
+    const secretKey = this.configService.get<string>('MINIO_SECRET_KEY') || 'minioadmin123';
+    const endpoint = this.configService.get<string>('MINIO_ENDPOINT') || 'localhost';
+    
+    // Log credential length for debugging
+    console.log(`🔐 Access Key Length: ${accessKey.length} (MinIO expects 32, Cloudflare R2 typically uses longer)`);
+    console.log(`📍 Endpoint: ${endpoint}`);
+    
+    // For Cloudflare R2, credentials can be longer than 32 characters
+    // Validate that we have proper Cloudflare R2 format if key is long
+    if (accessKey.length > 32 && endpoint.includes('r2.cloudflarestorage.com')) {
+      console.warn('⚠️  Using Cloudflare R2 with extended credentials (length: ' + accessKey.length + ')');
+      console.log('📝 Ensure credentials format is correct for R2');
+    } else if (accessKey.length > 32 && !endpoint.includes('r2')) {
+      console.error('❌ Access key is 53 characters but endpoint is not R2!');
+      console.error('❌ MinIO/S3 standard requires 32-char keys, Cloudflare R2 requires R2-specific format');
+      throw new Error(
+        `Invalid credentials: Access key length is ${accessKey.length}, but should be 32 for standard S3/MinIO. ` +
+        `For Cloudflare R2, ensure MINIO_ENDPOINT ends with 'r2.cloudflarestorage.com' and credentials are in the correct format.`
+      );
+    }
+
+    try {
+      this.minioClient = new Minio.Client({
+        endPoint: endpoint,
+        port,
+        useSSL,
+        accessKey,
+        secretKey,
+        region: this.configService.get<string>('MINIO_REGION') || 'us-east-1',
+      });
+      console.log('✅ MinIO/R2 client initialized successfully');
+    } catch (error: any) {
+      console.error('❌ Failed to initialize MinIO client:', error.message);
+      if (error.message.includes('length')) {
+        console.error('💡 Credential length validation error detected');
+        console.error('💡 For Cloudflare R2: Use Account ID:Access Key ID format');
+        console.error('💡 For MinIO: Ensure access key is exactly 32 characters');
+      }
+      throw error;
+    }
 
     this.bucketName = this.configService.get<string>('MINIO_BUCKET_NAME') || 'earbudhub-uploads';
     this.allowedMimeTypes = (
