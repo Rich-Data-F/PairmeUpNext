@@ -75,19 +75,18 @@ export async function PATCH(
   try {
     const body = await request.json();
     const authConfig = withAuthHeaderFromRequest(request);
+    const headers = new Headers(authConfig.headers || {});
+    headers.set('Content-Type', 'application/json');
     
     const response = await fetch(`${getApiBase()}/listings/${id}`, {
       method: 'PATCH',
-      ...authConfig,
-      headers: {
-        ...authConfig.headers,
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(body),
     });
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
+      console.error('Backend PATCH failed:', { status: response.status, data });
       return new Response(JSON.stringify(data), { 
         status: response.status, 
         headers: { 'Content-Type': 'application/json' } 
@@ -99,6 +98,7 @@ export async function PATCH(
       headers: { 'Content-Type': 'application/json' } 
     });
   } catch (error: any) {
+    console.error('Proxy PATCH error:', error);
     return new Response(JSON.stringify({ error: error.message }), { 
       status: 500, 
       headers: { 'Content-Type': 'application/json' } 
@@ -116,14 +116,16 @@ export async function DELETE(
   
   try {
     const authConfig = withAuthHeaderFromRequest(request);
+    const headers = new Headers(authConfig.headers || {});
     
     const response = await fetch(`${getApiBase()}/listings/${id}`, {
       method: 'DELETE',
-      ...authConfig,
+      headers,
     });
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
+      console.error('Backend DELETE failed:', { status: response.status, data });
       return new Response(JSON.stringify(data), { 
         status: response.status, 
         headers: { 'Content-Type': 'application/json' } 
@@ -135,6 +137,7 @@ export async function DELETE(
       headers: { 'Content-Type': 'application/json' } 
     });
   } catch (error: any) {
+    console.error('Proxy DELETE error:', error);
     return new Response(JSON.stringify({ error: error.message }), { 
       status: 500, 
       headers: { 'Content-Type': 'application/json' } 
