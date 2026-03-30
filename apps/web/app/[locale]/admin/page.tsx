@@ -536,7 +536,7 @@ export default function AdminPage() {
                     <span className={`badge ${model.status === 'APPROVED' ? 'badge-success' : model.status === 'SYSTEM' ? 'badge-info' : model.status === 'PENDING' ? 'badge-warning' : model.status === 'OBSOLETE' ? 'badge-error' : 'badge-ghost'}`}>
                       {model.status}
                     </span>
-                    {model._count?.listings > 0 && <span className="badge badge-sm">{model._count.listings} listings</span>}
+                    {(model._count?.listings ?? 0) > 0 && <span className="badge badge-sm">{model._count?.listings} listings</span>}
                   </div>
                   <p className="text-xs text-gray-500">
                     Updated: {new Date(model.updatedAt).toLocaleDateString()}
