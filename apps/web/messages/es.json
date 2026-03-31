@@ -34,9 +34,16 @@
   },
   "hero": {
     "headline": "Encuentra tu auricular perdido",
-    "subheadline": "Marketplace profesional para auriculares individuales, estuches de carga y accesorios. Compra, vende y encuentra objetos perdidos con nuestra plataforma segura y funciones de cumplimiento legal.",
+    "subheadline": "Plataforma colaborativa de intercambio de auriculares individuales, estuches de carga y accesorios. Compra, vende, intercambia, declara pérdida o hallazgo de auriculares.",
     "browseMarketplace": "Explorar marketplace",
-    "reportLostItem": "Reportar objeto perdido"
+    "reportLostItem": "Reportar objeto perdido",
+    "searchPlaceholder": "Buscar auriculares, marcas, modelos...",
+    "locationPlaceholder": "Ciudad o región...",
+    "searchButton": "Buscar",
+    "lostFoundPromoTitle": "¿Perdiste o encontraste un auricular?",
+    "lostFoundPromoDesc": "Declara un objeto perdido o encontrado y ayuda a reunir los auriculares con sus dueños.",
+    "goLostFound": "Perdido y Encontrado",
+    "goMarketplace": "Ir al Marketplace"
   },
   "features": {
     "title": "Funciones",

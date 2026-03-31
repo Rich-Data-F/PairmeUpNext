@@ -34,9 +34,16 @@
   },
   "hero": {
     "headline": "Finden Sie Ihren fehlenden Ohrhörer",
-    "subheadline": "Professioneller Marktplatz für einzelne Ohrhörer, Ladeetuis und Zubehör. Kaufen, verkaufen und finden Sie verlorene Gegenstände mit unserer sicheren Plattform.",
+    "subheadline": "Kollaborative Austauschplattform für einzelne Ohrhörer, Ladehüllen und Zubehör. Kaufen, verkaufen, tauschen, Verlust oder Fund von Ohrhörern melden.",
     "browseMarketplace": "Marktplatz durchsuchen",
-    "reportLostItem": "Verlorenes Objekt melden"
+    "reportLostItem": "Verlorenes Objekt melden",
+    "searchPlaceholder": "Ohrhörer, Marken, Modelle suchen...",
+    "locationPlaceholder": "Stadt oder Region...",
+    "searchButton": "Suchen",
+    "lostFoundPromoTitle": "Ohrhörer verloren oder gefunden?",
+    "lostFoundPromoDesc": "Melden Sie einen verlorenen oder gefundenen Gegenstand und helfen Sie, Ohrhörer mit ihren Besitzern zusammenzuführen.",
+    "goLostFound": "Verloren & Gefunden",
+    "goMarketplace": "Zum Marktplatz"
   },
   "features": {
     "title": "Funktionen",

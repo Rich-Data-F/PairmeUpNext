@@ -34,9 +34,16 @@
   },
   "hero": {
     "headline": "Find Your Missing Earbud",
-    "subheadline": "Professional marketplace for individual earbuds, charging cases, and accessories. Buy, sell, and find lost items with our secure platform and legal compliance features.",
+    "subheadline": "Collaborative exchange platform for individual earbuds, charging cases, and accessories. Buy, sell, trade, declare loss or find of earbud items.",
     "browseMarketplace": "Browse Marketplace",
-    "reportLostItem": "Report Lost Item"
+    "reportLostItem": "Report Lost Item",
+    "searchPlaceholder": "Search earbuds, brands, models...",
+    "locationPlaceholder": "City or region...",
+    "searchButton": "Search",
+    "lostFoundPromoTitle": "Lost or Found an Earbud?",
+    "lostFoundPromoDesc": "Declare a lost or found item and help reunite earbuds with their owners.",
+    "goLostFound": "Lost & Found",
+    "goMarketplace": "Go to Marketplace"
   },
   "features": {
     "title": "Features",

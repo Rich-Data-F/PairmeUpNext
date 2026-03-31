@@ -1,14 +1,14 @@
 /*
-EarbudHub Marketplace - Professional Earbud Parts Marketplace with Lost/Stolen Registry
+PairAgain - Collaborative Earbud Exchange Platform with Lost/Found Registry
 
 PROJECT OVERVIEW:
-- Full-stack marketplace for buying/selling individual earbuds, charging cases, and accessories
-- Integrated lost/stolen registry with smart matching algorithm
+- Full-stack platform for buying, selling, trading individual earbuds, charging cases, and accessories
+- Integrated lost/found registry with smart matching algorithm
 - Advanced ratings system with 12+ criteria and weighted scoring
 - Blog system with brand/model taxonomy
 - City-level geolocation using GeoDB Cities API
 - Trust features: identifier masking, verification badges, escrow payments
-- Found items registry with legal compliance workflow
+- Found items registry with community-driven matching
 
 TECHNICAL STACK:
 - Frontend: Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS
@@ -36,10 +36,10 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: 'PairAgain - Professional Earbud Parts Marketplace',
+    default: 'PairAgain - Collaborative Earbud Exchange Platform',
     template: '%s | PairAgain',
   },
-  description: 'Buy and sell individual earbuds, charging cases, and accessories. Professional marketplace with lost/stolen registry and legal compliance.',
+  description: 'Buy, sell, trade, declare loss or find of earbud items. Collaborative exchange platform for individual earbuds, charging cases, and accessories.',
   keywords: [
     'earbuds',
     'airpods',
@@ -70,8 +70,8 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://pairagain.com',
     siteName: 'PairAgain',
-    title: 'PairAgain - Professional Earbud Parts Marketplace',
-    description: 'Buy and sell individual earbuds, charging cases, and accessories. Professional marketplace with lost/stolen registry.',
+    title: 'PairAgain - Collaborative Earbud Exchange Platform',
+    description: 'Buy, sell, trade, declare loss or find of earbud items. Collaborative exchange platform for earbuds, cases, and accessories.',
     images: [
       {
         url: '/og-image.jpg',

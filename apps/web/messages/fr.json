@@ -34,9 +34,16 @@
   },
   "hero": {
     "headline": "Retrouvez votre écouteur manquant",
-    "subheadline": "Place de marché professionnelle pour écouteurs individuels, étuis de chargement et accessoires. Achetez, vendez et retrouvez des objets perdus avec notre plateforme sécurisée.",
+    "subheadline": "Plateforme collaborative d'échange d'écouteurs individuels, boîtiers de charge et accessoires. Achetez, vendez, échangez, déclarez la perte ou la découverte d'écouteurs.",
     "browseMarketplace": "Parcourir le marché",
-    "reportLostItem": "Signaler un objet perdu"
+    "reportLostItem": "Signaler un objet perdu",
+    "searchPlaceholder": "Rechercher écouteurs, marques, modèles...",
+    "locationPlaceholder": "Ville ou région...",
+    "searchButton": "Rechercher",
+    "lostFoundPromoTitle": "Perdu ou trouvé un écouteur ?",
+    "lostFoundPromoDesc": "Déclarez un objet perdu ou trouvé et aidez à réunir les écouteurs avec leurs propriétaires.",
+    "goLostFound": "Perdu & Trouvé",
+    "goMarketplace": "Aller au Marketplace"
   },
   "features": {
     "title": "Fonctionnalités",
