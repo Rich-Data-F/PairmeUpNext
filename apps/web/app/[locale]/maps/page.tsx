@@ -17,9 +17,22 @@ export default function MapsPage() {
     async function fetchListings() {
       try {
         setIsLoading(true);
-        const res = await fetch('/api/proxy/listings?limit=1000');
-        const data = await res.json();
-        setListings(data.data || []);
+        // Paginate through all listings (limit=100 per page, up to 1000 total)
+        let allItems: any[] = [];
+        let page = 1;
+        const limit = 100;
+        while (true) {
+          const res = await fetch(`/api/proxy/listings?limit=${limit}&page=${page}`);
+          if (!res.ok) break;
+          const data = await res.json();
+          const items = data.data || [];
+          allItems = allItems.concat(items);
+          const pagination = data.pagination;
+          if (!pagination || page >= pagination.pages || items.length < limit) break;
+          page++;
+          if (page > 10) break; // safety cap
+        }
+        setListings(allItems);
       } catch (err) {
         console.error('Failed to load listings:', err);
       } finally {

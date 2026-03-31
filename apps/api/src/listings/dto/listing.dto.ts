@@ -335,7 +335,7 @@ export class ListingQueryDto {
   @Type(() => Number)
   @IsNumber()
   @Min(1)
-  @Max(100)
+  @Max(1000)
   limit?: number = 20;
 
   @ApiPropertyOptional({ description: 'Search query for title and description' })

@@ -98,11 +98,22 @@ export function LostStolenPage() {
     async function fetchReports() {
       try {
         setIsLoading(true);
-        // Fetch all listings: both registry items (price=0) and classified ads (price>0)
-        // This unified approach shows everything on the map with different styling
-        const res = await fetch('/api/proxy/listings?limit=1000');
-        const data = await res.json();
-        setReports(data.data || []);
+        // Paginate through all listings (limit=100 per page, up to 1000 total)
+        let allItems: any[] = [];
+        let page = 1;
+        const limit = 100;
+        while (true) {
+          const res = await fetch(`/api/proxy/listings?limit=${limit}&page=${page}`);
+          if (!res.ok) break;
+          const data = await res.json();
+          const items = data.data || [];
+          allItems = allItems.concat(items);
+          const pagination = data.pagination;
+          if (!pagination || page >= pagination.pages || items.length < limit) break;
+          page++;
+          if (page > 10) break; // safety cap
+        }
+        setReports(allItems);
       } catch (err) {
         console.error('Failed to load reports:', err);
       } finally {

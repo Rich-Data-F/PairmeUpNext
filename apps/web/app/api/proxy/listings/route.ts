@@ -18,10 +18,9 @@ export async function GET(request: NextRequest) {
 
     const data = await resp.json().catch(() => ({}));
     if (!resp.ok) {
-      return NextResponse.json(
-        { error: data?.message || 'Failed to fetch listings' },
-        { status: resp.status },
-      );
+      console.error('❌ Backend listings error:', resp.status, data);
+      // Return empty-but-valid structure so frontend doesn't break
+      return NextResponse.json({ data: [], pagination: { page: 1, limit: 20, total: 0, pages: 0 } });
     }
     return NextResponse.json(data);
   } catch (e: any) {
