@@ -94,7 +94,7 @@ export class UploadService {
       throw error;
     }
 
-    this.bucketName = this.configService.get<string>('MINIO_BUCKET_NAME') || 'earbudhub-uploads';
+    this.bucketName = this.configService.get<string>('MINIO_BUCKET_NAME') || 'pair-me-up';
     this.allowedMimeTypes = (
       this.configService.get<string>('ALLOWED_FILE_TYPES') || 'image/jpeg,image/png,image/webp'
     ).split(',');

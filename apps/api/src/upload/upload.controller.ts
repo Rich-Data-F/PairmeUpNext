@@ -150,7 +150,7 @@ export class UploadController {
         // Redirect to MinIO public URL if it's a key
         // Or actually, just return the URL directly from Common service
         // Since we don't have the key directly if it was an old path, let's try to infer
-        const url = `http://${process.env.MINIO_ENDPOINT || 'localhost'}:${process.env.MINIO_PORT || '9000'}/${process.env.MINIO_BUCKET_NAME || 'earbudhub-uploads'}/${file.path}`;
+        const url = `http://${process.env.MINIO_ENDPOINT || 'localhost'}:${process.env.MINIO_PORT || '9000'}/${process.env.MINIO_BUCKET_NAME || 'pair-me-up'}/${file.path}`;
         return res.redirect(url);
       }
 
@@ -179,7 +179,7 @@ export class UploadController {
       id: f.id,
       originalName: f.originalName,
       filename: f.filename,
-      url: `http://${process.env.MINIO_ENDPOINT || 'localhost'}:${process.env.MINIO_PORT || '9000'}/${process.env.MINIO_BUCKET_NAME || 'earbudhub-uploads'}/${f.path}`,
+      url: `http://${process.env.MINIO_ENDPOINT || 'localhost'}:${process.env.MINIO_PORT || '9000'}/${process.env.MINIO_BUCKET_NAME || 'pair-me-up'}/${f.path}`,
       createdAt: f.createdAt,
     }));
   }

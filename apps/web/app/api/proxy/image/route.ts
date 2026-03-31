@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 
       // Generic endpoint/<bucket>/<key> pattern (MinIO)
       if (!objectKey) {
-        const bucketName = process.env.MINIO_BUCKET_NAME || 'earbudhub-uploads';
+        const bucketName = process.env.MINIO_BUCKET_NAME || 'pair-me-up';
         const bucketMatch = rawUrl.match(new RegExp(`/${bucketName}/(.+)`));
         if (bucketMatch) {
           objectKey = bucketMatch[1];
