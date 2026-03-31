@@ -144,6 +144,33 @@ Battery life remains its Achilles' heel, however. With Immersive Audio turned on
       comments: 34,
       tags: ['Bose', 'Audio Quality', 'ANC'],
       featured: false
+    },
+    {
+      id: '6',
+      title: 'Huawei Loss Care: A Built-In Insurance for Your FreeBuds',
+      slug: 'huawei-loss-care-freebuds',
+      excerpt: 'Huawei now offers an official loss-protection plan for FreeBuds owners. Is it worth it, and how does it compare to the secondary market?',
+      content: `Huawei has quietly rolled out a service called "Loss Care" specifically for its FreeBuds product line. The concept is straightforward: pay a small fee when purchasing your FreeBuds, and if you lose a single earbud or the charging case within the coverage period, Huawei will replace it at a significantly reduced cost.
+
+This is a notable move in the true wireless earbud space, where losing a single bud has traditionally meant either buying a full replacement set or turning to the secondary market. Huawei's approach acknowledges a pain point that platforms like PairAgain were built to solve.
+
+**How it works:** After purchasing the Loss Care add-on, users register their FreeBuds through the Huawei Support app. If a component is lost, they can file a claim and receive a replacement unit for a fraction of the retail price. The service currently covers FreeBuds Pro 3, FreeBuds 6i, and select other models.
+
+**The catch:** Loss Care only covers one replacement per coverage period, and the replacement must be for the same model. It doesn't cover physical damage, water damage, or theft — only accidental loss.
+
+**How it compares to PairAgain:** While Huawei's Loss Care is a manufacturer-backed insurance model, PairAgain's marketplace offers more flexibility. On PairAgain, you can find replacement buds across all brands, negotiate prices, and even trade components you no longer need. For Huawei users specifically, Loss Care is a convenient first line of defense, but PairAgain remains the go-to for cross-brand replacements and cost-conscious buyers.
+
+For full details on Huawei's Loss Care program, visit the [official Huawei Loss Care page](https://consumer.huawei.com/fr/support/huawei-loss-care-for-freebuds/).`,
+      author: {
+        name: 'David Park',
+        avatar: '/avatars/david.jpg'
+      },
+      publishedAt: '2026-03-22T08:00:00Z',
+      readTime: 4,
+      views: 1240,
+      comments: 18,
+      tags: ['Huawei', 'Insurance', 'FreeBuds'],
+      featured: false
     }
   ];
 
@@ -205,9 +232,21 @@ Battery life remains its Achilles' heel, however. With Immersive Audio turned on
           </div>
 
           <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed space-y-6">
-            {selectedPost.content.split('\n\n').map((paragraph, idx) => (
-              <p key={idx}>{paragraph}</p>
-            ))}
+            {selectedPost.content.split('\n\n').map((paragraph, idx) => {
+              // Parse markdown-style bold (**text**) and links ([text](url))
+              const parts = paragraph.split(/(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g);
+              return (
+                <p key={idx}>
+                  {parts.map((part, i) => {
+                    const boldMatch = part.match(/^\*\*(.+)\*\*$/);
+                    if (boldMatch) return <strong key={i}>{boldMatch[1]}</strong>;
+                    const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+                    if (linkMatch) return <a key={i} href={linkMatch[2]} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">{linkMatch[1]}</a>;
+                    return <React.Fragment key={i}>{part}</React.Fragment>;
+                  })}
+                </p>
+              );
+            })}
           </div>
 
           <div className="mt-12 pt-8 border-t border-gray-100">
