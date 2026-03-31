@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
       const response = await fetch(backendUrl.toString(), {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(60_000),
       });
       const parsed = await response.json().catch(() => ({}));
       return { response, parsed };

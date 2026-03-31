@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getApiBase } from '@/lib/config';
+import { backendFetch } from '@/lib/backend-fetch';
 
-export async function GET(request: NextRequest) {
+export const maxDuration = 60;
+
+export async function GET(_request: NextRequest) {
   try {
-    const backendUrl = `${getApiBase()}/search/stats`;
-    console.log(`📡 Calling backend stats: ${backendUrl}`);
-
-    const response = await fetch(backendUrl, {
+    console.log('📡 Calling backend stats');
+    const response = await backendFetch('/search/stats', {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      next: { revalidate: 60 }, // Cache stats for 60 seconds
+      timeout: 60_000,
+      retries: 1,
     });
 
     if (!response.ok) {
@@ -20,7 +18,6 @@ export async function GET(request: NextRequest) {
 
     const statsData = await response.json();
     return NextResponse.json(statsData);
-    
   } catch (error) {
     console.error('❌ Stats API error:', error);
     return NextResponse.json({
@@ -28,6 +25,6 @@ export async function GET(request: NextRequest) {
       totalUsers: 0,
       totalViews: { _sum: { views: 0 } },
       error: 'Failed to fetch stats'
-    }, { status: 500 });
+    }, { status: 200 });
   }
 }

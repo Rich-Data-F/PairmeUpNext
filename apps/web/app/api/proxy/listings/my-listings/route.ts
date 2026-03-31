@@ -11,7 +11,13 @@ export async function GET(req: NextRequest) {
     const searchParams = url.searchParams.toString();
     const backendUrl = `${apiBase}/listings/my-listings${searchParams ? `?${searchParams}` : ''}`;
 
-    const resp = await fetch(backendUrl, await withAuthHeader({ method: 'GET' }));
+    const authOpts = await withAuthHeader({ method: 'GET' });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 60_000);
+
+    const resp = await fetch(backendUrl, { ...authOpts, signal: controller.signal });
+    clearTimeout(timer);
+
     const data = await resp.json().catch(() => ({}));
     if (!resp.ok) {
       return NextResponse.json({ error: data?.message || 'Failed to fetch listings' }, { status: resp.status });

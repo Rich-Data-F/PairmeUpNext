@@ -1,20 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 export const runtime = 'nodejs';
-import { getApiBase } from '@/lib/config';
+export const maxDuration = 60;
+import { backendFetch } from '@/lib/backend-fetch';
 
 export async function GET(request: NextRequest) {
   try {
-    const apiBase = getApiBase();
     const searchParams = request.nextUrl.searchParams;
     const queryString = searchParams.toString();
+    const path = `/listings${queryString ? `?${queryString}` : ''}`;
+    console.log('📡 Listings proxy →', path);
 
-    const backendUrl = `${apiBase}/listings${queryString ? `?${queryString}` : ''}`;
-    console.log('📡 Listings proxy →', backendUrl);
-
-    const resp = await fetch(backendUrl, {
+    const resp = await backendFetch(path, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      signal: AbortSignal.timeout(15000),
+      timeout: 60_000,
+      retries: 1,
     });
 
     const data = await resp.json().catch(() => ({}));
@@ -27,6 +26,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(data);
   } catch (e: any) {
     console.error('❌ Listings proxy error:', e);
-    return NextResponse.json({ error: 'Unexpected error' }, { status: 500 });
+    return NextResponse.json({ data: [], pagination: { page: 1, limit: 20, total: 0, pages: 0 } });
   }
 }

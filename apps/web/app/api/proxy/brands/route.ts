@@ -1,34 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { backendFetch } from '@/lib/backend-fetch';
 
-import { getApiBase } from '@/lib/config';
-const API_BASE_URL = getApiBase();
+export const maxDuration = 60;
 
 export async function GET(request: NextRequest) {
   try {
     console.log('🏢 Brands API called');
-    console.log('🔎 Using API base:', API_BASE_URL);
     
-    // Forward query parameters
     const url = new URL(request.url);
-    const searchParams = url.searchParams;
-    const queryString = searchParams.toString();
-    
-    // Always include counts for listing numbers and fetch more results
-    const params = new URLSearchParams(queryString);
+    const params = new URLSearchParams(url.searchParams.toString());
     params.set('include', '_count');
     if (!params.has('limit')) params.set('limit', '100');
     
-    const backendUrl = `${API_BASE_URL}/brands?${params.toString()}`;
-    
-    console.log('📡 Calling backend:', backendUrl);
+    console.log('📡 Calling backend brands');
 
-    const response = await fetch(backendUrl, {
+    const response = await backendFetch(`/brands?${params.toString()}`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      // Add timeout to prevent hanging requests
-      signal: AbortSignal.timeout(10000), // 10 second timeout
+      timeout: 60_000,
+      retries: 1,
     });
 
     if (!response.ok) {
@@ -42,19 +31,9 @@ export async function GET(request: NextRequest) {
 
     const data = await response.json();
     console.log('✅ Successfully fetched brands data');
-    
     return NextResponse.json(data);
   } catch (error) {
     console.error('❌ Error in brands API:', error);
-    
-    // Return a more specific error message
-    if (error instanceof Error && error.name === 'AbortError') {
-      return NextResponse.json(
-        { error: 'Backend request timeout' },
-        { status: 504 }
-      );
-    }
-    
     return NextResponse.json(
       { error: 'Internal server error while fetching brands' },
       { status: 500 }

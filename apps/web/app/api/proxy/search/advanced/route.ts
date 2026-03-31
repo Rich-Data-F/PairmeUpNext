@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getApiBase } from '@/lib/config';
+import { backendFetch } from '@/lib/backend-fetch';
+
+export const maxDuration = 60;
 
 export async function GET(request: NextRequest) {
   try {
@@ -38,16 +40,13 @@ export async function GET(request: NextRequest) {
     if (hasImages === 'true') backendParams.set('hasImages', 'true');
 
   // Call the real backend API
-  const backendUrl = `${getApiBase()}/search/advanced?${backendParams.toString()}`;
+  const backendUrl = `/search/advanced?${backendParams.toString()}`;
     console.log(`📡 Calling backend: ${backendUrl}`);
 
-    const response = await fetch(backendUrl, {
+    const response = await backendFetch(backendUrl, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      // Add timeout to prevent hanging
-      signal: AbortSignal.timeout(10000), // 10 second timeout
+      timeout: 60_000,
+      retries: 1,
     });
 
     if (!response.ok) {

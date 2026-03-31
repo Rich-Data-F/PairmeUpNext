@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getApiBase } from '@/lib/config';
+import { backendFetch } from '@/lib/backend-fetch';
+
+export const maxDuration = 60;
 
 export async function GET(
   request: NextRequest,
@@ -8,12 +10,11 @@ export async function GET(
   const params = await context.params;
   try {
     const { slug } = await params;
-    const apiBase = getApiBase();
-    console.log('📡 Brand detail backend:', `${apiBase}/brands/${slug}`);
-    const res = await fetch(`${apiBase}/brands/${slug}`, {
+    console.log('📡 Brand detail backend:', `/brands/${slug}`);
+    const res = await backendFetch(`/brands/${slug}`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      signal: AbortSignal.timeout(10000),
+      timeout: 60_000,
+      retries: 1,
     });
     if (!res.ok) {
       const text = await res.text().catch(() => '');

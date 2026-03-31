@@ -1,4 +1,7 @@
 import { NextRequest } from 'next/server';
+import { backendFetch } from '@/lib/backend-fetch';
+
+export const maxDuration = 60;
 
 export async function GET(
   request: NextRequest,
@@ -8,19 +11,11 @@ export async function GET(
   try {
     const { id } = await params;
     console.log(`🔍 Fetching listing details for ID: ${id}`);
-    
-    // Call backend API
-  const { getApiBase } = await import('@/lib/config');
-  const backendUrl = `${getApiBase()}/listings/${id}`;
-    console.log(`📡 Calling backend: ${backendUrl}`);
-    
-    const response = await fetch(backendUrl, {
+
+    const response = await backendFetch(`/listings/${id}`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      // Add timeout
-      signal: AbortSignal.timeout(10000), // 10 second timeout
+      timeout: 60_000,
+      retries: 1,
     });
 
     if (!response.ok) {
