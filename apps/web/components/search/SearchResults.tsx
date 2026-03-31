@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { 
   HeartIcon, 
@@ -95,11 +94,10 @@ function ListingCard({ listing }: { listing: any }) {
       <Link href={`/listings/${listing.id}` as any}>
         <div className="relative aspect-square">
           {!imageError ? (
-            <Image
+            <img
               src={primaryImage}
               alt={listing.title}
-              fill
-              className="object-cover"
+              className="absolute inset-0 w-full h-full object-cover"
               onError={() => setImageError(true)}
             />
           ) : (

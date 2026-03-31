@@ -615,9 +615,18 @@ export function EditListingForm({ listingId }: EditListingFormProps) {
           <h2 className="text-xl font-semibold">Photos</h2>
           {existingImages.length > 0 && (
             <div className="grid grid-cols-4 gap-4 mb-4">
-              {existingImages.map((img, idx) => (
+              {existingImages.map((img, idx) => {
+                const imgSrc = (() => {
+                  if (!img || img.startsWith('/')) return img;
+                  if (img.includes('pub-') && img.includes('.r2.dev')) return img;
+                  if (img.startsWith('http://') || img.startsWith('https://')) {
+                    return `/api/proxy/image?url=${encodeURIComponent(img)}`;
+                  }
+                  return img;
+                })();
+                return (
                 <div key={idx} className="relative aspect-square border rounded-lg overflow-hidden group">
-                  <img src={img} className="w-full h-full object-cover" />
+                  <img src={imgSrc} className="w-full h-full object-cover" />
                   <button 
                     type="button"
                     onClick={() => setExistingImages(prev => prev.filter((_, i) => i !== idx))}
@@ -626,7 +635,8 @@ export function EditListingForm({ listingId }: EditListingFormProps) {
                     <TrashIcon className="w-3 h-3" />
                   </button>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
           <PhotoUpload onPhotosChange={setNewPhotos} maxPhotos={5 - existingImages.length} />
