@@ -78,7 +78,17 @@ function ListingCard({ listing }: { listing: any }) {
     }
   };
 
-  const primaryImage = listing.images?.[0] || '/placeholder-image.jpg';
+  const normalizeImageUrl = (url: string) => {
+    if (!url || url.startsWith('/')) return url;
+    if (url.includes('pub-') && url.includes('.r2.dev')) return url;
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return `/api/proxy/image?url=${encodeURIComponent(url)}`;
+    }
+    return url;
+  };
+
+  const rawImage = listing.images?.[0];
+  const primaryImage = rawImage ? normalizeImageUrl(rawImage) : '/placeholder-image.jpg';
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200">
