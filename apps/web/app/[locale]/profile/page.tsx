@@ -189,7 +189,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 mt-20">
+      <div className="max-w-[1440px] mx-auto px-4 mt-20">
         <div className="flex flex-col sm:flex-row items-center sm:items-end justify-between gap-4">
           <div className="text-center sm:text-left">
             <div className="flex items-center gap-2">

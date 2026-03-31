@@ -45,7 +45,7 @@ export default function MapsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b mb-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 text-center">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-10 text-center">
           <h1 className="text-4xl font-extrabold text-gray-900 mb-2 flex items-center justify-center">
             <MapIcon className="w-8 h-8 mr-3 text-blue-600" />
             {t('title')}
@@ -54,7 +54,7 @@ export default function MapsPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <div className="flex items-center justify-between mb-6">
             <div>

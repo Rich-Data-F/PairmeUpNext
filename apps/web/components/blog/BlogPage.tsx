@@ -248,7 +248,7 @@ Battery life remains its Achilles' heel, however. With Immersive Audio turned on
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
             <h1 className="text-3xl font-bold text-gray-900 mb-4">PairAgain Blog</h1>
             <p className="text-xl text-gray-600 mb-8">
@@ -272,7 +272,7 @@ Battery life remains its Achilles' heel, however. With Immersive Audio turned on
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tags Filter */}
         <div className="mb-8">
           <div className="flex flex-wrap gap-2">

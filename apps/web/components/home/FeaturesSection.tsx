@@ -4,7 +4,7 @@ export async function FeaturesSection() {
   const t = await getTranslations('features')
   return (
     <div className="py-16 bg-white">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
         <h2 className="text-3xl font-bold text-center mb-12">{t('title')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="text-center">

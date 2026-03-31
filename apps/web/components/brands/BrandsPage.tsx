@@ -43,38 +43,19 @@ export function BrandsPage() {
         // Transform data to include listingCount from _count.models
         const transformedBrands = brandsData.map((brand: any) => ({
           ...brand,
-          listingCount: brand._count?.models || 0
+          listingCount: (brand._count?.Listing || 0) + (brand._count?.LostReport || 0) + (brand._count?.FoundItem || 0),
+          modelCount: brand._count?.models || 0,
         }));
         
         console.log(`📊 Setting ${transformedBrands.length} brands`);
         setBrands(transformedBrands);
       } else {
         console.error('❌ API response not ok:', response.status, response.statusText);
-        // Fallback to mock data
-        setBrands([
-          { id: '1', name: 'Apple', slug: 'apple', logo: null, listingCount: 245 },
-          { id: '2', name: 'Samsung', slug: 'samsung', logo: null, listingCount: 189 },
-          { id: '3', name: 'Sony', slug: 'sony', logo: null, listingCount: 156 },
-          { id: '4', name: 'Huawei', slug: 'huawei', logo: null, listingCount: 98 },
-          { id: '5', name: 'Bose', slug: 'bose', logo: null, listingCount: 87 },
-          { id: '6', name: 'Sennheiser', slug: 'sennheiser', logo: null, listingCount: 76 },
-          { id: '7', name: 'Jabra', slug: 'jabra', logo: null, listingCount: 65 },
-          { id: '8', name: 'Anker', slug: 'anker', logo: null, listingCount: 54 },
-          { id: '9', name: 'Nothing', slug: 'nothing', logo: null, listingCount: 43 },
-          { id: '10', name: 'Google', slug: 'google', logo: null, listingCount: 32 },
-          { id: '11', name: 'OnePlus', slug: 'oneplus', logo: null, listingCount: 28 },
-          { id: '12', name: 'Beats', slug: 'beats', logo: null, listingCount: 21 },
-        ]);
+        setBrands([]);
       }
     } catch (error) {
       console.error('❌ Error fetching brands:', error);
-      // Use mock data on error
-      setBrands([
-        { id: '1', name: 'Apple', slug: 'apple', logo: null, listingCount: 245 },
-        { id: '2', name: 'Samsung', slug: 'samsung', logo: null, listingCount: 189 },
-        { id: '3', name: 'Sony', slug: 'sony', logo: null, listingCount: 156 },
-        { id: '4', name: 'Huawei', slug: 'huawei', logo: null, listingCount: 98 },
-      ]);
+      setBrands([]);
     } finally {
       setLoading(false);
     }
@@ -94,7 +75,7 @@ export function BrandsPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
             <h1 className="text-3xl font-bold text-gray-900 mb-4">
               Browse by Brand
@@ -122,7 +103,7 @@ export function BrandsPage() {
       </div>
 
       {/* Brands Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
             {Array.from({ length: 12 }).map((_, index) => (
@@ -170,9 +151,12 @@ export function BrandsPage() {
                         {brand.name}
                       </h3>
                       
-                      {brand.listingCount !== undefined && (
-                        <p className="text-sm text-gray-500">
-                          {brand.listingCount} listing{brand.listingCount !== 1 ? 's' : ''}
+                      <p className="text-sm text-gray-500">
+                        {(brand as any).listingCount || 0} listing{((brand as any).listingCount || 0) !== 1 ? 's' : ''}
+                      </p>
+                      {(brand as any).modelCount > 0 && (
+                        <p className="text-xs text-gray-400">
+                          {(brand as any).modelCount} model{(brand as any).modelCount !== 1 ? 's' : ''}
                         </p>
                       )}
                     </button>

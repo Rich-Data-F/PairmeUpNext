@@ -22,7 +22,7 @@ export class BrandsService {
       orderBy: { name: 'asc' },
       include: {
         _count: {
-          select: { models: true },
+          select: { models: true, Listing: true, LostReport: true, FoundItem: true },
         },
       },
     });

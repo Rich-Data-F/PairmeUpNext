@@ -13,9 +13,10 @@ export async function GET(request: NextRequest) {
     const searchParams = url.searchParams;
     const queryString = searchParams.toString();
     
-    // Always include counts for listing numbers
+    // Always include counts for listing numbers and fetch more results
     const params = new URLSearchParams(queryString);
     params.set('include', '_count');
+    if (!params.has('limit')) params.set('limit', '100');
     
     const backendUrl = `${API_BASE_URL}/brands?${params.toString()}`;
     

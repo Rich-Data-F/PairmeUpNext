@@ -123,7 +123,7 @@ export function HomePage() {
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 text-white">
         <div className="absolute inset-0 bg-black/20"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black mb-6 tracking-tight">
               {t_hero('headline')}
@@ -234,7 +234,7 @@ export function HomePage() {
 
       {/* Category Filter */}
       <section className="py-8 bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <CategoryFilter
             selectedCategory={selectedCategory}
             onCategoryChange={setSelectedCategory}
@@ -244,7 +244,7 @@ export function HomePage() {
 
       {/* Featured Listings */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">{t_home('featuredTitle')}</h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -288,7 +288,7 @@ export function HomePage() {
 
       {/* Statistics Section */}
       <section className="py-16 bg-gray-900 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">{t_home('statsTitle')}</h2>
             <p className="text-lg text-gray-300">{t_home('statsSubtitle')}</p>
@@ -323,7 +323,7 @@ export function HomePage() {
 
       {/* How It Works Section */}
       <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">{t_home('howItWorksTitle')}</h2>
             <p className="text-lg text-gray-600">{t_home('howItWorksSubtitle')}</p>
@@ -369,7 +369,7 @@ export function HomePage() {
 
       {/* Survey CTA Section */}
       <section className="py-16 bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 md:p-12 border border-white/20 flex flex-col md:flex-row items-center justify-between gap-8">
             <div className="max-w-xl text-center md:text-left">
               <h2 className="text-3xl font-black mb-4">{t_home('surveyCTA_Title')}</h2>
