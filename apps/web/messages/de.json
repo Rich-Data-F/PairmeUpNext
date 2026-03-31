@@ -298,6 +298,26 @@
       "subtitle": "Verwalten Sie die Artikel, die Sie zum Verkauf oder Tausch angeboten haben.",
       "noListings": "Noch keine Anzeigen",
       "createOne": "Anzeige erstellen"
+    },
+    "details": {
+      "title": "Profildetails",
+      "subtitle": "Aktualisieren Sie Ihre persönlichen Daten und Ihr öffentliches Profil.",
+      "name": "Vollständiger Name",
+      "phone": "Telefonnummer",
+      "location": "Standort",
+      "bio": "Biografie",
+      "saveChanges": "Änderungen speichern",
+      "updateSuccess": "Profil erfolgreich aktualisiert!"
+    },
+    "security": {
+      "title": "Sicherheit",
+      "subtitle": "Ändern Sie Ihr Passwort, um Ihr Konto zu schützen.",
+      "oldPassword": "Aktuelles Passwort",
+      "newPassword": "Neues Passwort",
+      "confirmPassword": "Neues Passwort bestätigen",
+      "changePassword": "Passwort ändern",
+      "passwordMismatch": "Passwörter stimmen nicht überein.",
+      "passwordSuccess": "Passwort erfolgreich geändert!"
     }
   },
   "myListings": {

@@ -13,7 +13,7 @@
     "maps": "Maps"
   },
   "footer": {
-    "tagline": "Professional marketplace for earbud parts with lost/stolen registry and legal compliance.",
+    "tagline": "Collaborative exchange platform for earbud parts with lost & found registry.",
     "allListings": "All Listings",
     "browseListings": "Browse Listings",
     "sellItems": "Sell Your Items",
@@ -298,6 +298,26 @@
       "subtitle": "Manage the items you have listed for sale or trade.",
       "noListings": "No listings yet",
       "createOne": "Create a listing"
+    },
+    "details": {
+      "title": "Profile Details",
+      "subtitle": "Update your personal information and public profile.",
+      "name": "Full Name",
+      "phone": "Phone Number",
+      "location": "Location",
+      "bio": "Bio",
+      "saveChanges": "Save Changes",
+      "updateSuccess": "Profile updated successfully!"
+    },
+    "security": {
+      "title": "Security",
+      "subtitle": "Change your password to keep your account secure.",
+      "oldPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password",
+      "changePassword": "Change Password",
+      "passwordMismatch": "Passwords do not match.",
+      "passwordSuccess": "Password changed successfully!"
     }
   },
   "myListings": {

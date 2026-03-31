@@ -298,6 +298,26 @@
       "subtitle": "Gérez les articles que vous avez mis en vente ou en échange.",
       "noListings": "Aucune annonce pour le moment",
       "createOne": "Créer une annonce"
+    },
+    "details": {
+      "title": "Détails du profil",
+      "subtitle": "Mettez à jour vos informations personnelles et votre profil public.",
+      "name": "Nom complet",
+      "phone": "Numéro de téléphone",
+      "location": "Localisation",
+      "bio": "Biographie",
+      "saveChanges": "Enregistrer les modifications",
+      "updateSuccess": "Profil mis à jour avec succès !"
+    },
+    "security": {
+      "title": "Sécurité",
+      "subtitle": "Changez votre mot de passe pour sécuriser votre compte.",
+      "oldPassword": "Mot de passe actuel",
+      "newPassword": "Nouveau mot de passe",
+      "confirmPassword": "Confirmer le nouveau mot de passe",
+      "changePassword": "Changer le mot de passe",
+      "passwordMismatch": "Les mots de passe ne correspondent pas.",
+      "passwordSuccess": "Mot de passe changé avec succès !"
     }
   },
   "myListings": {

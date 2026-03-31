@@ -298,6 +298,26 @@
       "subtitle": "Administre los artículos que ha publicado para venta o intercambio.",
       "noListings": "Sin anuncios aún",
       "createOne": "Crear un anuncio"
+    },
+    "details": {
+      "title": "Detalles del perfil",
+      "subtitle": "Actualice su información personal y su perfil público.",
+      "name": "Nombre completo",
+      "phone": "Número de teléfono",
+      "location": "Ubicación",
+      "bio": "Biografía",
+      "saveChanges": "Guardar cambios",
+      "updateSuccess": "¡Perfil actualizado con éxito!"
+    },
+    "security": {
+      "title": "Seguridad",
+      "subtitle": "Cambie su contraseña para mantener su cuenta segura.",
+      "oldPassword": "Contraseña actual",
+      "newPassword": "Nueva contraseña",
+      "confirmPassword": "Confirmar nueva contraseña",
+      "changePassword": "Cambiar contraseña",
+      "passwordMismatch": "Las contraseñas no coinciden.",
+      "passwordSuccess": "¡Contraseña cambiada con éxito!"
     }
   },
   "myListings": {
