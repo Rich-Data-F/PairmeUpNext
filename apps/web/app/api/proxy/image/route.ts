@@ -62,7 +62,8 @@ export async function GET(request: NextRequest) {
 
     // Route through backend serve-key — backend has R2 credentials
     const apiBase = getApiBase();
-    const backendUrl = `${apiBase}/upload/serve-key/${encodeURIComponent(objectKey!)}`;
+    // Use the key as-is in the path (slashes intact); backend wildcard @Get('serve-key/*') handles them
+    const backendUrl = `${apiBase}/upload/serve-key/${objectKey!}`;
 
     const response = await fetch(backendUrl, {
       signal: AbortSignal.timeout(20000),

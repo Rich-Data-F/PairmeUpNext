@@ -99,25 +99,18 @@ export function ListingCard({ listing }: ListingCardProps) {
   const normalizeImageUrl = (url: string) => {
     if (!url) return '';
 
-    // R2 private/S3 API URLs — route through the image proxy
-    if (url.includes('r2.cloudflarestorage.com') || url.includes('r2.dev')) {
-      // If it's already a public R2 dev URL (pub-xxx.r2.dev), use as-is
-      if (url.includes('pub-') && url.includes('.r2.dev')) return url;
-      // Private R2 URL — proxy it
+    // Already a relative path — use as-is
+    if (url.startsWith('/')) return url;
+
+    // Truly public R2 dev URLs (pub-xxx.r2.dev) — serve directly, no proxy needed
+    if (url.includes('pub-') && url.includes('.r2.dev')) return url;
+
+    // All other absolute URLs (private R2, Render-hosted MinIO, localhost in prod, etc.)
+    // go through the backend image proxy which has the storage credentials.
+    if (url.startsWith('http://') || url.startsWith('https://')) {
       return `/api/proxy/image?url=${encodeURIComponent(url)}`;
     }
 
-    // Detect MinIO localhost absolute URLs when running on a public domain
-    if (typeof window !== 'undefined' && url.includes('localhost:') && !window.location.hostname.includes('localhost')) {
-      return `/api/proxy/image?url=${encodeURIComponent(url)}`;
-    }
-    // Clean up old legacy paths
-    if (url.includes('localhost:4000/uploads/')) {
-      return url.replace(/https?:\/\/localhost:4000\/uploads\//, '/api/proxy/uploads/');
-    }
-    if (url.includes('localhost:4000/upload/serve/')) {
-      return url.replace(/https?:\/\/localhost:4000\/upload\/serve\//, '/api/proxy/upload/serve/');
-    }
     return url;
   };
 
