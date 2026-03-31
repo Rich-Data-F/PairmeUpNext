@@ -342,12 +342,11 @@ export function LostStolenPage() {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
               <p className="mt-4 text-gray-600">{t('syncing')}</p>
             </div>
-          ) : filteredReports.length > 0 ? (
-            resultsView === 'map' ? (
+          ) : resultsView === 'map' ? (
               <LostFoundMap
                 reports={filteredReports}
-                emptyTitle={t('mapNoCoordinates')}
-                emptyDescription={t('mapNoCoordinatesDesc')}
+                emptyTitle={searchQuery ? t('noMatches') : t('mapNoCoordinates')}
+                emptyDescription={searchQuery ? t('noMatchesDesc') : t('mapNoCoordinatesDesc')}
                 viewDetailsLabel={t('viewDetails')}
                 brandModelLabel={t('brandModel')}
                 datePostedLabel={t('datePosted')}
@@ -365,7 +364,7 @@ export function LostStolenPage() {
                 allLabel={t('all', { ns: 'common' })}
                 classifiedLabel={t('classified', { ns: 'common' })}
               />
-            ) : (
+            ) : filteredReports.length > 0 ? (
             <div className="space-y-6 max-h-[700px] overflow-y-auto pr-2 custom-scrollbar">
               {filteredReports.map((report) => (
                 <div key={report.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow border-l-4 border-l-blue-600">
@@ -404,7 +403,6 @@ export function LostStolenPage() {
                 </div>
               ))}
             </div>
-            )
           ) : (
             <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed border-gray-200">
               <ExclamationTriangleIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />

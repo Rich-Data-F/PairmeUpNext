@@ -226,15 +226,6 @@ export function LostFoundMapClient({
     );
   }
 
-  if (mappedReports.length === 0) {
-    return (
-      <div className="rounded-2xl border-2 border-dashed border-gray-200 bg-white px-6 py-16 text-center shadow-sm">
-        <h3 className="text-lg font-semibold text-gray-900">{emptyTitle}</h3>
-        <p className="mt-2 text-sm text-gray-600">{emptyDescription}</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
@@ -317,7 +308,23 @@ export function LostFoundMapClient({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md">
+      <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md">
+        {mappedReports.length === 0 && (
+          <div className="absolute inset-0 z-[1000] flex items-center justify-center bg-white/70 backdrop-blur-sm">
+            <div className="rounded-2xl border-2 border-dashed border-gray-200 bg-white px-8 py-12 text-center shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900">{emptyTitle}</h3>
+              <p className="mt-2 text-sm text-gray-600">{emptyDescription}</p>
+              {localCategory !== 'all' && (
+                <button
+                  onClick={() => handleCategoryChange('all')}
+                  className="mt-4 inline-flex items-center rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+                >
+                  {allLabel} ↩
+                </button>
+              )}
+            </div>
+          </div>
+        )}
         <MapContainer
           center={DEFAULT_CENTER}
           zoom={DEFAULT_ZOOM}

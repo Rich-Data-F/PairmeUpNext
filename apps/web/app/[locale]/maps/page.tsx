@@ -89,8 +89,17 @@ export default function MapsPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('searchPlaceholder')}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+                  aria-label="Clear search"
+                >
+                  ✕
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -100,11 +109,11 @@ export default function MapsPage() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-4 text-gray-600">{t('loading')}</p>
           </div>
-        ) : filteredListings.length > 0 ? (
+        ) : (
           <LostFoundMap
             reports={filteredListings}
-            emptyTitle={t('noCoordinates')}
-            emptyDescription={t('noCoordinatesDesc')}
+            emptyTitle={searchQuery ? t('noResults') : t('noCoordinates')}
+            emptyDescription={searchQuery ? t('noResultsDesc') : t('noCoordinatesDesc')}
             viewDetailsLabel={tCommon('viewDetails')}
             brandModelLabel={tCommon('brandModel')}
             datePostedLabel={tCommon('datePosted')}
@@ -122,11 +131,6 @@ export default function MapsPage() {
             allLabel={tCommon('all')}
             classifiedLabel={t('classified')}
           />
-        ) : (
-          <div className="rounded-2xl border-2 border-dashed border-gray-200 bg-white px-6 py-16 text-center shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900">{t('noResults')}</h3>
-            <p className="mt-2 text-sm text-gray-600">{t('noResultsDesc')}</p>
-          </div>
         )}
       </div>
     </div>
