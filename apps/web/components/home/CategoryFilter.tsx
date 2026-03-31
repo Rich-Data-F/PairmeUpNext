@@ -14,21 +14,24 @@ interface Category {
 interface CategoryFilterProps {
   selectedCategory: string;
   onCategoryChange: (category: string) => void;
+  categoryCounts?: Record<string, number>;
 }
 
-export function CategoryFilter({ selectedCategory, onCategoryChange }: CategoryFilterProps) {
+export function CategoryFilter({ selectedCategory, onCategoryChange, categoryCounts = {} }: CategoryFilterProps) {
   const t = useTranslations('home.categories');
   const [isOpen, setIsOpen] = useState(false);
 
   const categories: Category[] = [
-    { id: '', name: t('all'), icon: '🎧', count: 15420 },
-    { id: 'airpods', name: t('airpods'), icon: '🍎', count: 8520 },
-    { id: 'galaxy-buds', name: t('galaxy-buds'), icon: '📱', count: 3240 },
-    { id: 'charging-cases', name: t('charging-cases'), icon: '🔋', count: 2150 },
-    { id: 'left-earbuds', name: t('left-earbuds'), icon: '⬅️', count: 890 },
-    { id: 'right-earbuds', name: t('right-earbuds'), icon: '➡️', count: 620 },
-    { id: 'accessories', name: t('accessories'), icon: '🎛️', count: 340 },
-    { id: 'other-brands', name: t('other-brands'), icon: '🎵', count: 180 },
+    { id: '', name: t('all'), icon: '🎧', count: categoryCounts['all'] ?? 0 },
+    { id: 'airpods', name: t('airpods'), icon: '🍎', count: categoryCounts['airpods'] ?? 0 },
+    { id: 'galaxy-buds', name: t('galaxy-buds'), icon: '📱', count: categoryCounts['galaxy-buds'] ?? 0 },
+    { id: 'charging-cases', name: t('charging-cases'), icon: '🔋', count: categoryCounts['charging-cases'] ?? 0 },
+    { id: 'left-earbuds', name: t('left-earbuds'), icon: '⬅️', count: categoryCounts['left-earbuds'] ?? 0 },
+    { id: 'right-earbuds', name: t('right-earbuds'), icon: '➡️', count: categoryCounts['right-earbuds'] ?? 0 },
+    { id: 'accessories', name: t('accessories'), icon: '🎛️', count: categoryCounts['accessories'] ?? 0 },
+    { id: 'other-brands', name: t('other-brands'), icon: '🎵', count: categoryCounts['other-brands'] ?? 0 },
+    { id: 'lost', name: t('lost'), icon: '🔍', count: categoryCounts['lost'] ?? 0 },
+    { id: 'found', name: t('found'), icon: '📦', count: categoryCounts['found'] ?? 0 },
   ];
 
   const selectedCategoryData = categories.find(cat => cat.id === selectedCategory) || categories[0];

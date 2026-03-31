@@ -49,6 +49,7 @@ export function HomePage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>({ activeListings: 0, totalUsers: 0, totalViews: 0 });
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     fetchHomepageData();
@@ -93,8 +94,9 @@ export function HomePage() {
       setStats({
         activeListings: statsData?.activeListings ?? 0,
         totalUsers: statsData?.totalUsers ?? 0,
-        totalViews: statsData?.totalViews?._sum?.views ?? 0,
+        totalViews: statsData?.totalViews ?? 0,
       });
+      setCategoryCounts(statsData?.categoryCounts ?? {});
     } catch (error) {
       console.error('Error fetching homepage data:', error);
     } finally {
@@ -238,6 +240,7 @@ export function HomePage() {
           <CategoryFilter
             selectedCategory={selectedCategory}
             onCategoryChange={setSelectedCategory}
+            categoryCounts={categoryCounts}
           />
         </div>
       </section>

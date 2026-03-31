@@ -34,7 +34,7 @@
   },
   "hero": {
     "headline": "Find Your Missing Earbud",
-    "subheadline": "Collaborative exchange platform for individual earbuds, charging cases, and accessories. Buy, sell, trade, declare loss or find of earbud items.",
+    "subheadline": "Collaborative exchange platform for earbuds, charging cases, and accessories. Buy, sell, trade, declare loss or find of earbud items.",
     "browseMarketplace": "Browse Marketplace",
     "reportLostItem": "Report Lost Item",
     "searchPlaceholder": "Search earbuds, brands, models...",
@@ -239,7 +239,9 @@
       "left-earbuds": "Left Earbuds",
       "right-earbuds": "Right Earbuds",
       "accessories": "Accessories",
-      "other-brands": "Other Brands"
+      "other-brands": "Other Brands",
+      "lost": "Lost Items",
+      "found": "Found Items"
     },
     "featuredTitle": "Featured Listings",
     "featuredSubtitle": "Discover the most popular items available on our marketplace right now",

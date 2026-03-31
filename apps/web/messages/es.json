@@ -34,7 +34,7 @@
   },
   "hero": {
     "headline": "Encuentra tu auricular perdido",
-    "subheadline": "Plataforma colaborativa de intercambio de auriculares individuales, estuches de carga y accesorios. Compra, vende, intercambia, declara pérdida o hallazgo de auriculares.",
+    "subheadline": "Plataforma colaborativa de intercambio de auriculares, estuches de carga y accesorios. Compra, vende, intercambia, declara pérdida o hallazgo de auriculares.",
     "browseMarketplace": "Explorar marketplace",
     "reportLostItem": "Reportar objeto perdido",
     "searchPlaceholder": "Buscar auriculares, marcas, modelos...",
@@ -239,7 +239,9 @@
       "left-earbuds": "Auriculares izquierdos",
       "right-earbuds": "Auriculares derechos",
       "accessories": "Accesorios",
-      "other-brands": "Otras marcas"
+      "other-brands": "Otras marcas",
+      "lost": "Objetos perdidos",
+      "found": "Objetos encontrados"
     },
     "featuredTitle": "Anuncios destacados",
     "featuredSubtitle": "Descubra los artículos más populares disponibles en nuestro mercado en este momento",

@@ -34,7 +34,7 @@
   },
   "hero": {
     "headline": "Finden Sie Ihren fehlenden Ohrhörer",
-    "subheadline": "Kollaborative Austauschplattform für einzelne Ohrhörer, Ladehüllen und Zubehör. Kaufen, verkaufen, tauschen, Verlust oder Fund von Ohrhörern melden.",
+    "subheadline": "Kollaborative Austauschplattform für Ohrhörer, Ladehüllen und Zubehör. Kaufen, verkaufen, tauschen, Verlust oder Fund von Ohrhörern melden.",
     "browseMarketplace": "Marktplatz durchsuchen",
     "reportLostItem": "Verlorenes Objekt melden",
     "searchPlaceholder": "Ohrhörer, Marken, Modelle suchen...",
@@ -239,7 +239,9 @@
       "left-earbuds": "Linke Ohrhörer",
       "right-earbuds": "Rechte Ohrhörer",
       "accessories": "Zubehör",
-      "other-brands": "Andere Marken"
+      "other-brands": "Andere Marken",
+      "lost": "Verlorene Objekte",
+      "found": "Gefundene Objekte"
     },
     "featuredTitle": "Ausgewählte Angebote",
     "featuredSubtitle": "Entdecken Sie die beliebtesten Artikel, die jetzt auf unserem Markt verfügbar sind",

@@ -34,7 +34,7 @@
   },
   "hero": {
     "headline": "Retrouvez votre écouteur manquant",
-    "subheadline": "Plateforme collaborative d'échange d'écouteurs individuels, boîtiers de charge et accessoires. Achetez, vendez, échangez, déclarez la perte ou la découverte d'écouteurs.",
+    "subheadline": "Plateforme collaborative d'échange d'écouteurs, boîtiers de charge et accessoires. Achetez, vendez, échangez, déclarez la perte ou la découverte d'écouteurs.",
     "browseMarketplace": "Parcourir le marché",
     "reportLostItem": "Signaler un objet perdu",
     "searchPlaceholder": "Rechercher écouteurs, marques, modèles...",
@@ -239,7 +239,9 @@
       "left-earbuds": "Écouteurs gauches",
       "right-earbuds": "Écouteurs droits",
       "accessories": "Accessoires",
-      "other-brands": "Autres marques"
+      "other-brands": "Autres marques",
+      "lost": "Objets perdus",
+      "found": "Objets trouvés"
     },
     "featuredTitle": "Annonces mises en avant",
     "featuredSubtitle": "Découvrez les articles les plus populaires disponibles sur notre marché en ce moment",

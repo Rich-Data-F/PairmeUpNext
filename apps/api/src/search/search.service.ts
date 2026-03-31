@@ -608,6 +608,8 @@ export class SearchService {
    * Moved here from the controller to avoid private-property access anti-pattern.
    */
   async getMarketplaceStats() {
+    const activeWhere = { status: 'ACTIVE' as const };
+
     const [
       totalListings,
       activeListings,
@@ -615,9 +617,18 @@ export class SearchService {
       totalViews,
       topBrands,
       recentActivity,
+      // Category counts by listing type
+      countLeftEarbuds,
+      countRightEarbuds,
+      countEarbudPair,
+      countChargingCases,
+      countFullSet,
+      countAccessories,
+      // Brand-based counts (Apple = AirPods, Samsung = Galaxy Buds)
+      brandCounts,
     ] = await Promise.all([
       this.prisma.listing.count(),
-      this.prisma.listing.count({ where: { status: 'ACTIVE' } }),
+      this.prisma.listing.count({ where: activeWhere }),
       this.prisma.user.count(),
       this.prisma.listing.aggregate({ _sum: { views: true } }),
       this.prisma.brand.findMany({
@@ -627,7 +638,7 @@ export class SearchService {
         take: 5,
       }),
       this.prisma.listing.findMany({
-        where: { status: 'ACTIVE' },
+        where: activeWhere,
         orderBy: { publishedAt: 'desc' },
         select: {
           id: true,
@@ -640,7 +651,52 @@ export class SearchService {
         },
         take: 10,
       }),
+      this.prisma.listing.count({ where: { ...activeWhere, type: 'EARBUD_LEFT' } }),
+      this.prisma.listing.count({ where: { ...activeWhere, type: 'EARBUD_RIGHT' } }),
+      this.prisma.listing.count({ where: { ...activeWhere, type: 'EARBUD_PAIR' } }),
+      this.prisma.listing.count({ where: { ...activeWhere, type: 'CHARGING_CASE' } }),
+      this.prisma.listing.count({ where: { ...activeWhere, type: 'FULL_SET' } }),
+      this.prisma.listing.count({ where: { ...activeWhere, type: 'ACCESSORIES' } }),
+      this.prisma.listing.groupBy({
+        by: ['brandId'],
+        where: activeWhere,
+        _count: { _all: true },
+      }),
     ]);
+
+    // Lost & Found counts (price=0 items: BUYING=lost, SELLING=found)
+    const [countLost, countFound] = await Promise.all([
+      this.prisma.listing.count({ where: { ...activeWhere, price: 0, primaryIntent: 'BUYING' } }),
+      this.prisma.listing.count({ where: { ...activeWhere, price: 0, primaryIntent: 'SELLING' } }),
+    ]);
+
+    // Map brand-based counts: look up brand names for airpods / galaxy buds
+    const allBrands = await this.prisma.brand.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true, slug: true },
+    });
+
+    const brandMap = new Map(allBrands.map((b) => [b.id, b]));
+    let airpodsCount = 0;
+    let galaxyBudsCount = 0;
+    let otherBrandsCount = 0;
+
+    for (const entry of brandCounts) {
+      const brand = brandMap.get(entry.brandId);
+      if (!brand) {
+        otherBrandsCount += entry._count._all;
+        continue;
+      }
+      const slug = brand.slug.toLowerCase();
+      const name = brand.name.toLowerCase();
+      if (slug.includes('apple') || name.includes('apple') || slug.includes('airpod') || name.includes('airpod')) {
+        airpodsCount += entry._count._all;
+      } else if (slug.includes('samsung') || name.includes('samsung') || slug.includes('galaxy') || name.includes('galaxy')) {
+        galaxyBudsCount += entry._count._all;
+      } else {
+        otherBrandsCount += entry._count._all;
+      }
+    }
 
     return {
       totalListings,
@@ -649,6 +705,18 @@ export class SearchService {
       totalViews: totalViews._sum.views || 0,
       topBrands,
       recentActivity,
+      categoryCounts: {
+        all: activeListings,
+        airpods: airpodsCount,
+        'galaxy-buds': galaxyBudsCount,
+        'charging-cases': countChargingCases,
+        'left-earbuds': countLeftEarbuds,
+        'right-earbuds': countRightEarbuds,
+        accessories: countAccessories,
+        'other-brands': otherBrandsCount,
+        lost: countLost,
+        found: countFound,
+      },
     };
   }
 }

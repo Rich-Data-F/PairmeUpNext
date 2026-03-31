@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     default: 'PairAgain - Collaborative Earbud Exchange Platform',
     template: '%s | PairAgain',
   },
-  description: 'Buy, sell, trade, declare loss or find of earbud items. Collaborative exchange platform for individual earbuds, charging cases, and accessories.',
+  description: 'Buy, sell, trade, declare loss or find of earbud items. Collaborative exchange platform for earbuds, charging cases, and accessories.',
   keywords: [
     'earbuds',
     'airpods',
@@ -84,7 +84,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'PairAgain - Professional Earbud Parts Marketplace',
-    description: 'Buy and sell individual earbuds, charging cases, and accessories.',
+    description: 'Buy and sell earbuds, charging cases, and accessories.',
     images: ['/og-image.jpg'],
     creator: '@pairagain',
   },
