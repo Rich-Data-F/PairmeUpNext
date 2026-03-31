@@ -342,24 +342,47 @@ export function SearchFilters({ facets, filters, onFiltersChange, loading }: Sea
             </FilterSection>
           )}
 
-          {/* Cities */}
+          {/* Cities / Location */}
           {facets?.cities && facets.cities.length > 0 && (
             <FilterSection title="Location" defaultOpen={false}>
-              {facets.cities.slice(0, 10).map((city) => (
-                <CheckboxOption
-                  key={city.id}
-                  id={`city-${city.id}`}
-                  label={city.name}
-                  count={city.count}
-                  checked={(filters.cities || []).includes(city.id)}
-                  onChange={(checked) => handleCityChange(city.id, checked)}
-                />
-              ))}
-              {facets.cities.length > 10 && (
-                <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-                  Show more cities
-                </button>
-              )}
+              {(() => {
+                // Group cities by country for cleaner display
+                const grouped: Record<string, typeof facets.cities> = {};
+                for (const city of facets.cities) {
+                  const country = (city as any).country || (city as any).countryCode || 'Other';
+                  if (!grouped[country]) grouped[country] = [];
+                  grouped[country]!.push(city);
+                }
+                const countries = Object.keys(grouped).sort();
+                // If only one country, skip grouping header
+                if (countries.length <= 1) {
+                  return facets.cities.slice(0, 15).map((city) => (
+                    <CheckboxOption
+                      key={city.id}
+                      id={`city-${city.id}`}
+                      label={city.name}
+                      count={city.count}
+                      checked={(filters.cities || []).includes(city.id)}
+                      onChange={(checked) => handleCityChange(city.id, checked)}
+                    />
+                  ));
+                }
+                return countries.map(country => (
+                  <div key={country} className="space-y-2">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mt-2">{country}</p>
+                    {grouped[country]!.slice(0, 8).map((city) => (
+                      <CheckboxOption
+                        key={city.id}
+                        id={`city-${city.id}`}
+                        label={city.name}
+                        count={city.count}
+                        checked={(filters.cities || []).includes(city.id)}
+                        onChange={(checked) => handleCityChange(city.id, checked)}
+                      />
+                    ))}
+                  </div>
+                ));
+              })()}
             </FilterSection>
           )}
         </div>

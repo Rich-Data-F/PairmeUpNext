@@ -545,15 +545,19 @@ export class AdvancedSearchService {
     const cityIds = cityCounts.map(c => c.cityId);
     const cities = await this.prisma.city.findMany({
       where: { id: { in: cityIds } },
-      select: { id: true, name: true, countryCode: true },
+      select: { id: true, name: true, displayName: true, countryCode: true, country: true },
     });
 
-    return cityCounts.map(count => ({
-      id: count.cityId,
-      name: cities.find(c => c.id === count.cityId)?.name || 'Unknown',
-      countryCode: cities.find(c => c.id === count.cityId)?.countryCode,
-      count: count._count.cityId,
-    }));
+    return cityCounts.map(count => {
+      const city = cities.find(c => c.id === count.cityId);
+      return {
+        id: count.cityId,
+        name: city?.displayName || city?.name || 'Unknown',
+        countryCode: city?.countryCode,
+        country: city?.country,
+        count: count._count.cityId,
+      };
+    });
   }
 
   // Autocomplete helper methods

@@ -29,8 +29,9 @@ const sortOptions: SortOption[] = [
   { value: 'relevance', label: 'Most Relevant' },
   { value: 'price_asc', label: 'Price: Low to High' },
   { value: 'price_desc', label: 'Price: High to Low' },
-  { value: 'createdAt_desc', label: 'Newest First' },
-  { value: 'createdAt_asc', label: 'Oldest First' },
+  { value: 'date_desc', label: 'Newest First' },
+  { value: 'date_asc', label: 'Oldest First' },
+  { value: 'popularity', label: 'Most Popular' },
 ];
 
 function ListingCard({ listing }: { listing: any }) {
@@ -162,7 +163,7 @@ function ListingCard({ listing }: { listing: any }) {
           {/* Location and Time */}
           <div className="flex items-center text-sm text-gray-500">
             <MapPinIcon className="h-4 w-4 mr-1" />
-            <span>{listing.city?.name}</span>
+            <span>{listing.city?.displayName || listing.city?.name}</span>
             <span className="mx-2">•</span>
             <ClockIcon className="h-4 w-4 mr-1" />
             <span>{formatTimeAgo(listing.createdAt)}</span>

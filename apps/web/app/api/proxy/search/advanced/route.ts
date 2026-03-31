@@ -21,18 +21,20 @@ export async function GET(request: NextRequest) {
     console.log(`🔍 Advanced search API called with query: "${query}", page: ${page}`);
 
     // Build query parameters for the backend API
+    // Backend /search/advanced expects: q, brandIds, modelIds, priceMin, priceMax,
+    // conditions, cityIds, verifiedOnly, hasImages, sortBy, page, limit
     const backendParams = new URLSearchParams();
     if (query) backendParams.set('q', query);
     if (page > 1) backendParams.set('page', page.toString());
     if (limit !== 20) backendParams.set('limit', limit.toString());
-    if (sortBy !== 'relevance') backendParams.set('sortBy', sortBy);
-    if (brands) backendParams.set('brand', brands.split(',')[0]); // backend takes single brandId
-    if (models) backendParams.set('model', models.split(',')[0]);
-    if (cities) backendParams.set('city', cities.split(',')[0]);
-    if (conditions) backendParams.set('condition', conditions);
-    if (minPrice) backendParams.set('minPrice', minPrice);
-    if (maxPrice) backendParams.set('maxPrice', maxPrice);
-    if (isVerified === 'true') backendParams.set('verified', 'true');
+    if (sortBy) backendParams.set('sortBy', sortBy);
+    if (brands) backendParams.set('brandIds', brands);
+    if (models) backendParams.set('modelIds', models);
+    if (cities) backendParams.set('cityIds', cities);
+    if (conditions) backendParams.set('conditions', conditions);
+    if (minPrice) backendParams.set('priceMin', minPrice);
+    if (maxPrice) backendParams.set('priceMax', maxPrice);
+    if (isVerified === 'true') backendParams.set('verifiedOnly', 'true');
     if (hasImages === 'true') backendParams.set('hasImages', 'true');
 
   // Call the real backend API
