@@ -747,6 +747,8 @@ export class ListingsService {
       currency: listing.currency,
       identifierMasked: listing.identifierMasked,
       isVerified: listing.isVerified,
+      primaryIntent: listing.primaryIntent,
+      openToAlternate: listing.openToAlternate,
       brand: {
         id: listing.brand.id,
         name: listing.brand.name,
@@ -764,6 +766,8 @@ export class ListingsService {
         name: listing.city.name,
         displayName: listing.city.displayName,
         countryCode: listing.city.countryCode,
+        latitude: listing.city.latitude ? parseFloat(listing.city.latitude) : null,
+        longitude: listing.city.longitude ? parseFloat(listing.city.longitude) : null,
       },
       seller: {
         id: listing.seller.id,
