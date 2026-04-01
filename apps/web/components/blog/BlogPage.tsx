@@ -26,6 +26,7 @@ interface BlogPost {
   excerpt: string;
   content: string;
   author: {
+    id: string;
     name: string;
     avatar?: string;
   };
@@ -204,9 +205,13 @@ export function BlogPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [viewCounts, setViewCounts] = useState<Record<string, number>>({});
+
+  // Blog posts from API (with hardcoded fallback)
+  const [apiPosts, setApiPosts] = useState<BlogPost[] | null>(null);
+  const [postsLoading, setPostsLoading] = useState(true);
   
   // Auth / edit
-  const [profile, setProfile] = useState<{ name: string; isAdmin: boolean } | null>(null);
+  const [profile, setProfile] = useState<{ id: string; name: string; isAdmin: boolean } | null>(null);
   const [blogEdits, setBlogEdits] = useState<Record<string, BlogEdits>>({});
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<BlogEdits & { tagsRaw: string }>({ tagsRaw: '' });
@@ -250,15 +255,31 @@ export function BlogPage() {
     setComments(c);
   }, []);
 
-  // Load profile for edit permission
+  // Load profile for edit permission and fetch posts from API
   useEffect(() => {
     fetch('/api/proxy/auth/profile')
       .then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (data?.id) setProfile({ name: data.name || '', isAdmin: data.isAdmin === true });
+        if (data?.id) setProfile({ id: data.id, name: data.name || '', isAdmin: data.isAdmin === true });
       })
       .catch(() => {});
     setBlogEdits(getBlogEdits());
+
+    // Fetch posts from API
+    fetch('/api/proxy/blog?limit=50')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.data?.length > 0) {
+          setApiPosts(data.data);
+          // Clear any stale localStorage edits now that we have authoritative DB data
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('blog_edits');
+          }
+          setBlogEdits({});
+        }
+      })
+      .catch(() => {})
+      .finally(() => setPostsLoading(false));
   }, []);
 
   // Increment view count when an article is opened
@@ -309,7 +330,8 @@ export function BlogPage() {
 
   const canEdit = (post: BlogPost): boolean => {
     if (!profile) return false;
-    return profile.isAdmin || profile.name === post.author.name;
+    // ID check works for API posts; name check serves as fallback for hardcoded posts (author.id = '')
+    return profile.isAdmin || profile.id === post.author.id || (post.author.id === '' && profile.name === post.author.name);
   };
 
   const startEdit = (post: BlogPost) => {
@@ -325,7 +347,7 @@ export function BlogPage() {
     setIsEditing(true);
   };
 
-  const saveEdit = (post: BlogPost) => {
+  const saveEdit = async (post: BlogPost) => {
     const tags = editForm.tagsRaw?.split(',').map(t => t.trim()).filter(Boolean) || post.tags;
     const edits: BlogEdits = {
       title: editForm.title || post.title,
@@ -335,13 +357,48 @@ export function BlogPage() {
       readTime: Number(editForm.readTime) || post.readTime,
       tags,
     };
+
+    // Persist to database
+    try {
+      const resp = await fetch(`/api/proxy/blog/${post.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: edits.title,
+          excerpt: edits.excerpt,
+          content: edits.content,
+          featuredImage: edits.coverImage,
+          readTime: edits.readTime,
+          tags: edits.tags,
+        }),
+      });
+      if (resp.ok) {
+        const updated = await resp.json();
+        // Update apiPosts with the server response
+        setApiPosts(prev =>
+          prev ? prev.map(p => (p.id === post.id ? { ...p, ...updated } : p)) : prev,
+        );
+        // Clear localStorage edit for this post since it's now in DB
+        deleteBlogEdit(post.slug);
+        const updatedEdits = { ...blogEdits };
+        delete updatedEdits[post.slug];
+        setBlogEdits(updatedEdits);
+        setSelectedPost({ ...post, ...updated });
+        setIsEditing(false);
+        toast.success('Post updated and saved to database!');
+        return;
+      }
+    } catch {
+      // Fall through to localStorage fallback
+    }
+
+    // Fallback: save to localStorage if API is unavailable
     saveBlogEdit(post.slug, edits);
-    const updated = { ...blogEdits, [post.slug]: edits };
-    setBlogEdits(updated);
-    // Update selectedPost so article view refreshes
-    setSelectedPost(applyEdits(post, updated));
+    const updatedEdits = { ...blogEdits, [post.slug]: edits };
+    setBlogEdits(updatedEdits);
+    setSelectedPost(applyEdits(post, updatedEdits));
     setIsEditing(false);
-    toast.success('Post updated!');
+    toast.success('Post updated (saved locally).');
   };
 
   const revertEdit = (post: BlogPost) => {
@@ -382,7 +439,7 @@ export function BlogPage() {
     return max > 0 ? top : null;
   };
 
-  const blogPosts: BlogPost[] = [
+  const hardcodedPosts: BlogPost[] = [
     {
       id: '1',
       title: 'AirPods Pro 3 Leaks: Hearing Aid Features and Better ANC Coming in 2025',
@@ -393,7 +450,7 @@ export function BlogPage() {
 The hearing aid functionality is particularly interesting, as recent FDA deregulations have opened the door for over-the-counter hearing aids. By integrating this into a device millions already own, Apple could disrupt a multibillion-dollar industry. 
 
 Additionally, we expect a 20% improvement in active noise cancellation (ANC) and better battery efficiency, potentially pushing playback time past 7 hours on a single charge. The case will likely retain its USB-C port but may see improvements in Find My accuracy with a newer U-series chip.`,
-      author: { name: 'Sarah Johnson' },
+      author: { id: '', name: 'Sarah Johnson' },
       publishedAt: '2026-03-18T10:00:00Z',
       readTime: 6,
       tags: ['Apple', 'News', 'AirPods'],
@@ -410,7 +467,7 @@ Additionally, we expect a 20% improvement in active noise cancellation (ANC) and
 For the average consumer, losing a single AirPod Pro used to represent a $100+ loss, often leading to the purchase of a completely new set. However, platforms like PairAgain are enabling a circular economy where users can find an authentic replacement for half the cost.
 
 Industry analysts predict that within the next two years, major brands may even start offering official "single-bud" SKU options at retail, moving away from the all-or-nothing bundles that have dominated the market since 2016.`,
-      author: { name: 'David Park' },
+      author: { id: '', name: 'David Park' },
       publishedAt: '2026-03-15T14:30:00Z',
       readTime: 5,
       tags: ['Market Trends', 'Repair', 'Savings'],
@@ -427,7 +484,7 @@ Industry analysts predict that within the next two years, major brands may even 
 The primary benefit of the stem design is microphone placement. By bringing the beam-forming mics closer to the mouth, Samsung has significantly improved call quality in windy conditions. The new "Blade Lights" aren't just for show either; they provide a visual indicator for pairing status and battery life.
 
 In terms of sound, the Buds 3 Pro feature a sophisticated 2-way speaker system with a high-fidelity tweeter and a planar woofer, delivering crisp highs and deep, controlled bass that rivals the Sony XM5 series.`,
-      author: { name: 'Mike Chen' },
+      author: { id: '', name: 'Mike Chen' },
       publishedAt: '2026-03-12T09:15:00Z',
       readTime: 8,
       tags: ['Samsung', 'Review', 'Hardware'],
@@ -444,7 +501,7 @@ In terms of sound, the Buds 3 Pro feature a sophisticated 2-way speaker system w
 Internal test models suggest Sony is moving toward a more ergonomic "hybrid" tip design—combining the comfort of silicone with the isolation of memory foam. This has been a point of contention for XM4 and XM5 users who found the stock foam tips prone to degradation.
 
 Connectivity will also get a boost with Bluetooth 5.4 support and optimized LE Audio, allowing for multi-point connection across three devices simultaneously without the occasional dropout seen in previous generations.`,
-      author: { name: 'Emma Williams' },
+      author: { id: '', name: 'Emma Williams' },
       publishedAt: '2026-03-10T16:45:00Z',
       readTime: 4,
       tags: ['Sony', 'ANC', 'Leaks'],
@@ -461,7 +518,7 @@ Connectivity will also get a boost with Bluetooth 5.4 support and optimized LE A
 The "Immersive Audio" mode, which uses head-tracking to simulate a spatial soundstage, remains a highlight of the experience. Unlike Apple's implementation, Bose's spatial audio works with any source, making it a versatile choice for movie lovers and podcast listeners alike.
 
 Battery life remains its Achilles' heel, however. With Immersive Audio turned on, you can only expect about 4 hours of juice. For long-haul flights, users might find themselves reaching for their XM5s or AirPods Max instead if they don't have time for a quick charge.`,
-      author: { name: 'Lisa Thompson' },
+      author: { id: '', name: 'Lisa Thompson' },
       publishedAt: '2026-03-05T11:20:00Z',
       readTime: 7,
       tags: ['Bose', 'Audio Quality', 'ANC'],
@@ -484,7 +541,7 @@ This is a notable move in the true wireless earbud space, where losing a single 
 **How it compares to PairAgain:** While Huawei's Loss Care is a manufacturer-backed insurance model, PairAgain's marketplace offers more flexibility. On PairAgain, you can find replacement buds across all brands, negotiate prices, and even trade components you no longer need. For Huawei users specifically, Loss Care is a convenient first line of defense, but PairAgain remains the go-to for cross-brand replacements and cost-conscious buyers.
 
 For full details on Huawei's Loss Care program, visit the [official Huawei Loss Care page](https://consumer.huawei.com/fr/support/huawei-loss-care-for-freebuds/).`,
-      author: { name: 'David Park' },
+      author: { id: '', name: 'David Park' },
       publishedAt: '2026-03-22T08:00:00Z',
       readTime: 4,
       tags: ['Huawei', 'Insurance', 'FreeBuds'],
@@ -493,15 +550,20 @@ For full details on Huawei's Loss Care program, visit the [official Huawei Loss 
     }
   ];
 
+  // Use API posts when available, otherwise fall back to hardcoded posts
+  const blogPosts: BlogPost[] = apiPosts ?? hardcodedPosts;
+
   // Initialize view counts and engagement on mount
   useEffect(() => {
     const slugs = blogPosts.map(p => p.slug);
     refreshViewCounts(slugs);
     loadEngagement(slugs);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [apiPosts]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Apply localStorage edits to all posts for rendering
-  const displayPosts = blogPosts.map(p => applyEdits(p, blogEdits));
+  // Apply localStorage edits to all posts for rendering (only for non-API posts)
+  const displayPosts = apiPosts
+    ? blogPosts  // API posts are already up-to-date
+    : blogPosts.map(p => applyEdits(p, blogEdits));
 
   const allTags = Array.from(new Set(displayPosts.flatMap(post => post.tags)));
 
@@ -1031,6 +1093,12 @@ For full details on Huawei's Loss Care program, visit the [official Huawei Loss 
       </div>
 
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {postsLoading && (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mr-3" />
+            <span className="text-gray-500 text-sm">Loading articles…</span>
+          </div>
+        )}
         {/* Tags Filter */}
         <div className="mb-8">
           <div className="flex flex-wrap gap-2">

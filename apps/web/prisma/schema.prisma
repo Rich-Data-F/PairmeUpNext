@@ -781,6 +781,10 @@ model BlogPost {
   // Author
   authorId String
 
+  // Read time and featured flag
+  readTime Int     @default(5)
+  featured Boolean @default(false)
+
   // Engagement
   views        Int @default(0)
   likes        Int @default(0)

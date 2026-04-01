@@ -331,6 +331,140 @@ async function main() {
   }
 
   console.log('🎉 Database seed completed successfully!');
+
+  // Seed blog posts
+  const blogAuthorEmail = 'admin@earbudhub.com';
+  const blogAuthor = await prisma.user.findUnique({ where: { email: blogAuthorEmail } });
+  if (blogAuthor) {
+    const blogPosts = [
+      {
+        title: 'AirPods Pro 3 Leaks: Hearing Aid Features and Better ANC Coming in 2025',
+        slug: 'airpods-pro-3-leaks-2025',
+        excerpt: 'Apple is reportedly preparing a massive update for the AirPods Pro line, focusing on health tracking and revolutionary active noise cancellation.',
+        content: `The latest reports from industry insiders suggest that the AirPods Pro 3 will feature a revamped H3 chip, dedicated health sensors for heart rate monitoring, and a new "hearing aid mode" that leverages advanced on-device processing. This move aligns with Apple's broader strategy to position its wearables as essential health devices.
+
+The hearing aid functionality is particularly interesting, as recent FDA deregulations have opened the door for over-the-counter hearing aids. By integrating this into a device millions already own, Apple could disrupt a multibillion-dollar industry.
+
+Additionally, we expect a 20% improvement in active noise cancellation (ANC) and better battery efficiency, potentially pushing playback time past 7 hours on a single charge. The case will likely retain its USB-C port but may see improvements in Find My accuracy with a newer U-series chip.`,
+        featuredImage: 'https://images.unsplash.com/photo-1606741965326-cb990ae01bb2?w=800&q=80',
+        tags: ['Apple', 'News', 'AirPods'],
+        readTime: 6,
+        featured: true,
+        status: 'PUBLISHED' as const,
+        publishedAt: new Date('2026-03-18T10:00:00Z'),
+      },
+      {
+        title: 'The "Single Earbud" Market: Why Replacement Parts are Booming',
+        slug: 'single-earbud-market-boom',
+        excerpt: 'Losing one earbud used to mean buying a whole new set. Not anymore. Discover why the secondary market for parts is changing the industry.',
+        content: `PairAgain data shows a 40% increase in searches for individual left and right buds over the last quarter. Manufacturers like Samsung and Sony are beginning to recognize this "right to repair" movement by making pairing software more accessible, though Apple still maintains a tighter grip on its ecosystem.
+
+For the average consumer, losing a single AirPod Pro used to represent a $100+ loss, often leading to the purchase of a completely new set. However, platforms like PairAgain are enabling a circular economy where users can find an authentic replacement for half the cost.
+
+Industry analysts predict that within the next two years, major brands may even start offering official "single-bud" SKU options at retail, moving away from the all-or-nothing bundles that have dominated the market since 2016.`,
+        featuredImage: 'https://images.unsplash.com/photo-1590658268037-6bf12f032f55?w=800&q=80',
+        tags: ['Market Trends', 'Repair', 'Savings'],
+        readTime: 5,
+        featured: false,
+        status: 'PUBLISHED' as const,
+        publishedAt: new Date('2026-03-15T14:30:00Z'),
+      },
+      {
+        title: 'Samsung Galaxy Buds 3 Pro Review: The Stem Design Controversy',
+        slug: 'samsung-buds-3-pro-review',
+        excerpt: 'Samsung abandoned the "bean" for a "stem." Does the new design actually improve microphone quality and fit?',
+        content: `Critics were divided when Samsung unveiled the Galaxy Buds 3 Pro with a design strikingly similar to the AirPods Pro. However, real-world testing shows that the dual-driver system and improved blade-lights offer a level of audio fidelity that justifies the hardware shift.
+
+The primary benefit of the stem design is microphone placement. By bringing the beam-forming mics closer to the mouth, Samsung has significantly improved call quality in windy conditions. The new "Blade Lights" aren't just for show either; they provide a visual indicator for pairing status and battery life.
+
+In terms of sound, the Buds 3 Pro feature a sophisticated 2-way speaker system with a high-fidelity tweeter and a planar woofer, delivering crisp highs and deep, controlled bass that rivals the Sony XM5 series.`,
+        featuredImage: 'https://images.unsplash.com/photo-1631867934874-4e0719e27668?w=800&q=80',
+        tags: ['Samsung', 'Review', 'Hardware'],
+        readTime: 8,
+        featured: false,
+        status: 'PUBLISHED' as const,
+        publishedAt: new Date('2026-03-12T09:15:00Z'),
+      },
+      {
+        title: 'Sony WF-1000XM6 Rumors: Smaller Case and Faster Loading',
+        slug: 'sony-xm6-rumors',
+        excerpt: "Everything we know about Sony's next flagship noise-cancelling earbuds.",
+        content: `Sony is expected to announce the WF-1000XM6 later this year. Sources indicate a 15% reduction in case size and a new V2 processor that could potentially double the processing power for ANC filters, aiming to take back the crown from Bose.
+
+Internal test models suggest Sony is moving toward a more ergonomic "hybrid" tip design—combining the comfort of silicone with the isolation of memory foam. This has been a point of contention for XM4 and XM5 users who found the stock foam tips prone to degradation.
+
+Connectivity will also get a boost with Bluetooth 5.4 support and optimized LE Audio, allowing for multi-point connection across three devices simultaneously without the occasional dropout seen in previous generations.`,
+        featuredImage: 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=800&q=80',
+        tags: ['Sony', 'ANC', 'Leaks'],
+        readTime: 4,
+        featured: false,
+        status: 'PUBLISHED' as const,
+        publishedAt: new Date('2026-03-10T16:45:00Z'),
+      },
+      {
+        title: "Bose QuietComfort Ultra: Still the ANC King in 2026?",
+        slug: 'bose-qc-ultra-2026-review',
+        excerpt: "Bose's \"Immersive Audio\" has been out for a while. We revisit the QC Ultra to see if it holds up against the newer competition.",
+        content: `While other brands focus on health and connectivity, Bose remains laser-focused on one thing: silence. In 2026, the QuietComfort Ultra remains the benchmark for low-frequency isolation in urban environments.
+
+The "Immersive Audio" mode, which uses head-tracking to simulate a spatial soundstage, remains a highlight of the experience. Unlike Apple's implementation, Bose's spatial audio works with any source, making it a versatile choice for movie lovers and podcast listeners alike.
+
+Battery life remains its Achilles' heel, however. With Immersive Audio turned on, you can only expect about 4 hours of juice. For long-haul flights, users might find themselves reaching for their XM5s or AirPods Max instead if they don't have time for a quick charge.`,
+        featuredImage: 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=800&q=80',
+        tags: ['Bose', 'Audio Quality', 'ANC'],
+        readTime: 7,
+        featured: false,
+        status: 'PUBLISHED' as const,
+        publishedAt: new Date('2026-03-05T11:20:00Z'),
+      },
+      {
+        title: 'Huawei Loss Care: A Built-In Insurance for Your FreeBuds',
+        slug: 'huawei-loss-care-freebuds',
+        excerpt: 'Huawei now offers an official loss-protection plan for FreeBuds owners. Is it worth it, and how does it compare to the secondary market?',
+        content: `Huawei has quietly rolled out a service called "Loss Care" specifically for its FreeBuds product line. The concept is straightforward: pay a small fee when purchasing your FreeBuds, and if you lose a single earbud or the charging case within the coverage period, Huawei will replace it at a significantly reduced cost.
+
+This is a notable move in the true wireless earbud space, where losing a single bud has traditionally meant either buying a full replacement set or turning to the secondary market. Huawei's approach acknowledges a pain point that platforms like PairAgain were built to solve.
+
+**How it works:** After purchasing the Loss Care add-on, users register their FreeBuds through the Huawei Support app. If a component is lost, they can file a claim and receive a replacement unit for a fraction of the retail price. The service currently covers FreeBuds Pro 3, FreeBuds 6i, and select other models.
+
+**The catch:** Loss Care only covers one replacement per coverage period, and the replacement must be for the same model. It doesn't cover physical damage, water damage, or theft — only accidental loss.
+
+**How it compares to PairAgain:** While Huawei's Loss Care is a manufacturer-backed insurance model, PairAgain's marketplace offers more flexibility. On PairAgain, you can find replacement buds across all brands, negotiate prices, and even trade components you no longer need. For Huawei users specifically, Loss Care is a convenient first line of defense, but PairAgain remains the go-to for cross-brand replacements and cost-conscious buyers.
+
+For full details on Huawei's Loss Care program, visit the [official Huawei Loss Care page](https://consumer.huawei.com/fr/support/huawei-loss-care-for-freebuds/).`,
+        featuredImage: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80',
+        tags: ['Huawei', 'Insurance', 'FreeBuds'],
+        readTime: 4,
+        featured: false,
+        status: 'PUBLISHED' as const,
+        publishedAt: new Date('2026-03-22T08:00:00Z'),
+      },
+    ];
+
+    for (const post of blogPosts) {
+      await prisma.blogPost.upsert({
+        where: { slug: post.slug },
+        update: {
+          title: post.title,
+          excerpt: post.excerpt,
+          content: post.content,
+          featuredImage: post.featuredImage,
+          tags: post.tags,
+          readTime: post.readTime,
+          featured: post.featured,
+          status: post.status,
+          publishedAt: post.publishedAt,
+        },
+        create: {
+          ...post,
+          authorId: blogAuthor.id,
+        },
+      });
+      console.log(`✅ Blog post seeded: ${post.title}`);
+    }
+  } else {
+    console.log('⚠️ Admin user not found — skipping blog post seed');
+  }
 }
 
 main()
