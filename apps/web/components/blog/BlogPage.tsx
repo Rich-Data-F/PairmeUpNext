@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { 
@@ -10,7 +10,10 @@ import {
   MagnifyingGlassIcon,
   ClockIcon,
   EyeIcon,
-  ChatBubbleLeftIcon
+  ChatBubbleLeftIcon,
+  ShareIcon,
+  HandThumbUpIcon,
+  LinkIcon
 } from '@heroicons/react/24/outline';
 
 interface BlogPost {
@@ -25,11 +28,138 @@ interface BlogPost {
   };
   publishedAt: string;
   readTime: number;
-  views: number;
-  comments: number;
   tags: string[];
   featured?: boolean;
-  coverImage?: string;
+  coverImage: string;
+}
+
+interface BlogComment {
+  id: string;
+  name: string;
+  content: string;
+  createdAt: string;
+  parentId?: string;
+}
+
+type ReactionType = '👍' | '❤️' | '🔥' | '😮' | '👏';
+const REACTIONS: ReactionType[] = ['👍', '❤️', '🔥', '😮', '👏'];
+
+// --- localStorage helpers ---
+function getViewCount(slug: string): number {
+  if (typeof window === 'undefined') return 0;
+  try {
+    const counts = JSON.parse(localStorage.getItem('blog_views') || '{}');
+    return counts[slug] || 0;
+  } catch { return 0; }
+}
+
+function incrementViewCount(slug: string): number {
+  if (typeof window === 'undefined') return 0;
+  try {
+    const counts = JSON.parse(localStorage.getItem('blog_views') || '{}');
+    const sessionKey = `blog_viewed_${slug}`;
+    if (!sessionStorage.getItem(sessionKey)) {
+      counts[slug] = (counts[slug] || 0) + 1;
+      localStorage.setItem('blog_views', JSON.stringify(counts));
+      sessionStorage.setItem(sessionKey, '1');
+    }
+    return counts[slug] || 0;
+  } catch { return 0; }
+}
+
+function getReactions(slug: string): Record<ReactionType, number> {
+  if (typeof window === 'undefined') return { '👍': 0, '❤️': 0, '🔥': 0, '😮': 0, '👏': 0 };
+  try {
+    const all = JSON.parse(localStorage.getItem('blog_reactions') || '{}');
+    return all[slug] || { '👍': 0, '❤️': 0, '🔥': 0, '😮': 0, '👏': 0 };
+  } catch { return { '👍': 0, '❤️': 0, '🔥': 0, '😮': 0, '👏': 0 }; }
+}
+
+function getUserReaction(slug: string): ReactionType | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const userReactions = JSON.parse(localStorage.getItem('blog_user_reactions') || '{}');
+    return userReactions[slug] || null;
+  } catch { return null; }
+}
+
+function toggleReaction(slug: string, reaction: ReactionType): { reactions: Record<ReactionType, number>; userReaction: ReactionType | null } {
+  if (typeof window === 'undefined') return { reactions: getReactions(slug), userReaction: null };
+  try {
+    const all = JSON.parse(localStorage.getItem('blog_reactions') || '{}');
+    const userReactions = JSON.parse(localStorage.getItem('blog_user_reactions') || '{}');
+    const current = all[slug] || { '👍': 0, '❤️': 0, '🔥': 0, '😮': 0, '👏': 0 };
+    const prev = userReactions[slug] || null;
+
+    if (prev === reaction) {
+      // Un-react
+      current[reaction] = Math.max(0, (current[reaction] || 0) - 1);
+      delete userReactions[slug];
+    } else {
+      // Remove previous reaction
+      if (prev) current[prev] = Math.max(0, (current[prev] || 0) - 1);
+      // Add new
+      current[reaction] = (current[reaction] || 0) + 1;
+      userReactions[slug] = reaction;
+    }
+    all[slug] = current;
+    localStorage.setItem('blog_reactions', JSON.stringify(all));
+    localStorage.setItem('blog_user_reactions', JSON.stringify(userReactions));
+    return { reactions: current, userReaction: userReactions[slug] || null };
+  } catch { return { reactions: getReactions(slug), userReaction: null }; }
+}
+
+function getComments(slug: string): BlogComment[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const all = JSON.parse(localStorage.getItem('blog_comments') || '{}');
+    return all[slug] || [];
+  } catch { return []; }
+}
+
+function addComment(slug: string, name: string, content: string, parentId?: string): BlogComment[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const all = JSON.parse(localStorage.getItem('blog_comments') || '{}');
+    const comments: BlogComment[] = all[slug] || [];
+    comments.push({
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      name,
+      content,
+      createdAt: new Date().toISOString(),
+      parentId,
+    });
+    all[slug] = comments;
+    localStorage.setItem('blog_comments', JSON.stringify(all));
+    return comments;
+  } catch { return []; }
+}
+
+// --- Share helpers ---
+function getShareUrl(slug: string): string {
+  if (typeof window === 'undefined') return '';
+  return `${window.location.origin}/blog#${slug}`;
+}
+
+function shareToTwitter(title: string, slug: string) {
+  const url = getShareUrl(slug);
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`, '_blank');
+}
+function shareToFacebook(slug: string) {
+  const url = getShareUrl(slug);
+  window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
+}
+function shareToLinkedIn(title: string, slug: string) {
+  const url = getShareUrl(slug);
+  window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank');
+}
+function shareToWhatsApp(title: string, slug: string) {
+  const url = getShareUrl(slug);
+  window.open(`https://wa.me/?text=${encodeURIComponent(`${title} ${url}`)}`, '_blank');
+}
+function copyLink(slug: string) {
+  navigator.clipboard.writeText(getShareUrl(slug));
+  toast.success('Link copied to clipboard!');
 }
 
 export function BlogPage() {
@@ -37,6 +167,99 @@ export function BlogPage() {
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [viewCounts, setViewCounts] = useState<Record<string, number>>({});
+  
+  // Engagement state
+  const [reactions, setReactions] = useState<Record<string, Record<ReactionType, number>>>({});
+  const [userReactions, setUserReactions] = useState<Record<string, ReactionType | null>>({});
+  const [comments, setComments] = useState<Record<string, BlogComment[]>>({});
+  const [commentName, setCommentName] = useState('');
+  const [commentText, setCommentText] = useState('');
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyName, setReplyName] = useState('');
+  const [replyText, setReplyText] = useState('');
+  const [showShareMenu, setShowShareMenu] = useState<string | null>(null);
+  const [showReactions, setShowReactions] = useState<string | null>(null);
+  const shareMenuRef = useRef<HTMLDivElement>(null);
+
+  // Refresh view counts from localStorage on mount and when selectedPost changes
+  const refreshViewCounts = useCallback((slugs: string[]) => {
+    const counts: Record<string, number> = {};
+    slugs.forEach(slug => {
+      counts[slug] = getViewCount(slug);
+    });
+    setViewCounts(counts);
+  }, []);
+
+  // Load engagement data for all posts
+  const loadEngagement = useCallback((slugs: string[]) => {
+    const r: Record<string, Record<ReactionType, number>> = {};
+    const ur: Record<string, ReactionType | null> = {};
+    const c: Record<string, BlogComment[]> = {};
+    slugs.forEach(slug => {
+      r[slug] = getReactions(slug);
+      ur[slug] = getUserReaction(slug);
+      c[slug] = getComments(slug);
+    });
+    setReactions(r);
+    setUserReactions(ur);
+    setComments(c);
+  }, []);
+
+  // Increment view count when an article is opened
+  useEffect(() => {
+    if (selectedPost) {
+      incrementViewCount(selectedPost.slug);
+      setViewCounts((prev: Record<string, number>) => ({
+        ...prev,
+        [selectedPost.slug]: getViewCount(selectedPost.slug)
+      }));
+    }
+  }, [selectedPost]);
+
+  // Close share menu on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (shareMenuRef.current && !shareMenuRef.current.contains(e.target as Node)) {
+        setShowShareMenu(null);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const handleReaction = (slug: string, reaction: ReactionType) => {
+    const result = toggleReaction(slug, reaction);
+    setReactions((prev: Record<string, Record<ReactionType, number>>) => ({ ...prev, [slug]: result.reactions }));
+    setUserReactions((prev: Record<string, ReactionType | null>) => ({ ...prev, [slug]: result.userReaction }));
+    setShowReactions(null);
+  };
+
+  const handleComment = (slug: string, parentId?: string) => {
+    const name = parentId ? replyName.trim() : commentName.trim();
+    const text = parentId ? replyText.trim() : commentText.trim();
+    if (!name || !text) { toast.error('Please enter your name and comment.'); return; }
+    const updated = addComment(slug, name, text, parentId);
+    setComments((prev: Record<string, BlogComment[]>) => ({ ...prev, [slug]: updated }));
+    if (parentId) { setReplyName(''); setReplyText(''); setReplyingTo(null); }
+    else { setCommentName(''); setCommentText(''); }
+    toast.success('Comment posted!');
+  };
+
+  const getTotalReactions = (slug: string): number => {
+    const r = reactions[slug];
+    if (!r) return 0;
+    return (Object.values(r) as number[]).reduce((sum, v) => sum + v, 0);
+  };
+
+  const getTopReaction = (slug: string): ReactionType | null => {
+    const r = reactions[slug];
+    if (!r) return null;
+    let top: ReactionType | null = null;
+    let max = 0;
+    (Object.entries(r) as [ReactionType, number][]).forEach(([k, v]) => { if (v > max) { max = v; top = k; } });
+    return max > 0 ? top : null;
+  };
 
   const blogPosts: BlogPost[] = [
     {
@@ -49,17 +272,12 @@ export function BlogPage() {
 The hearing aid functionality is particularly interesting, as recent FDA deregulations have opened the door for over-the-counter hearing aids. By integrating this into a device millions already own, Apple could disrupt a multibillion-dollar industry. 
 
 Additionally, we expect a 20% improvement in active noise cancellation (ANC) and better battery efficiency, potentially pushing playback time past 7 hours on a single charge. The case will likely retain its USB-C port but may see improvements in Find My accuracy with a newer U-series chip.`,
-      author: {
-        name: 'Sarah Johnson',
-        avatar: '/avatars/sarah.jpg'
-      },
+      author: { name: 'Sarah Johnson' },
       publishedAt: '2026-03-18T10:00:00Z',
       readTime: 6,
-      views: 2450,
-      comments: 42,
       tags: ['Apple', 'News', 'AirPods'],
       featured: true,
-      coverImage: '/blog/airpods-pro-3.jpg'
+      coverImage: 'https://images.unsplash.com/photo-1606741965326-cb990ae01bb2?w=800&q=80'
     },
     {
       id: '2',
@@ -71,16 +289,12 @@ Additionally, we expect a 20% improvement in active noise cancellation (ANC) and
 For the average consumer, losing a single AirPod Pro used to represent a $100+ loss, often leading to the purchase of a completely new set. However, platforms like PairAgain are enabling a circular economy where users can find an authentic replacement for half the cost.
 
 Industry analysts predict that within the next two years, major brands may even start offering official "single-bud" SKU options at retail, moving away from the all-or-nothing bundles that have dominated the market since 2016.`,
-      author: {
-        name: 'David Park',
-        avatar: '/avatars/david.jpg'
-      },
+      author: { name: 'David Park' },
       publishedAt: '2026-03-15T14:30:00Z',
       readTime: 5,
-      views: 1892,
-      comments: 28,
       tags: ['Market Trends', 'Repair', 'Savings'],
-      featured: false
+      featured: false,
+      coverImage: 'https://images.unsplash.com/photo-1590658268037-6bf12f032f55?w=800&q=80'
     },
     {
       id: '3',
@@ -92,16 +306,12 @@ Industry analysts predict that within the next two years, major brands may even 
 The primary benefit of the stem design is microphone placement. By bringing the beam-forming mics closer to the mouth, Samsung has significantly improved call quality in windy conditions. The new "Blade Lights" aren't just for show either; they provide a visual indicator for pairing status and battery life.
 
 In terms of sound, the Buds 3 Pro feature a sophisticated 2-way speaker system with a high-fidelity tweeter and a planar woofer, delivering crisp highs and deep, controlled bass that rivals the Sony XM5 series.`,
-      author: {
-        name: 'Mike Chen',
-        avatar: '/avatars/mike.jpg'
-      },
+      author: { name: 'Mike Chen' },
       publishedAt: '2026-03-12T09:15:00Z',
       readTime: 8,
-      views: 3421,
-      comments: 56,
       tags: ['Samsung', 'Review', 'Hardware'],
-      featured: false
+      featured: false,
+      coverImage: 'https://images.unsplash.com/photo-1631867934874-4e0719e27668?w=800&q=80'
     },
     {
       id: '4',
@@ -113,16 +323,12 @@ In terms of sound, the Buds 3 Pro feature a sophisticated 2-way speaker system w
 Internal test models suggest Sony is moving toward a more ergonomic "hybrid" tip design—combining the comfort of silicone with the isolation of memory foam. This has been a point of contention for XM4 and XM5 users who found the stock foam tips prone to degradation.
 
 Connectivity will also get a boost with Bluetooth 5.4 support and optimized LE Audio, allowing for multi-point connection across three devices simultaneously without the occasional dropout seen in previous generations.`,
-      author: {
-        name: 'Emma Williams',
-        avatar: '/avatars/emma.jpg'
-      },
+      author: { name: 'Emma Williams' },
       publishedAt: '2026-03-10T16:45:00Z',
       readTime: 4,
-      views: 5103,
-      comments: 112,
       tags: ['Sony', 'ANC', 'Leaks'],
-      featured: false
+      featured: false,
+      coverImage: 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=800&q=80'
     },
     {
       id: '5',
@@ -134,16 +340,12 @@ Connectivity will also get a boost with Bluetooth 5.4 support and optimized LE A
 The "Immersive Audio" mode, which uses head-tracking to simulate a spatial soundstage, remains a highlight of the experience. Unlike Apple's implementation, Bose's spatial audio works with any source, making it a versatile choice for movie lovers and podcast listeners alike.
 
 Battery life remains its Achilles' heel, however. With Immersive Audio turned on, you can only expect about 4 hours of juice. For long-haul flights, users might find themselves reaching for their XM5s or AirPods Max instead if they don't have time for a quick charge.`,
-      author: {
-        name: 'Lisa Thompson',
-        avatar: '/avatars/lisa.jpg'
-      },
+      author: { name: 'Lisa Thompson' },
       publishedAt: '2026-03-05T11:20:00Z',
       readTime: 7,
-      views: 2876,
-      comments: 34,
       tags: ['Bose', 'Audio Quality', 'ANC'],
-      featured: false
+      featured: false,
+      coverImage: 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=800&q=80'
     },
     {
       id: '6',
@@ -161,18 +363,21 @@ This is a notable move in the true wireless earbud space, where losing a single 
 **How it compares to PairAgain:** While Huawei's Loss Care is a manufacturer-backed insurance model, PairAgain's marketplace offers more flexibility. On PairAgain, you can find replacement buds across all brands, negotiate prices, and even trade components you no longer need. For Huawei users specifically, Loss Care is a convenient first line of defense, but PairAgain remains the go-to for cross-brand replacements and cost-conscious buyers.
 
 For full details on Huawei's Loss Care program, visit the [official Huawei Loss Care page](https://consumer.huawei.com/fr/support/huawei-loss-care-for-freebuds/).`,
-      author: {
-        name: 'David Park',
-        avatar: '/avatars/david.jpg'
-      },
+      author: { name: 'David Park' },
       publishedAt: '2026-03-22T08:00:00Z',
       readTime: 4,
-      views: 1240,
-      comments: 18,
       tags: ['Huawei', 'Insurance', 'FreeBuds'],
-      featured: false
+      featured: false,
+      coverImage: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80'
     }
   ];
+
+  // Initialize view counts and engagement on mount
+  useEffect(() => {
+    const slugs = blogPosts.map(p => p.slug);
+    refreshViewCounts(slugs);
+    loadEngagement(slugs);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const allTags = Array.from(new Set(blogPosts.flatMap(post => post.tags)));
 
@@ -209,6 +414,15 @@ For full details on Huawei's Loss Care program, visit the [official Huawei Loss 
           >
             ← Back to Blog
           </button>
+
+          {/* Cover Image */}
+          <div className="mb-8 rounded-2xl overflow-hidden shadow-lg">
+            <img 
+              src={selectedPost.coverImage} 
+              alt={selectedPost.title}
+              className="w-full h-64 sm:h-80 md:h-96 object-cover"
+            />
+          </div>
           
           <div className="mb-8">
             <div className="flex items-center space-x-2 text-sm text-gray-600 mb-4">
@@ -217,6 +431,9 @@ For full details on Huawei's Loss Care program, visit the [official Huawei Loss 
               <span className="mx-2">•</span>
               <ClockIcon className="w-4 h-4" />
               <span>{selectedPost.readTime} min read</span>
+              <span className="mx-2">•</span>
+              <EyeIcon className="w-4 h-4" />
+              <span>{viewCounts[selectedPost.slug] || 0} views</span>
             </div>
             <h1 className="text-4xl font-extrabold text-gray-900 mb-6">{selectedPost.title}</h1>
             
@@ -249,7 +466,95 @@ For full details on Huawei's Loss Care program, visit the [official Huawei Loss 
             })}
           </div>
 
-          <div className="mt-12 pt-8 border-t border-gray-100">
+          {/* Reactions & Share Bar */}
+          <div className="mt-10 pt-6 border-t border-gray-100">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              {/* Reactions */}
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <button
+                    onClick={() => setShowReactions(showReactions === selectedPost.slug ? null : selectedPost.slug)}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-full border transition-all ${
+                      userReactions[selectedPost.slug]
+                        ? 'bg-blue-50 border-blue-300 text-blue-700'
+                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {userReactions[selectedPost.slug] ? (
+                      <span className="text-lg">{userReactions[selectedPost.slug]}</span>
+                    ) : (
+                      <HandThumbUpIcon className="w-5 h-5" />
+                    )}
+                    <span className="font-medium text-sm">{getTotalReactions(selectedPost.slug) || 'React'}</span>
+                  </button>
+                  {showReactions === selectedPost.slug && (
+                    <div className="absolute bottom-full left-0 mb-2 bg-white rounded-full shadow-lg border border-gray-200 px-2 py-1 flex gap-1 z-10 animate-in fade-in slide-in-from-bottom-2">
+                      {REACTIONS.map(r => (
+                        <button
+                          key={r}
+                          onClick={() => handleReaction(selectedPost.slug, r)}
+                          className={`text-xl hover:scale-125 transition-transform p-1.5 rounded-full ${
+                            userReactions[selectedPost.slug] === r ? 'bg-blue-100' : 'hover:bg-gray-100'
+                          }`}
+                          title={r}
+                        >
+                          {r}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {/* Show breakdown of reactions */}
+                {getTotalReactions(selectedPost.slug) > 0 && (
+                  <div className="flex items-center gap-1 text-sm text-gray-500">
+                    {(Object.entries(reactions[selectedPost.slug] || {}) as [ReactionType, number][])
+                      .filter(([, v]) => v > 0)
+                      .sort(([, a], [, b]) => b - a)
+                      .map(([emoji, count]) => (
+                        <span key={emoji} className="flex items-center gap-0.5">
+                          <span className="text-base">{emoji}</span>
+                          <span>{count}</span>
+                        </span>
+                      ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Share */}
+              <div className="relative" ref={shareMenuRef}>
+                <button
+                  onClick={() => setShowShareMenu(showShareMenu === selectedPost.slug ? null : selectedPost.slug)}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-all"
+                >
+                  <ShareIcon className="w-5 h-5" />
+                  <span className="font-medium text-sm">Share</span>
+                </button>
+                {showShareMenu === selectedPost.slug && (
+                  <div className="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-lg border border-gray-200 py-2 w-48 z-10">
+                    <button onClick={() => { shareToTwitter(selectedPost.title, selectedPost.slug); setShowShareMenu(null); }} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3">
+                      <span className="text-lg">𝕏</span> Share on X
+                    </button>
+                    <button onClick={() => { shareToFacebook(selectedPost.slug); setShowShareMenu(null); }} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3">
+                      <span className="text-lg">📘</span> Facebook
+                    </button>
+                    <button onClick={() => { shareToLinkedIn(selectedPost.title, selectedPost.slug); setShowShareMenu(null); }} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3">
+                      <span className="text-lg">💼</span> LinkedIn
+                    </button>
+                    <button onClick={() => { shareToWhatsApp(selectedPost.title, selectedPost.slug); setShowShareMenu(null); }} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3">
+                      <span className="text-lg">💬</span> WhatsApp
+                    </button>
+                    <hr className="my-1 border-gray-100" />
+                    <button onClick={() => { copyLink(selectedPost.slug); setShowShareMenu(null); }} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3">
+                      <LinkIcon className="w-4 h-4" /> Copy link
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div className="mt-8 pt-6 border-t border-gray-100">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Tags</h3>
             <div className="flex flex-wrap gap-2">
               {selectedPost.tags.map(tag => (
@@ -257,6 +562,128 @@ For full details on Huawei's Loss Care program, visit the [official Huawei Loss 
                   #{tag}
                 </span>
               ))}
+            </div>
+          </div>
+
+          {/* Comments Section */}
+          <div className="mt-10 pt-8 border-t border-gray-100">
+            <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <ChatBubbleLeftIcon className="w-5 h-5" />
+              Comments ({(comments[selectedPost.slug] || []).length})
+            </h3>
+
+            {/* Comment form */}
+            <div className="bg-gray-50 rounded-xl p-6 mb-8">
+              <h4 className="font-semibold text-gray-800 mb-4">Leave a comment</h4>
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  placeholder="Your name"
+                  value={commentName}
+                  onChange={(e) => setCommentName(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                />
+                <textarea
+                  placeholder="Write your comment..."
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none"
+                />
+                <button
+                  onClick={() => handleComment(selectedPost.slug)}
+                  className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
+                >
+                  Post Comment
+                </button>
+              </div>
+            </div>
+
+            {/* Comments list */}
+            <div className="space-y-6">
+              {(comments[selectedPost.slug] || [])
+                .filter(c => !c.parentId)
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                .map(comment => (
+                  <div key={comment.id} className="group">
+                    <div className="flex gap-3">
+                      <div className="w-9 h-9 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-sm flex-shrink-0">
+                        {comment.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-gray-900 text-sm">{comment.name}</span>
+                          <span className="text-xs text-gray-400">{formatDate(comment.createdAt)}</span>
+                        </div>
+                        <p className="text-gray-700 text-sm leading-relaxed">{comment.content}</p>
+                        <button
+                          onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+                          className="text-xs text-blue-600 hover:text-blue-800 mt-2 font-medium"
+                        >
+                          Reply
+                        </button>
+
+                        {/* Reply form */}
+                        {replyingTo === comment.id && (
+                          <div className="mt-3 pl-4 border-l-2 border-blue-200 space-y-2">
+                            <input
+                              type="text"
+                              placeholder="Your name"
+                              value={replyName}
+                              onChange={(e) => setReplyName(e.target.value)}
+                              className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                            />
+                            <textarea
+                              placeholder="Write a reply..."
+                              value={replyText}
+                              onChange={(e) => setReplyText(e.target.value)}
+                              rows={2}
+                              className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none"
+                            />
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleComment(selectedPost.slug, comment.id)}
+                                className="bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                              >
+                                Reply
+                              </button>
+                              <button
+                                onClick={() => { setReplyingTo(null); setReplyName(''); setReplyText(''); }}
+                                className="text-gray-500 hover:text-gray-700 px-4 py-1.5 text-sm"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Threaded replies */}
+                        {(comments[selectedPost.slug] || [])
+                          .filter(r => r.parentId === comment.id)
+                          .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+                          .map(reply => (
+                            <div key={reply.id} className="mt-4 pl-4 border-l-2 border-gray-200">
+                              <div className="flex gap-3">
+                                <div className="w-7 h-7 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 font-bold text-xs flex-shrink-0">
+                                  {reply.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="font-semibold text-gray-900 text-sm">{reply.name}</span>
+                                    <span className="text-xs text-gray-400">{formatDate(reply.createdAt)}</span>
+                                  </div>
+                                  <p className="text-gray-700 text-sm leading-relaxed">{reply.content}</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              {(comments[selectedPost.slug] || []).length === 0 && (
+                <p className="text-center text-gray-400 py-6 text-sm">No comments yet. Be the first to share your thoughts!</p>
+              )}
             </div>
           </div>
 
@@ -347,10 +774,16 @@ For full details on Huawei's Loss Care program, visit the [official Huawei Loss 
             <div className="bg-white rounded-lg shadow-lg overflow-hidden">
               <div className="md:flex">
                 <div className="md:w-1/2">
-                  <div className="h-64 md:h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                    <div className="text-white text-center p-8">
-                      <h3 className="text-2xl font-bold mb-2">Featured Article</h3>
-                      <p className="text-blue-100">Most popular this week</p>
+                  <div className="h-64 md:h-full relative">
+                    <img 
+                      src={featuredPost.coverImage} 
+                      alt={featuredPost.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end">
+                      <div className="text-white p-6">
+                        <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">Featured</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -375,6 +808,10 @@ For full details on Huawei's Loss Care program, visit the [official Huawei Loss 
                       <div className="flex items-center space-x-1">
                         <ClockIcon className="w-4 h-4" />
                         <span>{featuredPost.readTime} min read</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <EyeIcon className="w-4 h-4" />
+                        <span>{viewCounts[featuredPost.slug] || 0} views</span>
                       </div>
                     </div>
                   </div>
@@ -404,10 +841,12 @@ For full details on Huawei's Loss Care program, visit the [official Huawei Loss 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {otherPosts.map((post) => (
             <article key={post.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="h-48 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                <div className="text-gray-500 text-center p-4">
-                  <h4 className="font-medium text-lg">{post.title}</h4>
-                </div>
+              <div className="h-48 overflow-hidden">
+                <img 
+                  src={post.coverImage} 
+                  alt={post.title}
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                />
               </div>
               
               <div className="p-6">
@@ -434,13 +873,28 @@ For full details on Huawei's Loss Care program, visit the [official Huawei Loss 
                   <div className="flex items-center space-x-4 text-sm text-gray-500">
                     <div className="flex items-center space-x-1">
                       <EyeIcon className="w-4 h-4" />
-                      <span>{post.views}</span>
+                      <span>{viewCounts[post.slug] || 0}</span>
                     </div>
-                    <div className="flex items-center space-x-1">
-                      <ChatBubbleLeftIcon className="w-4 h-4" />
-                      <span>{post.comments}</span>
-                    </div>
+                    {getTotalReactions(post.slug) > 0 && (
+                      <div className="flex items-center space-x-1">
+                        <span className="text-sm">{getTopReaction(post.slug)}</span>
+                        <span>{getTotalReactions(post.slug)}</span>
+                      </div>
+                    )}
+                    {(comments[post.slug] || []).length > 0 && (
+                      <div className="flex items-center space-x-1">
+                        <ChatBubbleLeftIcon className="w-4 h-4" />
+                        <span>{(comments[post.slug] || []).length}</span>
+                      </div>
+                    )}
                   </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); copyLink(post.slug); }}
+                    className="text-gray-400 hover:text-blue-600 transition-colors"
+                    title="Copy link"
+                  >
+                    <ShareIcon className="w-4 h-4" />
+                  </button>
                 </div>
                 
                 <div className="flex flex-wrap gap-1 mb-4">
