@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url);
     const params = new URLSearchParams(url.searchParams.toString());
     params.set('include', '_count');
-    if (!params.has('limit')) params.set('limit', '100');
+    if (!params.has('limit')) params.set('limit', '500');
     
     console.log('📡 Calling backend brands');
 

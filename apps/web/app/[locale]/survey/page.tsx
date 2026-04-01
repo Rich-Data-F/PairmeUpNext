@@ -201,6 +201,14 @@ export default function SurveyPage() {
   const [resoldCurrency, setResoldCurrency] = useState('EUR');
   const [resoldStore, setResoldStore] = useState('');
 
+  // ── Device & App ──────────────────────────────────────────────────────────────
+  const [deviceTypes, setDeviceTypes] = useState<string[]>([]);
+  const [deviceTypeOther, setDeviceTypeOther] = useState('');
+  const [operatingSystems, setOperatingSystems] = useState<string[]>([]);
+  const [osOther, setOsOther] = useState('');
+  const [commandOnDeviceRate, setCommandOnDeviceRate] = useState<number | ''>('');
+  const [deviceAppRate, setDeviceAppRate] = useState<number | ''>('');
+
   // ── Effects ───────────────────────────────────────────────────────────────────
   useEffect(() => {
     fetch('/api/proxy/auth/profile')
@@ -306,6 +314,13 @@ export default function SurveyPage() {
       resoldPrice: resoldItem && resoldPrice ? Number(resoldPrice) : undefined,
       resoldCurrency: resoldItem && resoldPrice ? resoldCurrency : undefined,
       resoldStore: resoldItem ? resoldStore : undefined,
+      // device & app
+      deviceTypes: deviceTypes.length ? deviceTypes.join(',') : undefined,
+      deviceTypeOther: deviceTypes.includes('OTHER') ? deviceTypeOther : undefined,
+      operatingSystems: operatingSystems.length ? operatingSystems.join(',') : undefined,
+      osOther: operatingSystems.includes('OTHER') ? osOther : undefined,
+      commandOnDeviceRate: commandOnDeviceRate ? Number(commandOnDeviceRate) : undefined,
+      deviceAppRate: deviceAppRate ? Number(deviceAppRate) : undefined,
     };
 
     try {
@@ -963,6 +978,100 @@ export default function SurveyPage() {
                   </div>
                 </div>
               )}
+
+            </div>
+          </section>
+
+          {/* ── Section 10: Device & App ─────────────────────────────────────── */}
+          <section>
+            <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-3">
+              <SectionBadge num={10} /> {t('s10Title')}
+            </h2>
+            <div className="bg-indigo-50 p-6 rounded-3xl border border-indigo-100 space-y-6">
+
+              {/* Device Types - multiselect checkboxes */}
+              <div>
+                <h3 className="text-sm font-black uppercase tracking-widest text-indigo-700 mb-3">{t('deviceTypeTitle')}</h3>
+                <p className="text-xs text-gray-500 mb-3 italic">{t('deviceTypeHint')}</p>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { value: 'LAPTOP', label: '💻 ' + t('deviceLaptop') },
+                    { value: 'MOBILE', label: '📱 ' + t('deviceMobile') },
+                    { value: 'TABLET', label: '📲 ' + t('deviceTablet') },
+                    { value: 'DESKTOP', label: '🖥️ ' + t('deviceDesktop') },
+                    { value: 'SMARTWATCH', label: '⌚ ' + t('deviceSmartwatch') },
+                    { value: 'OTHER', label: '🔧 ' + t('deviceOther') },
+                  ].map(opt => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setDeviceTypes(prev =>
+                        prev.includes(opt.value) ? prev.filter(d => d !== opt.value) : [...prev, opt.value]
+                      )}
+                      className={`px-4 py-2 rounded-xl text-sm font-bold border transition-all ${
+                        deviceTypes.includes(opt.value)
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
+                          : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-400'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                {deviceTypes.includes('OTHER') && (
+                  <input
+                    className="input input-bordered w-full mt-3 bg-white"
+                    placeholder={t('deviceOtherPlaceholder')}
+                    value={deviceTypeOther}
+                    onChange={e => setDeviceTypeOther(e.target.value)}
+                  />
+                )}
+              </div>
+
+              {/* Operating Systems - multiselect checkboxes */}
+              <div>
+                <h3 className="text-sm font-black uppercase tracking-widest text-indigo-700 mb-3">{t('osTitle')}</h3>
+                <p className="text-xs text-gray-500 mb-3 italic">{t('osHint')}</p>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { value: 'IOS', label: '🍎 iOS' },
+                    { value: 'ANDROID', label: '🤖 Android' },
+                    { value: 'WINDOWS', label: '🪟 Windows' },
+                    { value: 'MACOS', label: '💻 macOS' },
+                    { value: 'LINUX', label: '🐧 Linux' },
+                    { value: 'OTHER', label: '🔧 ' + t('osOtherLabel') },
+                  ].map(opt => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setOperatingSystems(prev =>
+                        prev.includes(opt.value) ? prev.filter(o => o !== opt.value) : [...prev, opt.value]
+                      )}
+                      className={`px-4 py-2 rounded-xl text-sm font-bold border transition-all ${
+                        operatingSystems.includes(opt.value)
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
+                          : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-400'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                {operatingSystems.includes('OTHER') && (
+                  <input
+                    className="input input-bordered w-full mt-3 bg-white"
+                    placeholder={t('osOtherPlaceholder')}
+                    value={osOther}
+                    onChange={e => setOsOther(e.target.value)}
+                  />
+                )}
+              </div>
+
+              {/* Command on Device & Device App ratings */}
+              <div className="grid md:grid-cols-2 gap-x-12 gap-y-6 bg-white p-6 rounded-2xl border border-indigo-100 shadow-sm">
+                {renderRatingGroup(t('commandOnDeviceRate'), commandOnDeviceRate, setCommandOnDeviceRate)}
+                {renderRatingGroup(t('deviceAppRate'), deviceAppRate, setDeviceAppRate)}
+              </div>
 
             </div>
           </section>

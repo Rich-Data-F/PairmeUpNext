@@ -1336,6 +1336,25 @@ model SurveyResponse {
   boughtSpareItem       Boolean  @default(false)
   spareCondition        String?  // NEW, USED
   sparePurchaseLocation String?
+  spareCountry          String?
+  sparePrice            Decimal? @db.Decimal(10, 2)
+  spareCurrency         String?
+
+  // Device & App context
+  deviceTypes           String?  // comma-separated: LAPTOP,MOBILE,TABLET,OTHER
+  deviceTypeOther       String?  // free text if OTHER selected
+  operatingSystems      String?  // comma-separated: IOS,ANDROID,WINDOWS,LINUX,MACOS,OTHER
+  osOther               String?  // free text if OTHER selected
+  commandOnDeviceRate   Int?     // 1-5: ease of controlling earbuds from device
+  deviceAppRate         Int?     // 1-5: companion app quality
+
+  // Resale
+  resoldItem            Boolean  @default(false)
+  resoldItemType        String?  // case | one_earbud | two_earbuds | full_kit
+  resoldCondition       String?  // NEW | USED
+  resoldPrice           Decimal? @db.Decimal(10, 2)
+  resoldCurrency        String?
+  resoldStore           String?
 
   createdAt             DateTime @default(now())
 

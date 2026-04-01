@@ -88,4 +88,12 @@ export class CreateSurveyDto {
   @ApiProperty({ required: false }) @IsNumber() @IsOptional() resoldPrice?: number;             // resale price
   @ApiProperty({ required: false }) @IsString() @IsOptional() resoldCurrency?: string;          // resale currency
   @ApiProperty({ required: false }) @IsString() @IsOptional() resoldStore?: string;             // resale store/website
+
+  // ── Device & App context ────────────────────────────────────────────────────
+  @ApiProperty({ required: false }) @IsString() @IsOptional() deviceTypes?: string;             // comma-separated: LAPTOP,MOBILE,TABLET,OTHER
+  @ApiProperty({ required: false }) @IsString() @IsOptional() deviceTypeOther?: string;         // free text if OTHER selected
+  @ApiProperty({ required: false }) @IsString() @IsOptional() operatingSystems?: string;        // comma-separated: IOS,ANDROID,WINDOWS,LINUX,MACOS,OTHER
+  @ApiProperty({ required: false }) @IsString() @IsOptional() osOther?: string;                 // free text if OTHER selected
+  @ApiProperty({ required: false }) @IsInt() @Min(1) @Max(5) @IsOptional() commandOnDeviceRate?: number;  // ease of controlling earbuds from device
+  @ApiProperty({ required: false }) @IsInt() @Min(1) @Max(5) @IsOptional() deviceAppRate?: number;        // companion app quality
 }

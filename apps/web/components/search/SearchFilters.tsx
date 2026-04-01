@@ -9,6 +9,7 @@ interface SearchFiltersProps {
   filters: SearchParams;
   onFiltersChange: (filters: Partial<SearchParams>) => void;
   loading: boolean;
+  brandNamesMap?: Record<string, string>;
 }
 
 interface FilterSectionProps {
@@ -77,7 +78,7 @@ const conditionLabels: Record<string, string> = {
   PARTS_ONLY: 'Parts Only'
 };
 
-export function SearchFilters({ facets, filters, onFiltersChange, loading }: SearchFiltersProps) {
+export function SearchFilters({ facets, filters, onFiltersChange, loading, brandNamesMap = {} }: SearchFiltersProps) {
   // Local state for price inputs to avoid immediate API calls on every keystroke
   const [localMinPrice, setLocalMinPrice] = useState(filters.minPrice || '');
   const [localMaxPrice, setLocalMaxPrice] = useState(filters.maxPrice || '');
@@ -292,7 +293,7 @@ export function SearchFilters({ facets, filters, onFiltersChange, loading }: Sea
                    <CheckboxOption
                      key={brandId}
                      id={`brand-${brandId}`}
-                     label={brandId} // Will show ID until facets load with proper name
+                     label={brandNamesMap[brandId] || brandId}
                      count={0}
                      checked={true}
                      onChange={(checked) => handleBrandChange(brandId, checked)}

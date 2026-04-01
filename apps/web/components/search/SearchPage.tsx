@@ -77,6 +77,7 @@ export function SearchPage({ showAllByDefault = false }: SearchPageProps) {
   const [facets, setFacets] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [brandNamesMap, setBrandNamesMap] = useState<Record<string, string>>({});
 
   // Perform search
   const performSearch = useCallback(async (filters: SearchParams) => {
@@ -115,6 +116,14 @@ export function SearchPage({ showAllByDefault = false }: SearchPageProps) {
       if (facetsResponse.ok) {
         facetsData = await facetsResponse.json();
         setFacets(facetsData);
+        // Update brand names map from facets data
+        if (facetsData?.brands) {
+          const newNames: Record<string, string> = {};
+          for (const b of facetsData.brands) {
+            if (b.id && b.name) newNames[b.id] = b.name;
+          }
+          setBrandNamesMap(prev => ({ ...prev, ...newNames }));
+        }
       }
 
       setResults(searchData);
@@ -142,6 +151,12 @@ export function SearchPage({ showAllByDefault = false }: SearchPageProps) {
       sortBy: searchParams.get('sortBy') || 'relevance',
       page: parseInt(searchParams.get('page') || '1'),
     };
+
+    // Build brand names map from URL (passed from BrandsPage)
+    const brandName = searchParams.get('brandName');
+    if (brandName && params.brands && params.brands.length === 1) {
+      setBrandNamesMap(prev => ({ ...prev, [params.brands![0]]: brandName }));
+    }
     
     console.log('📝 Initializing search from URL params:', params);
     setSearchFilters(params);
@@ -240,6 +255,7 @@ export function SearchPage({ showAllByDefault = false }: SearchPageProps) {
               facets={facets}
               onFiltersChange={handleFilterChange}
               loading={loading}
+              brandNamesMap={brandNamesMap}
             />
           </div>
           

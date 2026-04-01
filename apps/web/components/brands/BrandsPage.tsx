@@ -66,9 +66,9 @@ export function BrandsPage() {
   ) : [];
 
   const handleBrandClick = (brand: Brand) => {
-    // Navigate to search with both query and brand filter
-    // Use brand name for query but brand ID for the brands filter
-    router.push(`/search?q=${encodeURIComponent(brand.name)}&brands=${encodeURIComponent(brand.id)}`);
+    // Navigate to search with brand filter only (no text query to avoid interference)
+    // Pass brandName in URL so the search filter can display the label properly
+    router.push(`/search?brands=${encodeURIComponent(brand.id)}&brandName=${encodeURIComponent(brand.name)}`);
   };
 
   return (
