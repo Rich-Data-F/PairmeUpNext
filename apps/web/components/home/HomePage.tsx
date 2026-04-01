@@ -73,7 +73,7 @@ export function HomePage() {
     try {
       setLoading(true);
       const [featuredResponse, suggestionsResponse, statsResponse] = await Promise.all([
-        fetch('/api/search/featured'),
+        fetch('/api/search/featured?limit=30'),
         fetch('/api/search/suggestions'),
         fetch('/api/proxy/search/stats'),
       ]);
@@ -82,9 +82,15 @@ export function HomePage() {
       const suggestionsData = await parseJsonSafely(suggestionsResponse, { popular: [], trending: [] });
       const statsData = await parseJsonSafely(statsResponse, { activeListings: 0, totalUsers: 0, totalViews: { _sum: { views: 0 } } });
 
-      const featuredArray = Array.isArray(featured)
+      const rawArray: any[] = Array.isArray(featured)
         ? featured
         : (featured?.listings ?? []);
+
+      // Only show listings with at least one photo, sorted by views desc, capped at 6
+      const featuredArray = rawArray
+        .filter(l => Array.isArray(l.images) && l.images.length > 0)
+        .sort((a, b) => (b.views ?? 0) - (a.views ?? 0))
+        .slice(0, 6);
 
       setFeaturedListings(featuredArray);
       setSuggestions({
@@ -256,8 +262,8 @@ export function HomePage() {
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[...Array(12)].map((_, index) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, index) => (
                 <div key={index} className="bg-white rounded-xl shadow-sm animate-pulse">
                   <div className="aspect-square bg-gray-200 rounded-t-xl"></div>
                   <div className="p-4 space-y-3">
@@ -268,8 +274,8 @@ export function HomePage() {
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          ) : featuredListings.length === 0 ? null : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {featuredListings.map((listing) => (
                 <ListingCard key={listing.id} listing={listing} />
               ))}
