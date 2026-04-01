@@ -564,6 +564,7 @@ model BlogPost {
   brandId         String?
   modelId         String?
   authorId        String
+  readTime        Int        @default(5)
   views           Int        @default(0)
   likes           Int        @default(0)
   commentCount    Int        @default(0)

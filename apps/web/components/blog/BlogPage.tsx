@@ -26,14 +26,20 @@ interface BlogPost {
   excerpt: string;
   content: string;
   author: {
+    id?: string;
     name: string;
+    image?: string | null;
     avatar?: string;
   };
   publishedAt: string;
   readTime: number;
   tags: string[];
   featured?: boolean;
-  coverImage: string;
+  coverImage: string;       // local alias — mapped from featuredImage
+  featuredImage?: string;    // DB field
+  views?: number;
+  likes?: number;
+  commentCount?: number;
 }
 
 interface BlogComment {
@@ -198,15 +204,135 @@ function copyLink(slug: string) {
   toast.success('Link copied to clipboard!');
 }
 
+// --- Image URL normalization (same pattern as ListingCard / SearchResults) ---
+function normalizeImageUrl(url: string | null | undefined): string {
+  if (!url) return '/placeholder-image.jpg';
+  if (url.startsWith('/')) return url;
+  if (url.includes('pub-') && url.includes('.r2.dev')) return url;
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return `/api/proxy/image?url=${encodeURIComponent(url)}`;
+  }
+  return url;
+}
+
+// --- Map API response to local BlogPost shape ---
+function mapApiPost(raw: any): BlogPost {
+  return {
+    id: raw.id,
+    title: raw.title,
+    slug: raw.slug,
+    excerpt: raw.excerpt || '',
+    content: raw.content || '',
+    author: {
+      id: raw.author?.id,
+      name: raw.author?.name || 'Unknown',
+      image: raw.author?.image,
+    },
+    publishedAt: raw.publishedAt || raw.createdAt,
+    readTime: raw.readTime || 5,
+    tags: raw.tags || [],
+    featured: false,
+    coverImage: raw.featuredImage || '',
+    featuredImage: raw.featuredImage,
+    views: raw.views || 0,
+    likes: raw.likes || 0,
+    commentCount: raw.commentCount || 0,
+  };
+}
+
+// Fallback posts when API is empty / unreachable
+const FALLBACK_POSTS: BlogPost[] = [
+  {
+    id: 'fb-1',
+    title: 'AirPods Pro 3 Leaks: Hearing Aid Features and Better ANC Coming in 2025',
+    slug: 'airpods-pro-3-leaks-2025',
+    excerpt: 'Apple is reportedly preparing a massive update for the AirPods Pro line, focusing on health tracking and revolutionary active noise cancellation.',
+    content: `The latest reports from industry insiders suggest that the AirPods Pro 3 will feature a revamped H3 chip, dedicated health sensors for heart rate monitoring, and a new "hearing aid mode" that leverages advanced on-device processing. This move aligns with Apple's broader strategy to position its wearables as essential health devices.\n\nThe hearing aid functionality is particularly interesting, as recent FDA deregulations have opened the door for over-the-counter hearing aids. By integrating this into a device millions already own, Apple could disrupt a multibillion-dollar industry.\n\nAdditionally, we expect a 20% improvement in active noise cancellation (ANC) and better battery efficiency, potentially pushing playback time past 7 hours on a single charge. The case will likely retain its USB-C port but may see improvements in Find My accuracy with a newer U-series chip.`,
+    author: { name: 'Sarah Johnson' },
+    publishedAt: '2026-03-18T10:00:00Z',
+    readTime: 6,
+    tags: ['Apple', 'News', 'AirPods'],
+    featured: true,
+    coverImage: 'https://images.unsplash.com/photo-1606741965326-cb990ae01bb2?w=800&q=80',
+  },
+  {
+    id: 'fb-2',
+    title: 'The "Single Earbud" Market: Why Replacement Parts are Booming',
+    slug: 'single-earbud-market-boom',
+    excerpt: 'Losing one earbud used to mean buying a whole new set. Not anymore.',
+    content: `PairAgain data shows a 40% increase in searches for individual left and right buds over the last quarter. Manufacturers like Samsung and Sony are beginning to recognize this "right to repair" movement.\n\nFor the average consumer, losing a single AirPod Pro used to represent a $100+ loss. However, platforms like PairAgain are enabling a circular economy where users can find an authentic replacement for half the cost.\n\nIndustry analysts predict that within the next two years, major brands may even start offering official "single-bud" SKU options at retail.`,
+    author: { name: 'David Park' },
+    publishedAt: '2026-03-15T14:30:00Z',
+    readTime: 5,
+    tags: ['Market Trends', 'Repair', 'Savings'],
+    featured: false,
+    coverImage: 'https://images.unsplash.com/photo-1590658268037-6bf12f032f55?w=800&q=80',
+  },
+  {
+    id: 'fb-3',
+    title: 'Samsung Galaxy Buds 3 Pro Review: The Stem Design Controversy',
+    slug: 'samsung-buds-3-pro-review',
+    excerpt: 'Samsung abandoned the "bean" for a "stem." Does the new design actually improve microphone quality and fit?',
+    content: `Critics were divided when Samsung unveiled the Galaxy Buds 3 Pro with a design strikingly similar to the AirPods Pro. However, real-world testing shows that the dual-driver system and improved blade-lights offer a level of audio fidelity that justifies the hardware shift.\n\nThe primary benefit of the stem design is microphone placement. By bringing the beam-forming mics closer to the mouth, Samsung has significantly improved call quality in windy conditions.\n\nIn terms of sound, the Buds 3 Pro feature a sophisticated 2-way speaker system with a high-fidelity tweeter and a planar woofer, delivering crisp highs and deep, controlled bass that rivals the Sony XM5 series.`,
+    author: { name: 'Mike Chen' },
+    publishedAt: '2026-03-12T09:15:00Z',
+    readTime: 8,
+    tags: ['Samsung', 'Review', 'Hardware'],
+    featured: false,
+    coverImage: 'https://images.unsplash.com/photo-1631867934874-4e0719e27668?w=800&q=80',
+  },
+  {
+    id: 'fb-4',
+    title: 'Sony WF-1000XM6 Rumors: Smaller Case and Faster Loading',
+    slug: 'sony-xm6-rumors',
+    excerpt: "Everything we know about Sony's next flagship noise-cancelling earbuds.",
+    content: `Sony is expected to announce the WF-1000XM6 later this year. Sources indicate a 15% reduction in case size and a new V2 processor that could potentially double the processing power for ANC filters.\n\nInternal test models suggest Sony is moving toward a more ergonomic "hybrid" tip design—combining the comfort of silicone with the isolation of memory foam.\n\nConnectivity will also get a boost with Bluetooth 5.4 support and optimized LE Audio, allowing for multi-point connection across three devices simultaneously.`,
+    author: { name: 'Emma Williams' },
+    publishedAt: '2026-03-10T16:45:00Z',
+    readTime: 4,
+    tags: ['Sony', 'ANC', 'Leaks'],
+    featured: false,
+    coverImage: 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=800&q=80',
+  },
+  {
+    id: 'fb-5',
+    title: 'Bose QuietComfort Ultra: Still the ANC King in 2026?',
+    slug: 'bose-qc-ultra-2026-review',
+    excerpt: "Bose's \"Immersive Audio\" has been out for a while. We revisit the QC Ultra to see if it holds up.",
+    content: `While other brands focus on health and connectivity, Bose remains laser-focused on one thing: silence. In 2026, the QuietComfort Ultra remains the benchmark for low-frequency isolation.\n\nThe "Immersive Audio" mode, which uses head-tracking to simulate a spatial soundstage, remains a highlight.\n\nBattery life remains its Achilles' heel, however. With Immersive Audio turned on, you can only expect about 4 hours of juice.`,
+    author: { name: 'Lisa Thompson' },
+    publishedAt: '2026-03-05T11:20:00Z',
+    readTime: 7,
+    tags: ['Bose', 'Audio Quality', 'ANC'],
+    featured: false,
+    coverImage: 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=800&q=80',
+  },
+  {
+    id: 'fb-6',
+    title: 'Huawei Loss Care: A Built-In Insurance for Your FreeBuds',
+    slug: 'huawei-loss-care-freebuds',
+    excerpt: 'Huawei now offers an official loss-protection plan for FreeBuds owners.',
+    content: `Huawei has quietly rolled out a service called "Loss Care" specifically for its FreeBuds product line. Pay a small fee when purchasing your FreeBuds, and if you lose a single earbud or the charging case within the coverage period, Huawei will replace it at a significantly reduced cost.\n\n**How it works:** After purchasing the Loss Care add-on, users register their FreeBuds through the Huawei Support app.\n\n**The catch:** Loss Care only covers one replacement per coverage period, and the replacement must be for the same model.\n\n**How it compares to PairAgain:** While Huawei's Loss Care is a manufacturer-backed insurance model, PairAgain's marketplace offers more flexibility.\n\nFor full details, visit the [official Huawei Loss Care page](https://consumer.huawei.com/fr/support/huawei-loss-care-for-freebuds/).`,
+    author: { name: 'David Park' },
+    publishedAt: '2026-03-22T08:00:00Z',
+    readTime: 4,
+    tags: ['Huawei', 'Insurance', 'FreeBuds'],
+    featured: false,
+    coverImage: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80',
+  },
+];
+
 export function BlogPage() {
   const router = useRouter();
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>(FALLBACK_POSTS);
+  const [loading, setLoading] = useState(true);
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [viewCounts, setViewCounts] = useState<Record<string, number>>({});
   
   // Auth / edit
-  const [profile, setProfile] = useState<{ name: string; isAdmin: boolean } | null>(null);
+  const [profile, setProfile] = useState<{ name: string; isAdmin: boolean; id?: string } | null>(null);
   const [blogEdits, setBlogEdits] = useState<Record<string, BlogEdits>>({});
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<BlogEdits & { tagsRaw: string }>({ tagsRaw: '' });
@@ -225,6 +351,24 @@ export function BlogPage() {
   const [showShareMenu, setShowShareMenu] = useState<string | null>(null);
   const [showReactions, setShowReactions] = useState<string | null>(null);
   const shareMenuRef = useRef<HTMLDivElement>(null);
+
+  // Fetch posts from API, fall back to hardcoded
+  useEffect(() => {
+    fetch('/api/proxy/blog?limit=50')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.posts?.length) {
+          const mapped = data.posts.map(mapApiPost);
+          // Mark the first post as featured if none is
+          if (!mapped.some((p: BlogPost) => p.featured) && mapped.length > 0) {
+            mapped[0].featured = true;
+          }
+          setBlogPosts(mapped);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   // Refresh view counts from localStorage on mount and when selectedPost changes
   const refreshViewCounts = useCallback((slugs: string[]) => {
@@ -255,7 +399,7 @@ export function BlogPage() {
     fetch('/api/proxy/auth/profile')
       .then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (data?.id) setProfile({ name: data.name || '', isAdmin: data.isAdmin === true });
+        if (data?.id) setProfile({ id: data.id, name: data.name || '', isAdmin: data.isAdmin === true });
       })
       .catch(() => {});
     setBlogEdits(getBlogEdits());
@@ -309,7 +453,8 @@ export function BlogPage() {
 
   const canEdit = (post: BlogPost): boolean => {
     if (!profile) return false;
-    return profile.isAdmin || profile.name === post.author.name;
+    if (profile.isAdmin) return true;
+    return profile.name === post.author.name || profile.id === post.author.id;
   };
 
   const startEdit = (post: BlogPost) => {
@@ -325,23 +470,43 @@ export function BlogPage() {
     setIsEditing(true);
   };
 
-  const saveEdit = (post: BlogPost) => {
+  const saveEdit = async (post: BlogPost) => {
     const tags = editForm.tagsRaw?.split(',').map(t => t.trim()).filter(Boolean) || post.tags;
-    const edits: BlogEdits = {
+    const payload = {
       title: editForm.title || post.title,
       excerpt: editForm.excerpt || post.excerpt,
       content: editForm.content || post.content,
-      coverImage: editForm.coverImage || post.coverImage,
+      featuredImage: editForm.coverImage || post.coverImage,
       readTime: Number(editForm.readTime) || post.readTime,
       tags,
     };
+
+    // Try saving to API first
+    try {
+      const res = await fetch(`/api/proxy/blog/${post.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        const mapped = mapApiPost(updated);
+        setBlogPosts(prev => prev.map(p => p.id === post.id ? mapped : p));
+        setSelectedPost(mapped);
+        setIsEditing(false);
+        toast.success('Post saved to database!');
+        return;
+      }
+    } catch {}
+
+    // Fallback: save to localStorage
+    const edits: BlogEdits = { ...payload, coverImage: payload.featuredImage };
     saveBlogEdit(post.slug, edits);
     const updated = { ...blogEdits, [post.slug]: edits };
     setBlogEdits(updated);
-    // Update selectedPost so article view refreshes
     setSelectedPost(applyEdits(post, updated));
     setIsEditing(false);
-    toast.success('Post updated!');
+    toast.success('Post updated locally.');
   };
 
   const revertEdit = (post: BlogPost) => {
@@ -382,126 +547,22 @@ export function BlogPage() {
     return max > 0 ? top : null;
   };
 
-  const blogPosts: BlogPost[] = [
-    {
-      id: '1',
-      title: 'AirPods Pro 3 Leaks: Hearing Aid Features and Better ANC Coming in 2025',
-      slug: 'airpods-pro-3-leaks-2025',
-      excerpt: 'Apple is reportedly preparing a massive update for the AirPods Pro line, focusing on health tracking and revolutionary active noise cancellation.',
-      content: `The latest reports from industry insiders suggest that the AirPods Pro 3 will feature a revamped H3 chip, dedicated health sensors for heart rate monitoring, and a new "hearing aid mode" that leverages advanced on-device processing. This move aligns with Apple's broader strategy to position its wearables as essential health devices.
-
-The hearing aid functionality is particularly interesting, as recent FDA deregulations have opened the door for over-the-counter hearing aids. By integrating this into a device millions already own, Apple could disrupt a multibillion-dollar industry. 
-
-Additionally, we expect a 20% improvement in active noise cancellation (ANC) and better battery efficiency, potentially pushing playback time past 7 hours on a single charge. The case will likely retain its USB-C port but may see improvements in Find My accuracy with a newer U-series chip.`,
-      author: { name: 'Sarah Johnson' },
-      publishedAt: '2026-03-18T10:00:00Z',
-      readTime: 6,
-      tags: ['Apple', 'News', 'AirPods'],
-      featured: true,
-      coverImage: 'https://images.unsplash.com/photo-1606741965326-cb990ae01bb2?w=800&q=80'
-    },
-    {
-      id: '2',
-      title: 'The "Single Earbud" Market: Why Replacement Parts are Booming',
-      slug: 'single-earbud-market-boom',
-      excerpt: 'Losing one earbud used to mean buying a whole new set. Not anymore. Discover why the secondary market for parts is changing the industry.',
-      content: `PairAgain data shows a 40% increase in searches for individual left and right buds over the last quarter. Manufacturers like Samsung and Sony are beginning to recognize this "right to repair" movement by making pairing software more accessible, though Apple still maintains a tighter grip on its ecosystem.
-
-For the average consumer, losing a single AirPod Pro used to represent a $100+ loss, often leading to the purchase of a completely new set. However, platforms like PairAgain are enabling a circular economy where users can find an authentic replacement for half the cost.
-
-Industry analysts predict that within the next two years, major brands may even start offering official "single-bud" SKU options at retail, moving away from the all-or-nothing bundles that have dominated the market since 2016.`,
-      author: { name: 'David Park' },
-      publishedAt: '2026-03-15T14:30:00Z',
-      readTime: 5,
-      tags: ['Market Trends', 'Repair', 'Savings'],
-      featured: false,
-      coverImage: 'https://images.unsplash.com/photo-1590658268037-6bf12f032f55?w=800&q=80'
-    },
-    {
-      id: '3',
-      title: 'Samsung Galaxy Buds 3 Pro Review: The Stem Design Controversy',
-      slug: 'samsung-buds-3-pro-review',
-      excerpt: 'Samsung abandoned the "bean" for a "stem." Does the new design actually improve microphone quality and fit?',
-      content: `Critics were divided when Samsung unveiled the Galaxy Buds 3 Pro with a design strikingly similar to the AirPods Pro. However, real-world testing shows that the dual-driver system and improved blade-lights offer a level of audio fidelity that justifies the hardware shift.
-
-The primary benefit of the stem design is microphone placement. By bringing the beam-forming mics closer to the mouth, Samsung has significantly improved call quality in windy conditions. The new "Blade Lights" aren't just for show either; they provide a visual indicator for pairing status and battery life.
-
-In terms of sound, the Buds 3 Pro feature a sophisticated 2-way speaker system with a high-fidelity tweeter and a planar woofer, delivering crisp highs and deep, controlled bass that rivals the Sony XM5 series.`,
-      author: { name: 'Mike Chen' },
-      publishedAt: '2026-03-12T09:15:00Z',
-      readTime: 8,
-      tags: ['Samsung', 'Review', 'Hardware'],
-      featured: false,
-      coverImage: 'https://images.unsplash.com/photo-1631867934874-4e0719e27668?w=800&q=80'
-    },
-    {
-      id: '4',
-      title: 'Sony WF-1000XM6 Rumors: Smaller Case and Faster Loading',
-      slug: 'sony-xm6-rumors',
-      excerpt: 'Everything we know about Sony\'s next flagship noise-cancelling earbuds.',
-      content: `Sony is expected to announce the WF-1000XM6 later this year. Sources indicate a 15% reduction in case size and a new V2 processor that could potentially double the processing power for ANC filters, aiming to take back the crown from Bose.
-
-Internal test models suggest Sony is moving toward a more ergonomic "hybrid" tip design—combining the comfort of silicone with the isolation of memory foam. This has been a point of contention for XM4 and XM5 users who found the stock foam tips prone to degradation.
-
-Connectivity will also get a boost with Bluetooth 5.4 support and optimized LE Audio, allowing for multi-point connection across three devices simultaneously without the occasional dropout seen in previous generations.`,
-      author: { name: 'Emma Williams' },
-      publishedAt: '2026-03-10T16:45:00Z',
-      readTime: 4,
-      tags: ['Sony', 'ANC', 'Leaks'],
-      featured: false,
-      coverImage: 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=800&q=80'
-    },
-    {
-      id: '5',
-      title: 'Bose QuietComfort Ultra: Still the ANC King in 2026?',
-      slug: 'bose-qc-ultra-2026-review',
-      excerpt: 'Bose\'s "Immersive Audio" has been out for a while. We revisit the QC Ultra to see if it holds up against the newer competition.',
-      content: `While other brands focus on health and connectivity, Bose remains laser-focused on one thing: silence. In 2026, the QuietComfort Ultra remains the benchmark for low-frequency isolation in urban environments.
-
-The "Immersive Audio" mode, which uses head-tracking to simulate a spatial soundstage, remains a highlight of the experience. Unlike Apple's implementation, Bose's spatial audio works with any source, making it a versatile choice for movie lovers and podcast listeners alike.
-
-Battery life remains its Achilles' heel, however. With Immersive Audio turned on, you can only expect about 4 hours of juice. For long-haul flights, users might find themselves reaching for their XM5s or AirPods Max instead if they don't have time for a quick charge.`,
-      author: { name: 'Lisa Thompson' },
-      publishedAt: '2026-03-05T11:20:00Z',
-      readTime: 7,
-      tags: ['Bose', 'Audio Quality', 'ANC'],
-      featured: false,
-      coverImage: 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=800&q=80'
-    },
-    {
-      id: '6',
-      title: 'Huawei Loss Care: A Built-In Insurance for Your FreeBuds',
-      slug: 'huawei-loss-care-freebuds',
-      excerpt: 'Huawei now offers an official loss-protection plan for FreeBuds owners. Is it worth it, and how does it compare to the secondary market?',
-      content: `Huawei has quietly rolled out a service called "Loss Care" specifically for its FreeBuds product line. The concept is straightforward: pay a small fee when purchasing your FreeBuds, and if you lose a single earbud or the charging case within the coverage period, Huawei will replace it at a significantly reduced cost.
-
-This is a notable move in the true wireless earbud space, where losing a single bud has traditionally meant either buying a full replacement set or turning to the secondary market. Huawei's approach acknowledges a pain point that platforms like PairAgain were built to solve.
-
-**How it works:** After purchasing the Loss Care add-on, users register their FreeBuds through the Huawei Support app. If a component is lost, they can file a claim and receive a replacement unit for a fraction of the retail price. The service currently covers FreeBuds Pro 3, FreeBuds 6i, and select other models.
-
-**The catch:** Loss Care only covers one replacement per coverage period, and the replacement must be for the same model. It doesn't cover physical damage, water damage, or theft — only accidental loss.
-
-**How it compares to PairAgain:** While Huawei's Loss Care is a manufacturer-backed insurance model, PairAgain's marketplace offers more flexibility. On PairAgain, you can find replacement buds across all brands, negotiate prices, and even trade components you no longer need. For Huawei users specifically, Loss Care is a convenient first line of defense, but PairAgain remains the go-to for cross-brand replacements and cost-conscious buyers.
-
-For full details on Huawei's Loss Care program, visit the [official Huawei Loss Care page](https://consumer.huawei.com/fr/support/huawei-loss-care-for-freebuds/).`,
-      author: { name: 'David Park' },
-      publishedAt: '2026-03-22T08:00:00Z',
-      readTime: 4,
-      tags: ['Huawei', 'Insurance', 'FreeBuds'],
-      featured: false,
-      coverImage: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80'
-    }
-  ];
-
   // Initialize view counts and engagement on mount
   useEffect(() => {
     const slugs = blogPosts.map(p => p.slug);
     refreshViewCounts(slugs);
     loadEngagement(slugs);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [blogPosts]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Apply localStorage edits to all posts for rendering
   const displayPosts = blogPosts.map(p => applyEdits(p, blogEdits));
+
+  // Use DB views if available, fall back to localStorage
+  const getViewsForPost = (post: BlogPost) => {
+    const dbViews = post.views || 0;
+    const localViews = viewCounts[post.slug] || 0;
+    return Math.max(dbViews, localViews);
+  };
 
   const allTags = Array.from(new Set(displayPosts.flatMap(post => post.tags)));
 
@@ -614,7 +675,7 @@ For full details on Huawei's Loss Care program, visit the [official Huawei Loss 
                 {editForm.coverImage ? (
                   <div className="relative group">
                     <img
-                      src={editForm.coverImage}
+                      src={normalizeImageUrl(editForm.coverImage)}
                       alt="Cover preview"
                       className="w-full h-40 object-cover rounded-xl"
                     />
@@ -710,7 +771,7 @@ For full details on Huawei's Loss Care program, visit the [official Huawei Loss 
           {/* Cover Image */}
           <div className="mb-8 rounded-2xl overflow-hidden shadow-lg">
             <img 
-              src={selectedPost.coverImage} 
+              src={normalizeImageUrl(selectedPost.coverImage)} 
               alt={selectedPost.title}
               className="w-full h-64 sm:h-80 md:h-96 object-cover"
             />
@@ -725,7 +786,7 @@ For full details on Huawei's Loss Care program, visit the [official Huawei Loss 
               <span>{selectedPost.readTime} min read</span>
               <span className="mx-2">•</span>
               <EyeIcon className="w-4 h-4" />
-              <span>{viewCounts[selectedPost.slug] || 0} views</span>
+              <span>{getViewsForPost(selectedPost)} views</span>
             </div>
             <h1 className="text-4xl font-extrabold text-gray-900 mb-6">{selectedPost.title}</h1>
             
@@ -1068,7 +1129,7 @@ For full details on Huawei's Loss Care program, visit the [official Huawei Loss 
                 <div className="md:w-1/2">
                   <div className="h-64 md:h-full relative">
                     <img 
-                      src={featuredPost.coverImage} 
+                      src={normalizeImageUrl(featuredPost.coverImage)} 
                       alt={featuredPost.title}
                       className="w-full h-full object-cover"
                     />
@@ -1103,7 +1164,7 @@ For full details on Huawei's Loss Care program, visit the [official Huawei Loss 
                       </div>
                       <div className="flex items-center space-x-1">
                         <EyeIcon className="w-4 h-4" />
-                        <span>{viewCounts[featuredPost.slug] || 0} views</span>
+                        <span>{getViewsForPost(featuredPost)} views</span>
                       </div>
                     </div>
                   </div>
@@ -1144,7 +1205,7 @@ For full details on Huawei's Loss Care program, visit the [official Huawei Loss 
             <article key={post.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
               <div className="h-48 overflow-hidden relative">
                 <img 
-                  src={post.coverImage} 
+                  src={normalizeImageUrl(post.coverImage)} 
                   alt={post.title}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                 />
@@ -1184,7 +1245,7 @@ For full details on Huawei's Loss Care program, visit the [official Huawei Loss 
                   <div className="flex items-center space-x-4 text-sm text-gray-500">
                     <div className="flex items-center space-x-1">
                       <EyeIcon className="w-4 h-4" />
-                      <span>{viewCounts[post.slug] || 0}</span>
+                      <span>{getViewsForPost(post)}</span>
                     </div>
                     {getTotalReactions(post.slug) > 0 && (
                       <div className="flex items-center space-x-1">
