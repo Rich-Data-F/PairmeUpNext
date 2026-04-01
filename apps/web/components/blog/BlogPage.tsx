@@ -13,7 +13,10 @@ import {
   ChatBubbleLeftIcon,
   ShareIcon,
   HandThumbUpIcon,
-  LinkIcon
+  LinkIcon,
+  PencilIcon,
+  CheckIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 
 interface BlogPost {
@@ -135,6 +138,39 @@ function addComment(slug: string, name: string, content: string, parentId?: stri
   } catch { return []; }
 }
 
+// --- Blog edit helpers (localStorage) ---
+type BlogEdits = Partial<Pick<BlogPost, 'title' | 'excerpt' | 'content' | 'coverImage' | 'readTime' | 'tags'>>;
+
+function getBlogEdits(): Record<string, BlogEdits> {
+  if (typeof window === 'undefined') return {};
+  try { return JSON.parse(localStorage.getItem('blog_edits') || '{}'); }
+  catch { return {}; }
+}
+
+function saveBlogEdit(slug: string, edits: BlogEdits) {
+  if (typeof window === 'undefined') return;
+  try {
+    const all = getBlogEdits();
+    all[slug] = edits;
+    localStorage.setItem('blog_edits', JSON.stringify(all));
+  } catch {}
+}
+
+function deleteBlogEdit(slug: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    const all = getBlogEdits();
+    delete all[slug];
+    localStorage.setItem('blog_edits', JSON.stringify(all));
+  } catch {}
+}
+
+function applyEdits(post: BlogPost, edits: Record<string, BlogEdits>): BlogPost {
+  const e = edits[post.slug];
+  if (!e) return post;
+  return { ...post, ...e };
+}
+
 // --- Share helpers ---
 function getShareUrl(slug: string): string {
   if (typeof window === 'undefined') return '';
@@ -168,6 +204,14 @@ export function BlogPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [viewCounts, setViewCounts] = useState<Record<string, number>>({});
+  
+  // Auth / edit
+  const [profile, setProfile] = useState<{ name: string; isAdmin: boolean } | null>(null);
+  const [blogEdits, setBlogEdits] = useState<Record<string, BlogEdits>>({});
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState<BlogEdits & { tagsRaw: string }>({ tagsRaw: '' });
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const coverFileRef = useRef<HTMLInputElement>(null);
   
   // Engagement state
   const [reactions, setReactions] = useState<Record<string, Record<ReactionType, number>>>({});
@@ -204,6 +248,17 @@ export function BlogPage() {
     setReactions(r);
     setUserReactions(ur);
     setComments(c);
+  }, []);
+
+  // Load profile for edit permission
+  useEffect(() => {
+    fetch('/api/proxy/auth/profile')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.id) setProfile({ name: data.name || '', isAdmin: data.isAdmin === true });
+      })
+      .catch(() => {});
+    setBlogEdits(getBlogEdits());
   }, []);
 
   // Increment view count when an article is opened
@@ -250,6 +305,72 @@ export function BlogPage() {
     const r = reactions[slug];
     if (!r) return 0;
     return (Object.values(r) as number[]).reduce((sum, v) => sum + v, 0);
+  };
+
+  const canEdit = (post: BlogPost): boolean => {
+    if (!profile) return false;
+    return profile.isAdmin || profile.name === post.author.name;
+  };
+
+  const startEdit = (post: BlogPost) => {
+    const p = applyEdits(post, blogEdits);
+    setEditForm({
+      title: p.title,
+      excerpt: p.excerpt,
+      content: p.content,
+      coverImage: p.coverImage,
+      readTime: p.readTime,
+      tagsRaw: p.tags.join(', '),
+    });
+    setIsEditing(true);
+  };
+
+  const saveEdit = (post: BlogPost) => {
+    const tags = editForm.tagsRaw?.split(',').map(t => t.trim()).filter(Boolean) || post.tags;
+    const edits: BlogEdits = {
+      title: editForm.title || post.title,
+      excerpt: editForm.excerpt || post.excerpt,
+      content: editForm.content || post.content,
+      coverImage: editForm.coverImage || post.coverImage,
+      readTime: Number(editForm.readTime) || post.readTime,
+      tags,
+    };
+    saveBlogEdit(post.slug, edits);
+    const updated = { ...blogEdits, [post.slug]: edits };
+    setBlogEdits(updated);
+    // Update selectedPost so article view refreshes
+    setSelectedPost(applyEdits(post, updated));
+    setIsEditing(false);
+    toast.success('Post updated!');
+  };
+
+  const revertEdit = (post: BlogPost) => {
+    deleteBlogEdit(post.slug);
+    const updated = { ...blogEdits };
+    delete updated[post.slug];
+    setBlogEdits(updated);
+    setSelectedPost(post);
+    setIsEditing(false);
+    toast.success('Post reverted to original.');
+  };
+
+  const uploadCoverImage = async (file: File) => {
+    if (!file.type.startsWith('image/')) { toast.error('Please select an image file.'); return; }
+    setUploadingCover(true);
+    try {
+      const fd = new FormData();
+      fd.append('image', file);
+      fd.append('category', 'blog');
+      const res = await fetch('/api/proxy/upload/image', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Upload failed');
+      setEditForm(f => ({ ...f, coverImage: data.url }));
+      toast.success('Cover photo uploaded!');
+    } catch (e: any) {
+      toast.error(e.message || 'Upload failed');
+    } finally {
+      setUploadingCover(false);
+    }
   };
 
   const getTopReaction = (slug: string): ReactionType | null => {
@@ -379,9 +500,12 @@ For full details on Huawei's Loss Care program, visit the [official Huawei Loss 
     loadEngagement(slugs);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const allTags = Array.from(new Set(blogPosts.flatMap(post => post.tags)));
+  // Apply localStorage edits to all posts for rendering
+  const displayPosts = blogPosts.map(p => applyEdits(p, blogEdits));
 
-  const filteredPosts = blogPosts.filter(post => {
+  const allTags = Array.from(new Set(displayPosts.flatMap(post => post.tags)));
+
+  const filteredPosts = displayPosts.filter(post => {
     const matchesSearch = searchQuery === '' || 
       post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -392,7 +516,7 @@ For full details on Huawei's Loss Care program, visit the [official Huawei Loss 
     return matchesSearch && matchesTag;
   });
 
-  const featuredPost = blogPosts.find(post => post.featured);
+  const featuredPost = displayPosts.find(post => post.featured);
   const otherPosts = filteredPosts.filter(post => !post.featured || selectedTag !== null || searchQuery !== '');
 
   const formatDate = (dateString: string) => {
@@ -408,12 +532,180 @@ For full details on Huawei's Loss Care program, visit the [official Huawei Loss 
     return (
       <div className="min-h-screen bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="mb-8 flex items-center justify-between">
           <button 
-            onClick={() => setSelectedPost(null)}
-            className="mb-8 flex items-center text-blue-600 hover:text-blue-800 font-medium"
+            onClick={() => { setSelectedPost(null); setIsEditing(false); }}
+            className="flex items-center text-blue-600 hover:text-blue-800 font-medium"
           >
             ← Back to Blog
           </button>
+
+          {canEdit(selectedPost) && !isEditing && (
+            <div className="flex items-center gap-2">
+              {blogEdits[selectedPost.slug] && (
+                <button
+                  onClick={() => revertEdit(applyEdits(blogPosts.find(p => p.slug === selectedPost.slug)!, blogEdits))}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-orange-600 border border-orange-300 rounded-lg hover:bg-orange-50 transition-all"
+                >
+                  <XMarkIcon className="w-4 h-4" /> Revert
+                </button>
+              )}
+              <button
+                onClick={() => startEdit(applyEdits(blogPosts.find(p => p.slug === selectedPost.slug)!, blogEdits))}
+                className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all"
+              >
+                <PencilIcon className="w-4 h-4" /> Edit Post
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Inline Edit Form */}
+        {isEditing && canEdit(selectedPost) && (
+          <div className="mb-10 bg-yellow-50 border border-yellow-200 rounded-2xl p-6 space-y-4 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-bold text-gray-900 flex items-center gap-2"><PencilIcon className="w-5 h-5 text-yellow-600" /> Editing Post</h3>
+              <button onClick={() => setIsEditing(false)} className="text-gray-400 hover:text-gray-600"><XMarkIcon className="w-5 h-5" /></button>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Title</label>
+              <input
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-semibold"
+                value={editForm.title || ''}
+                onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Excerpt</label>
+              <textarea
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none"
+                rows={2}
+                value={editForm.excerpt || ''}
+                onChange={e => setEditForm(f => ({ ...f, excerpt: e.target.value }))}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Cover Photo</label>
+
+              {/* Upload area */}
+              <div
+                className={`relative border-2 border-dashed rounded-xl transition-all cursor-pointer ${
+                  uploadingCover ? 'border-blue-300 bg-blue-50' : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'
+                }`}
+                onClick={() => !uploadingCover && coverFileRef.current?.click()}
+                onDragOver={e => { e.preventDefault(); e.stopPropagation(); }}
+                onDrop={e => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const file = e.dataTransfer.files?.[0];
+                  if (file) uploadCoverImage(file);
+                }}
+              >
+                <input
+                  ref={coverFileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={e => { const f = e.target.files?.[0]; if (f) uploadCoverImage(f); e.target.value = ''; }}
+                />
+                {editForm.coverImage ? (
+                  <div className="relative group">
+                    <img
+                      src={editForm.coverImage}
+                      alt="Cover preview"
+                      className="w-full h-40 object-cover rounded-xl"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
+                      <span className="text-white text-sm font-semibold">{uploadingCover ? 'Uploading…' : '📷 Click or drop to replace'}</span>
+                    </div>
+                    {uploadingCover && (
+                      <div className="absolute inset-0 bg-white/70 rounded-xl flex items-center justify-center">
+                        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+                    {uploadingCover ? (
+                      <><div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-2" /><p className="text-sm text-blue-600 font-medium">Uploading…</p></>
+                    ) : (
+                      <><div className="text-4xl mb-2">📷</div><p className="text-sm font-semibold text-gray-700">Click or drag & drop to upload a cover photo</p><p className="text-xs text-gray-400 mt-1">PNG, JPG, WebP · Max 10 MB</p></>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* URL fallback */}
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-xs text-gray-400 whitespace-nowrap">Or paste URL:</span>
+                <input
+                  className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs font-mono"
+                  placeholder="https://example.com/photo.jpg"
+                  value={editForm.coverImage || ''}
+                  onChange={e => setEditForm(f => ({ ...f, coverImage: e.target.value }))}
+                />
+                {editForm.coverImage && (
+                  <button
+                    onClick={() => setEditForm(f => ({ ...f, coverImage: '' }))}
+                    className="text-gray-400 hover:text-red-500 transition-colors"
+                    title="Clear image"
+                  >
+                    <XMarkIcon className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Read Time (min)</label>
+                <input
+                  type="number"
+                  min={1}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  value={editForm.readTime || ''}
+                  onChange={e => setEditForm(f => ({ ...f, readTime: Number(e.target.value) }))}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Tags (comma-separated)</label>
+                <input
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  value={editForm.tagsRaw || ''}
+                  onChange={e => setEditForm(f => ({ ...f, tagsRaw: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Content (markdown supported: **bold**, [link](url))</label>
+              <textarea
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-mono resize-y"
+                rows={14}
+                value={editForm.content || ''}
+                onChange={e => setEditForm(f => ({ ...f, content: e.target.value }))}
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2 border-t border-yellow-200">
+              <button
+                onClick={() => setIsEditing(false)}
+                className="px-5 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => saveEdit(blogPosts.find(p => p.slug === selectedPost.slug)!)}
+                className="flex items-center gap-1.5 px-5 py-2 text-sm font-bold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all"
+              >
+                <CheckIcon className="w-4 h-4" /> Save Changes
+              </button>
+            </div>
+          </div>
+        )}
 
           {/* Cover Image */}
           <div className="mb-8 rounded-2xl overflow-hidden shadow-lg">
@@ -831,6 +1123,15 @@ For full details on Huawei's Loss Care program, visit the [official Huawei Loss 
                   >
                     Read More
                   </button>
+                  {canEdit(featuredPost) && (
+                    <button
+                      onClick={() => { setSelectedPost(featuredPost); setTimeout(() => startEdit(featuredPost), 50); }}
+                      className="flex items-center gap-1.5 ml-3 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-all"
+                    >
+                      <PencilIcon className="w-4 h-4" />
+                      {blogEdits[featuredPost.slug] ? <span className="text-amber-600">Edited ✓</span> : 'Edit'}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -841,12 +1142,22 @@ For full details on Huawei's Loss Care program, visit the [official Huawei Loss 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {otherPosts.map((post) => (
             <article key={post.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="h-48 overflow-hidden">
+              <div className="h-48 overflow-hidden relative">
                 <img 
                   src={post.coverImage} 
                   alt={post.title}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                 />
+                {canEdit(post) && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setSelectedPost(post); setTimeout(() => startEdit(post), 50); }}
+                    className="absolute top-2 right-2 flex items-center gap-1 px-2.5 py-1 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 hover:bg-white shadow-sm transition-all"
+                    title="Edit this post"
+                  >
+                    <PencilIcon className="w-3.5 h-3.5" />
+                    {blogEdits[post.slug] ? <span className="text-amber-600">Edited</span> : 'Edit'}
+                  </button>
+                )}
               </div>
               
               <div className="p-6">
