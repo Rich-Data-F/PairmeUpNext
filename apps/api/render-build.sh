@@ -11,7 +11,7 @@ npx prisma generate
 cd ../../apps/api
 
 echo "==> Generating Prisma Client from API schema (ensures local node_modules is fresh)..."
-npx prisma generate --schema=prisma/prisma/schema.prisma
+npx prisma generate --schema=prisma/schema.prisma
 
 echo "==> Verifying Prisma Client has SurveyResponse..."
 node -e "const p = require('../../node_modules/@prisma/client'); console.log('surveyResponse' in new p.PrismaClient() ? '✅ surveyResponse found' : '❌ surveyResponse MISSING')" || true
