@@ -72,20 +72,11 @@ export const metadata: Metadata = {
     siteName: 'PairAgain',
     title: 'PairAgain - Collaborative Earbud Exchange Platform',
     description: 'Buy, sell, trade, declare loss or find of earbud items. Collaborative exchange platform for earbuds, cases, and accessories.',
-    images: [
-      {
-        url: '/og-image.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'PairAgain Marketplace',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'PairAgain - Professional Earbud Parts Marketplace',
     description: 'Buy and sell earbuds, charging cases, and accessories.',
-    images: ['/og-image.jpg'],
     creator: '@pairagain',
   },
   verification: {
@@ -93,9 +84,9 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/favicon-minimal.svg', media: '(prefers-color-scheme: light)' },
-      { url: '/favicon-techy.svg', media: '(prefers-color-scheme: dark)' },
-      { url: '/favicon.svg' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon-minimal.svg', type: 'image/svg+xml', media: '(prefers-color-scheme: light)' },
+      { url: '/favicon-techy.svg', type: 'image/svg+xml', media: '(prefers-color-scheme: dark)' },
     ],
     shortcut: '/favicon.svg',
     apple: '/favicon.svg',
