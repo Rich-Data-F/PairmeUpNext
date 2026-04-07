@@ -12,14 +12,14 @@ export async function GET(request: NextRequest) {
 
     // Map frontend param names to backend param names (same as advanced search proxy)
     const backendParams = new URLSearchParams();
-    for (const [key, value] of searchParams.entries()) {
+    Array.from(searchParams.entries()).forEach(([key, value]) => {
       if (key === 'brands') backendParams.set('brandIds', value);
       else if (key === 'models') backendParams.set('modelIds', value);
       else if (key === 'cities') backendParams.set('cityIds', value);
       else if (key === 'minPrice') backendParams.set('priceMin', value);
       else if (key === 'maxPrice') backendParams.set('priceMax', value);
       else backendParams.set(key, value);
-    }
+    });
 
     const response = await backendFetch(`/search/facets?${backendParams.toString()}`, {
       method: 'GET',

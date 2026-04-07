@@ -3,10 +3,10 @@ export const runtime = 'nodejs';
 import { getApiBase } from '@/lib/config';
 
 // POST /api/proxy/blog/[slug]/like
-export async function POST(request: Request, { params }: { params: { slug: string } }) {
+export async function POST(request: Request, context: { params: Promise<{ slug: string }> }) {
   try {
     const apiBase = getApiBase();
-    const { slug } = await params as any;
+    const { slug } = await context.params;
     const resp = await fetch(`${apiBase}/blog/${slug}/like`, {
       method: 'POST',
     });

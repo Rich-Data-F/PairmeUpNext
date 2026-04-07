@@ -4,10 +4,10 @@ import { getApiBase } from '@/lib/config';
 import { withAuthHeader } from '@/lib/auth-headers';
 
 // GET /api/proxy/blog/[slug] — get single post by slug
-export async function GET(request: Request, { params }: { params: { slug: string } }) {
+export async function GET(request: Request, context: { params: Promise<{ slug: string }> }) {
   try {
     const apiBase = getApiBase();
-    const { slug } = await params as any;
+    const { slug } = await context.params;
     const resp = await fetch(`${apiBase}/blog/${slug}`, {
       ...(await withAuthHeader()),
     });
@@ -19,10 +19,10 @@ export async function GET(request: Request, { params }: { params: { slug: string
 }
 
 // PATCH /api/proxy/blog/[slug] — update a post (using slug as id here)
-export async function PATCH(request: Request, { params }: { params: { slug: string } }) {
+export async function PATCH(request: Request, context: { params: Promise<{ slug: string }> }) {
   try {
     const apiBase = getApiBase();
-    const { slug } = await params as any;
+    const { slug } = await context.params;
     const body = await request.json();
     const resp = await fetch(`${apiBase}/blog/${slug}`, {
       method: 'PATCH',
@@ -41,10 +41,10 @@ export async function PATCH(request: Request, { params }: { params: { slug: stri
 }
 
 // DELETE /api/proxy/blog/[slug] — delete a post
-export async function DELETE(request: Request, { params }: { params: { slug: string } }) {
+export async function DELETE(request: Request, context: { params: Promise<{ slug: string }> }) {
   try {
     const apiBase = getApiBase();
-    const { slug } = await params as any;
+    const { slug } = await context.params;
     const resp = await fetch(`${apiBase}/blog/${slug}`, {
       method: 'DELETE',
       ...(await withAuthHeader()),

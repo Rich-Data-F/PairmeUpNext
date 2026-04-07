@@ -4,10 +4,10 @@ import { getApiBase } from '@/lib/config';
 import { withAuthHeader } from '@/lib/auth-headers';
 
 // POST /api/proxy/blog/[slug]/comments
-export async function POST(request: Request, { params }: { params: { slug: string } }) {
+export async function POST(request: Request, context: { params: Promise<{ slug: string }> }) {
   try {
     const apiBase = getApiBase();
-    const { slug } = await params as any;
+    const { slug } = await context.params;
     const body = await request.json();
     const resp = await fetch(`${apiBase}/blog/${slug}/comments`, {
       method: 'POST',
